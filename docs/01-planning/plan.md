@@ -135,7 +135,8 @@ hskim-me/
 | 성운 배경 | **GLSL 프래그먼트 셰이더** (FBM 노이즈) | 텍스처 이미지 없이 무한히 부드럽게 흐르는 성운을 만든다. 용량 부담 0, 해상도 무관 |
 | 스타일 | **Tailwind CSS** + CSS 변수 테마 | 김희섭 님 Knowledge DB에 이미 노트가 있는 익숙한 스택 |
 | 애니메이션 | **Framer Motion** (2D UI), R3F 자체 루프 (3D) | 상동 |
-| 수식 | **KaTeX** | Vault가 `$...$` / `$$...$$`를 쓴다 |
+| 수식 | **KaTeX** | Vault가 `$...$` / `$$...$$`를 쓴다. 해당 문서 30개에서만 로드 |
+| 다이어그램 | **Mermaid** | Vault에 flowchart가 있고, 운영 규칙상 프로젝트 구조도가 추가될 예정 |
 | 코드 하이라이트 | **Shiki** (빌드 타임) | 런타임 JS 0KB, 정적 출력과 궁합이 좋다 |
 | 검색 | **FlexSearch** (클라이언트, 사전 생성 인덱스) | 550여 문서 규모면 서버 없이 충분하다. P8의 AI 검색과 역할이 다름(키워드 vs 의미) |
 | 폰트 | 본문 **Pretendard**, 코드 **JetBrains Mono** | 한글 본문 가독성 |
@@ -177,6 +178,7 @@ Vault 사본
   "html": "<h2>핵심 맥락</h2>...",
   "description": "React는 컴포넌트 단위로 UI를 구성하는 JavaScript 라이브러리다.",  // 본문 첫 문단에서 추출, meta description 용
   "toc": [{ "depth": 2, "text": "핵심 맥락", "id": "핵심-맥락" }],
+  "features": { "math": false, "mermaid": false, "code": true, "table": true, "image": false },  // 무거운 라이브러리 조건부 로딩용
   "links":     [{ "slug": "...", "title": "..." }],   // 이 노트가 거는 링크
   "backlinks": [{ "slug": "...", "title": "..." }],   // 이 노트를 가리키는 링크
   "tags": [],
