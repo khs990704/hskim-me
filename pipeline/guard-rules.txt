@@ -1,0 +1,36 @@
+# 콘텐츠 가드 규칙 (기획 §10 계층 2)
+#
+# 형식:  심각도 | 분류 | 정규식 | 설명
+#   error — 검출되면 빌드를 실패시킨다. 공개되면 되돌릴 수 없는 종류.
+#   warn  — 보고만 한다. 오탐이 섞일 수 있어 사람이 확인한다.
+#
+# 이 가드는 보조 장치다. 통과가 공개 승인을 뜻하지 않는다.
+# 설계 판단·아키텍처 선택처럼 내용으로만 식별되는 위험은 여기서 잡히지 않는다.
+# 그래서 회사 케이스는 애초에 옵트인(D-08)이다.
+
+# --- 자격 증명 ---------------------------------------------------------------
+error | credential | -----BEGIN (?:RSA |EC |OPENSSH |PGP )?PRIVATE KEY----- | 개인키 블록
+error | credential | \bAKIA[0-9A-Z]{16}\b | AWS 액세스 키
+error | credential | \bghp_[A-Za-z0-9]{36}\b | GitHub 개인 액세스 토큰
+error | credential | \bxox[baprs]-[A-Za-z0-9-]{10,} | Slack 토큰
+error | credential | \beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,} | JWT 토큰
+error | credential | (?:api[_-]?key|secret[_-]?key|access[_-]?token|client[_-]?secret|password|passwd)\s*[:=]\s*["']?[A-Za-z0-9/+_-]{12,} | 하드코딩된 자격 증명
+error | credential | (?:mongodb|postgres(?:ql)?|mysql|redis|amqp)://[^\s:@]+:[^\s@]+@ | 비밀번호가 포함된 커넥션 문자열
+
+# --- 내부 네트워크 -----------------------------------------------------------
+error | internal-net | \b(?:10\.\d{1,3}|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b | 사설 IP 주소
+error | internal-net | https?://[A-Za-z0-9.-]+\.(?:internal|local|corp|intra|lan)\b | 내부 도메인
+warn  | internal-net | https?://localhost(?::\d+)? | localhost 주소 (예시 코드면 무해)
+warn  | internal-net | https?://\d{1,3}(?:\.\d{1,3}){3}(?::\d+)? | IP 주소로 된 URL
+
+# --- 조직 식별자 -------------------------------------------------------------
+warn  | identity | \b[A-Za-z0-9._%+-]+@(?!example\.|test\.)[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b | 이메일 주소
+warn  | identity | (?:사번|사원번호|employee[_ ]?id)\s*[:=]? | 사번 언급
+warn  | identity | (?:주식회사|㈜|Co\.,?\s*Ltd|Inc\.) | 법인명 표기
+
+# --- 로컬 환경 노출 ----------------------------------------------------------
+warn  | local-path | (?:/home/[a-z][a-z0-9_-]*|/Users/[A-Za-z][A-Za-z0-9_-]*|[A-Z]:\\\\Users\\\\) | 사용자 계정이 드러나는 절대 경로
+
+# --- 계약·내부 수치 ----------------------------------------------------------
+warn  | business | \b\d{1,3}(?:,\d{3})*\s*(?:원|만원|억원|달러|USD)\b | 금액 표기
+warn  | business | (?:계약(?:금액|기간|조건)|수주|매출|영업이익) | 계약·재무 관련 표현

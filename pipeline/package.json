@@ -6,10 +6,12 @@
   "description": "Obsidian Vault -> JSON 콘텐츠 파이프라인",
   "scripts": {
     "stage": "node src/stage.mjs",
-    "build": "node src/stage.mjs && node src/build.mjs",
+    "guard": "node src/guard.mjs",
+    "build": "node src/stage.mjs && node src/guard.mjs && node src/build.mjs && node src/layout.mjs",
+    "preview": "node src/preview.mjs",
     "report": "node src/classify-broken.mjs",
     "company": "node src/company-digest.mjs && node src/company-verdict.mjs",
-    "all": "npm run build && npm run report && npm run company"
+    "all": "npm run build && npm run preview && npm run report && npm run company"
   },
   "dependencies": {
     "@quartz-community/crawl-links": "^1.0.0",
@@ -17,6 +19,7 @@
     "@quartz-community/obsidian-flavored-markdown": "^1.0.0",
     "@quartz-community/types": "^1.0.0",
     "@quartz-community/utils": "^1.0.1",
+    "d3-force-3d": "^3.0.6",
     "github-slugger": "^2.0.0",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "katex": "^0.18.7",
