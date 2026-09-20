@@ -89,10 +89,106 @@ D-08에 따라 `02 Project Cases/Project Index/03 Company/` 하위 노트는 **�
 
 ---
 
-## 5. 검수 기록
+## 5. 1차 판정 초안 (P1, 2026-09-20)
 
-P1에서 채운다.
+**✅ 16 · 🔄 45 · ⛔ 15 (총 76)**
 
-| 노트 | 1 | 2 | 3 | 4 | 5 | 판정 | 사유 / 재작성 방향 |
-|---|---|---|---|---|---|---|---|
-| (P1에서 작성) | | | | | | | |
+이 초안은 제목·문서 구조·자동 패턴 검출·표본 정독에 근거한다. 🔄 판정 노트는 재작성 시점(P5)에 전문을 읽고 확정한다.
+**체크리스트 5번(계약·비밀유지서약 저촉)은 제작자가 판단할 수 없으므로 김희섭 님이 직접 확인해야 한다.**
+
+### 회사 케이스 노트의 공통 구조
+
+전 노트가 같은 템플릿을 쓴다.
+
+```
+한 줄 설명 / 문제 또는 목표 / 사용한 기술 / 구현 또는 진행 흐름 / 내가 설명할 수 있는 부분 / 결과
+```
+
+위험은 **「구현 또는 진행 흐름」에 집중**되고 나머지는 이미 안전한 높이에 있다. 일반화가 노트마다 다른 판단이 아니라 섹션 단위의 기계적 처리에 가깝다.
+
+### ⛔ 판정 기준
+
+`C ONNX Cryptography` 전문을 확인한 결과, 암호 구성(AES-256-GCM + ML-KEM-512), 키 래핑 5단계 절차, 버퍼 규약, 키 파생 방식이 그대로 적혀 있었다. 상용 보안 제품의 암호 설계 자체이며 공개 시 공격 출발점이 된다. **이 노트의 자동 패턴 검출 신호는 0건이었다** — 가드만으로는 잡히지 않는다는 D-08의 근거가 실물로 확인됐다.
+
+on-device-security 묶음의 암호·키·보안 저장소 계열을 같은 기준으로 처리했다.
+
+### 판정표
+
+| 묶음 | 노트 | 판정 | 자동 검출 신호 | 사유 / 재작성 방향 |
+|---|---|---|---|---|
+| Company Projects.md | Company Projects | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| Hazard Data | Building Hazard Data Codes | 🔄 | 수치×15 | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| Hazard Data | Hazard Data | 🔄 | 수치×15 | 허브 노트이나 내부 수치·경로가 검출됨. 해당 부분만 제거 |
+| Hazard Data | SDF File Processing | 🔄 | 수치×15 | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| MLOps | MLOps Backend API Integration Updates | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| MLOps | MLOps Backend MinIO Integration | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| MLOps | MLOps Backend | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| MLOps | Company MLOps Platform | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| MLOps | MLOps Frontend Feature and Design Updates | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| MLOps | MLOps Frontend MinIO UI | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| MLOps | MLOps Frontend | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| NSR | NSR RAG Chatbot | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| NSR | NSR | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| NSR | NSR FastAPI Context API | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| NSR | NSR FastAPI Streaming API | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| NSR | NSR RAG Answering Model | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| NSR | NSR Server React Build Deployment | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| NSR | NSR Server | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| on-device-security | C ONNX Packaging | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | C ONNX Cryptography | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | C ONNX Package Metadata | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | C ONNX Model Packager | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | C ONNX Runtime Model Loading | 🔄 | - | TEE·런타임 연동 흐름 제거 후 담당 범위만 남김 |
+| on-device-security | On-device Security | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| on-device-security | On-device Rust | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| on-device-security | Rust Inference Buffer Zeroization | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | Rust ONNX Inference | 🔄 | - | TEE·런타임 연동 흐름 제거 후 담당 범위만 남김 |
+| on-device-security | Rust ONNX Model Buffer Zeroization | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | OP-TEE | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| on-device-security | OP-TEE File Delete Client | 🔄 | - | TEE·런타임 연동 흐름 제거 후 담당 범위만 남김 |
+| on-device-security | OP-TEE File Get Client | 🔄 | - | TEE·런타임 연동 흐름 제거 후 담당 범위만 남김 |
+| on-device-security | OP-TEE File Save Client | 🔄 | - | TEE·런타임 연동 흐름 제거 후 담당 범위만 남김 |
+| on-device-security | OP-TEE Key Delete Client | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | OP-TEE Key Get Client | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | OP-TEE Key Save Client | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | OP-TEE Model Parameter Processing | 🔄 | - | TEE·런타임 연동 흐름 제거 후 담당 범위만 남김 |
+| on-device-security | OP-TEE Model Recovery and Inference | 🔄 | - | TEE·런타임 연동 흐름 제거 후 담당 범위만 남김 |
+| on-device-security | OP-TEE Secure Storage Client | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | OP-TEE Storage Process Integration | 🔄 | - | TEE·런타임 연동 흐름 제거 후 담당 범위만 남김 |
+| on-device-security | OP-TEE File Storage TA | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | OP-TEE Key Storage TA | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| on-device-security | OP-TEE Secure Storage | ⛔ | - | 암호 구성·키 래핑·보안 저장소 내부 동작. 공개 시 공격 표면 정보가 된다 |
+| secuai | Edge Metrics Push Sender | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | Edge Model Hash Verification | ⛔ | - | 보안 검증 절차의 내부 동작 |
+| secuai | SecuAI Edge Test API | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| secuai | KMS Admin Workflow Updates | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | KMS Excel Bulk Import Validation | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | KMS Internationalization | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | KMS | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| secuai | MDS Dashboard Backend Deployment Script | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | MDS Dashboard Backend | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | MDS Dashboard License Query API | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | MDS Dashboard Frontend Deployment Configuration | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | MDS Dashboard Frontend | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | MDS Dashboard License Internationalization | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | MDS Dashboard License Visualization and Filtering | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | MDS Dashboard | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| secuai | MDMS | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| secuai | MDS Deployment Status Tracking | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | MDS Docker Runtime Configuration | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | MDS Edge Monitoring Controls | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | MDS Internationalization | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | MDS License Status Management | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | PQC MDS Internationalization | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | PQC MDS MLOps Metadata Integration | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | PQC MDS Model Format Support | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | PQC MDS Model Protection Demo Workflow | ⛔ | - | 보안 검증 절차의 내부 동작 |
+| secuai | PQC MDS Runtime Environment Configuration | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | SecuAI PQC MDS | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| secuai | PQC SDK Docker Runtime Configuration | 🔄 | - | 기능 성격은 안전. 내부 경로·설정값만 제거 |
+| secuai | PQC SDK Model Metadata Integration | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | SecuAI PQC SDK | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| secuai | SecuAI Model Security Platform | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |
+| secuai | SecuAI MLOps Model Registration and SDK Integration | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | SecuAI MLOps Pipeline Orchestration | 🔄 | - | 「구현 또는 진행 흐름」 섹션을 걷어내고 담당 범위와 사용 기술만 남김 |
+| secuai | SecuAI MLOps Pipeline | ✅ | - | 한 줄 설명과 하위 링크 중심의 허브 노트. 구현 세부 없음 |

@@ -32,3 +32,10 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# 파이프라인 산출물·중간물
+pipeline/.vault-cache/
+pipeline/out/
+pipeline/*-report.json
+pipeline/company-digest.json
+pipeline/company-verdict.md
