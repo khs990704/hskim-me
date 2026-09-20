@@ -40,3 +40,6 @@ pipeline/*-report.json
 pipeline/company-digest.json
 pipeline/company-verdict.md
 pipeline/preview/
+
+# 임시 사이트 산출물
+web/dist/

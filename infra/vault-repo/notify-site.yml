@@ -1,0 +1,26 @@
+# Vault 저장소(private)에 둘 워크플로.
+# 경로: .github/workflows/notify-site.yml
+#
+# Vault 에 push 가 들어오면 사이트 저장소에 빌드를 요청한다.
+# Vault 내용 자체는 이 워크플로가 다루지 않는다. 알림만 보낸다.
+#
+# 필요한 설정
+#   변수  SITE_REPO             예) hskim/hskim-me
+#   비밀  SITE_DISPATCH_TOKEN   사이트 저장소에 Contents 쓰기 권한이 있는 fine-grained PAT
+name: notify site
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 사이트 빌드 요청
+        run: |
+          curl -fsSL -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.SITE_DISPATCH_TOKEN }}" \
+            "https://api.github.com/repos/${{ vars.SITE_REPO }}/dispatches" \
+            -d '{"event_type":"vault-updated"}'

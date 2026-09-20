@@ -1,0 +1,68 @@
+# hskim.me 빌드·배포
+#
+# 트리거 세 가지
+#   push               — 사이트 코드가 바뀌었을 때
+#   repository_dispatch — Vault 저장소에서 알려줄 때 (노트가 추가·수정됐을 때)
+#   workflow_dispatch   — 수동 실행
+#
+# 필요한 설정 (infra/README.md 참고)
+#   변수  VAULT_REPO            예) hskim/hskim-vault
+#   비밀  VAULT_DEPLOY_KEY      Vault 저장소 배포 키의 개인키
+#   비밀  CLOUDFLARE_API_TOKEN
+#   비밀  CLOUDFLARE_ACCOUNT_ID
+name: build & deploy
+
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [vault-updated]
+  workflow_dispatch:
+
+# 동시에 여러 배포가 겹치지 않게 한다. 나중 것만 살린다.
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 사이트 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Vault 체크아웃 (private)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.VAULT_REPO }}
+          ssh-key: ${{ secrets.VAULT_DEPLOY_KEY }}
+          path: .vault
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: pipeline/package-lock.json
+
+      - run: npm ci --prefix pipeline
+
+      # 콘텐츠 가드(금칙 패턴)와 유출 검증이 여기서 빌드를 중단시킨다.
+      - name: 콘텐츠 변환
+        env:
+          VAULT_PATH: ${{ github.workspace }}/.vault
+        run: |
+          npm --prefix pipeline run build
+          npm --prefix pipeline run verify
+
+      - name: 사이트 생성
+        run: node web/build-site.mjs
+
+      - name: Cloudflare Pages 배포
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy web/dist --project-name=hskim-me --branch=main
