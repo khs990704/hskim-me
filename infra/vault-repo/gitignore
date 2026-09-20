@@ -1,0 +1,28 @@
+# Vault 저장소(private)용 .gitignore
+# 경로: Vault 루트의 .gitignore 로 복사
+#
+# 허용 목록 방식이다. 기본적으로 전부 제외하고, 사이트가 쓰는 폴더만 다시 넣는다.
+# 제외 목록 방식이면 새 폴더가 생겼을 때 자동으로 올라간다. 그 반대가 안전하다.
+#
+# 올라가는 것: 01 Knowledge DB / 02 Project Cases / 03 Portfolio / 05 Attachments
+# 올라가지 않는 것: 00 Inbox, 04 Operations, Clippings, Relay,
+#                   obsidian-vault, .obsidian, .trash, 루트의 개별 파일
+#
+# 05 Attachments 는 현재 비어 있지만 미리 넣어 둔다.
+# 나중에 이미지를 붙일 때 이 파일을 고쳐야 한다는 걸 기억할 필요가 없도록.
+
+/*
+
+!/.gitignore
+!/.gitattributes
+!/.github
+
+!/01 Knowledge DB
+!/02 Project Cases
+!/03 Portfolio
+!/05 Attachments
+
+# 허용된 폴더 안에서도 제외할 것
+.DS_Store
+Thumbs.db
+desktop.ini

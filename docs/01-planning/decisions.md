@@ -150,3 +150,29 @@
 **절제 원칙** — 성운·bloom·파티클은 과하면 즉시 싸구려로 보인다. 배경 색은 2~3색으로 제한, 성운은 항상 노드보다 어둡게, 궤도 1회전 90초 이상, bloom은 가독성을 해치지 않는 선에서 정지. 기획 문서 §7 참조.
 
 **결정일** — 2026-09-20
+
+---
+
+## D-11. 정식 주소는 `www.hskim.me`
+
+**결정** — 사이트의 정식(canonical) 주소를 `https://www.hskim.me` 로 한다. `hskim.me`(apex)는 zone hold 가 해제되는 시점에 리다이렉트로 붙인다.
+
+**경위** — `hskim.me` 를 Cloudflare 에 추가하려 할 때 **zone hold** 에 막혔다. zone hold 는 Enterprise 전용 기능이고 Enterprise zone 에 기본 적용되므로, 사업자 계정(hosting.kr 추정)이 이 도메인의 zone 을 보유하고 있다는 뜻이다. 우회 경로를 전부 시도했다.
+
+| 시도 | 결과 |
+|---|---|
+| 네임서버를 Cloudflare 로 이전 | ❌ zone hold |
+| Pages 커스텀 도메인 + 외부 DNS (`www`) | ✅ **동작** |
+| Pages 커스텀 도메인 + 외부 DNS (apex) | ❌ Pages 가 apex 는 외부 DNS 를 지원하지 않음 |
+| hosting.kr URL 포워딩 | ❌ `@` 의 모든 레코드 삭제를 요구 — MX 포함이라 메일이 끊긴다 |
+| 다른 등록기관으로 이전 | ❌ Pages 의 apex 제약은 그대로 |
+
+**근거** — `www` 를 정식 주소로 쓰는 것은 흔한 구성이고 SEO 상 불이익이 없다. canonical URL 과 `sitemap.xml` 을 `www` 로 통일하면 된다(D-09). apex 는 나중에 301 로 합류시키면 평가도 이전된다.
+
+**부수 효과** — 네임서버를 Cloudflare 로 옮기지 않았으므로 **Google Workspace 메일에 리스크가 전혀 없다.** 결과적으로 원래 계획보다 안전한 구성이 됐다.
+
+**잃은 것** — Cloudflare Access 를 쓸 수 없다. 공개 전 잠금(P7 이전)은 다른 방법으로 구현해야 한다 → Pages Functions 기반 접근 제어 또는 robots·noindex 유지.
+
+**해제 시 할 일** — zone hold 가 풀리면 네임서버를 Cloudflare 로 옮기고, apex 를 Pages 에 추가한 뒤 `hskim.me → www.hskim.me` 301 을 건다. 이때 MX·TXT 를 먼저 Cloudflare 에 옮겨 두는 절차(infra/README.md 4단계)를 그대로 따른다.
+
+**결정일** — 2026-09-20

@@ -5,7 +5,10 @@ import { fileURLToPath } from 'node:url'
 export const ROOT = path.dirname(fileURLToPath(import.meta.url))
 
 // Obsidian Vault 원본. 이 경로는 읽기 전용으로만 접근한다. (D-03, 원본 무수정 원칙)
-export const VAULT = '/mnt/c/Users/user/Documents/Obsidian Vault'
+//
+// 로컬(WSL)에서는 Windows 의 Vault 를 직접 읽고,
+// CI 에서는 private 저장소로 체크아웃된 사본을 읽는다. VAULT_PATH 로 넘긴다.
+export const VAULT = process.env.VAULT_PATH ?? '/mnt/c/Users/user/Documents/Obsidian Vault'
 
 // 필터를 통과한 마크다운이 복사되는 중간 디렉터리. 매 빌드마다 새로 만든다.
 export const STAGE = path.join(ROOT, '.vault-cache')
