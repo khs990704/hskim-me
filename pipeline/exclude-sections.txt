@@ -1,0 +1,21 @@
+# 섹션 단위 공개 제외 (D-08 확장)
+#
+# 형식:  파일 경로 | 섹션 제목 | 사유
+#   - 제목이 일치하는 heading 과 그 하위 내용을 통째로 제거한다.
+#   - 제거된 섹션을 가리키는 문서 내 앵커 링크도 함께 정리된다.
+#
+# 왜 필요한가 —
+#   회사 프로젝트 케이스는 D-08 으로 기본 비공개가 됐지만, Portfolio.md 가
+#   같은 내용을 본문으로 다시 싣고 있었다. 파일 단위 규칙만으로는 막지 못한다.
+#   실제로 On-device Security 섹션에는 ⛔ 판정한 케이스 노트와 동일한
+#   암호 구성(AES-256-GCM, ML-KEM-512 키 래핑)과 TEE 저장 구조가 들어 있었다.
+#
+# 해제 절차 — company-case-review.md 의 체크리스트를 통과한 섹션만 이 목록에서 뺀다.
+
+03 Portfolio/Portfolio.md | 실무 프로젝트            | 회사 프로젝트 본문 전체. 아래 하위 섹션이 모두 제외되면 빈 제목만 남으므로 함께 지정
+03 Portfolio/Portfolio.md | Company MLOps Platform  | 회사 프로젝트. 검수 전까지 비공개
+03 Portfolio/Portfolio.md | NSR                     | 회사 프로젝트. 검수 전까지 비공개
+03 Portfolio/Portfolio.md | On-device Security      | 회사 프로젝트. ⛔ 케이스와 동일한 암호·TEE 구현 내용 포함
+03 Portfolio/Portfolio.md | SecuAI Model Security Platform | 회사 프로젝트. 검수 전까지 비공개
+03 Portfolio/Portfolio.md | SecuAI MLOps Pipeline   | 회사 프로젝트. 검수 전까지 비공개
+03 Portfolio/Portfolio.md | Hazard Data             | 회사 프로젝트. 검수 전까지 비공개
