@@ -39,3 +39,4 @@ pipeline/out/
 pipeline/*-report.json
 pipeline/company-digest.json
 pipeline/company-verdict.md
+pipeline/preview/

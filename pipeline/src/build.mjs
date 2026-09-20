@@ -173,7 +173,7 @@ for (const p of pages) for (const t of p.outgoing) {
   if (!seen.has(key)) { seen.add(key); edges.push({ source: p.route, target: slugToRoute.get(t) }) }
 }
 
-fs.writeFileSync(path.join(OUT, 'graph.json'), JSON.stringify({ nodes, links: edges }, null, 2))
+fs.writeFileSync(path.join(OUT, 'graph.json'), JSON.stringify({ nodes, links: edges }))
 fs.writeFileSync(path.join(OUT, 'slug-map.json'),
   JSON.stringify(Object.fromEntries(pages.map(p => [p.route, { slug: p.slug, source: p.rel }])), null, 2))
 fs.writeFileSync(path.join(ROOT, 'build-report.json'), JSON.stringify(report, null, 2))
