@@ -1,0 +1,34 @@
+# 의존성
+node_modules/
+.pnp/
+.pnp.js
+
+# 빌드 산출물
+.next/
+out/
+dist/
+build/
+.wrangler/
+
+# 파이프라인 중간 산출물 (Vault에서 매 빌드 시 생성)
+pipeline/.vault-cache/
+web/content/
+web/public/og/
+
+# 환경 변수·자격 증명
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 로그
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# 에디터·OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
