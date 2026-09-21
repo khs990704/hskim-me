@@ -220,18 +220,31 @@ for (const p of pages) {
   fs.writeFileSync(dest, JSON.stringify(doc, null, 2))
 }
 
+// MOC(Map of Content) 는 분류 안의 거의 모든 문서를 가리키는 색인 문서다.
+// 연결이 많지만 '어떤 문서끼리 실제로 관련 있는가' 라는 정보는 주지 않는다.
+// 그래프에서는 허브로 표시하되 배치 계산에서는 링크를 빼야 주제 군집이 드러난다.
+// (MOC 링크를 전부 빼도 고립되는 문서는 0개임을 확인했다)
+const isHub = title => /\bMOC\b/i.test(title)
+
 const nodes = pages.map(p => ({
   id: p.route,
   title: p.title,
   kind: p.kind,
   group: p.rel.split('/').slice(0, 2).map(s => s.replace(/^\d{2}\s+/, '')).join('/'),
   degree: p.outgoing.length + (backlinks.get(p.slug)?.size ?? 0),
+  hub: isHub(p.title) || undefined,
 }))
+const hubIds = new Set(nodes.filter(n => n.hub).map(n => n.id))
 const edges = []
 const seen = new Set()
 for (const p of pages) for (const t of p.outgoing) {
   const key = `${p.route}->${slugToRoute.get(t)}`
-  if (!seen.has(key)) { seen.add(key); edges.push({ source: p.route, target: slugToRoute.get(t) }) }
+  if (!seen.has(key)) {
+    const target = slugToRoute.get(t)
+    const hub = hubIds.has(p.route) || hubIds.has(target)
+    edges.push({ source: p.route, target, ...(hub ? { hub: true } : {}) })
+    seen.add(key)
+  }
 }
 
 fs.writeFileSync(path.join(OUT, 'graph.json'), JSON.stringify({ nodes, links: edges }))
@@ -246,6 +259,7 @@ console.log(`\n  문서 ${report.total}개 → 성공 ${report.ok} / 실패 ${re
 console.log(`  링크 ${report.linkCount}개 → 엣지 ${edges.length}개`)
 console.log(`    해석 실패 ${report.brokenLinks.length} · 중복 이름 ${report.ambiguousLinks.length}`)
 console.log(`  노드 ${nodes.length}개 · 고립 ${isolated.length}개 · URL 충돌 ${report.duplicateRoutes.length}건`)
+console.log(`  허브(MOC) ${hubIds.size}개 · 허브 엣지 ${edges.filter(e => e.hub).length}개 (배치 계산에서 제외)`)
 console.log(`  표 ${report.tables} · 코드 ${report.code} · 수식 ${report.math} · 콜아웃 ${report.callouts} · 이미지 ${report.images}`)
 console.log(`  H1 없음 ${report.noH1.length} · 요약 없음 ${report.emptyDescription.length} · 첫 문장만 사용 ${report.longDescription.length}`)
 const pd = report.pruned
