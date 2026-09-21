@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+/* ── 토큰 ──────────────────────────────────────────────────────────────
+   노트 화면은 메인(성운)과 의도적으로 대비시킨다. 조용하고 읽기 좋게.
+   기본은 다크 — 메인에서 넘어올 때 눈의 연속성을 지키기 위함이다.        */
+:root {
+  --bg:        #0e1116;
+  --bg-soft:   #141922;
+  --surface:   #171d27;
+  --line:      #232b38;
+  --line-soft: #1c232e;
+  --fg:        #d9dee7;
+  --fg-strong: #f0f3f8;
+  --fg-dim:    #8b95a7;
+  --fg-faint:  #5c6678;
+  --accent:    #7dd3fc;
+  --accent-dim:#38506322;
+  --mark:      #fbbf2433;
+
+  /* 본문 의미별 색. 제목 계층과 강조가 색으로도 읽히게 한다.
+     색만으로 의미를 전달하지 않도록 크기·굵기·기호를 함께 쓴다. */
+  --h2:        #7dd3fc;   /* 시안  — 큰 단락 */
+  --h3:        #a78bfa;   /* 보라  — 하위 단락 */
+  --strong:    #f0c674;   /* 호박  — 굵은 강조 */
+  --em:        #86d0b4;   /* 청록  — 기울임 */
+  --code-fg:   #f2a0c0;   /* 분홍  — 인라인 코드 */
+  --quote-bar: #4a5568;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg:        #fcfcfa;
+  --bg-soft:   #f4f4f1;
+  --surface:   #ffffff;
+  --line:      #e2e3df;
+  --line-soft: #ecedea;
+  --fg:        #2b2f36;
+  --fg-strong: #12151a;
+  --fg-dim:    #6b7280;
+  --fg-faint:  #9aa1ac;
+  --accent:    #0b6bcb;
+  --accent-dim:#0b6bcb14;
+  --mark:      #fde68a88;
+
+  --h2:        #0f6ba8;
+  --h3:        #6d4ac9;
+  --strong:    #9a6508;
+  --em:        #0f7a5c;
+  --code-fg:   #b03a72;
+  --quote-bar: #cbd0d6;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;        /* 한글 단어 중간에서 줄바꿈되지 않게 */
+  overflow-wrap: anywhere;
+}
+
+a { color: inherit; text-decoration: none; }
+
+::selection { background: var(--accent-dim); }
+
+/* 스크롤바 */
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* ── 본문 ──────────────────────────────────────────────────────────────
+   파이프라인이 만든 HTML 을 그대로 주입하므로 Tailwind 유틸리티가 닿지 않는다.
+   Obsidian 에서 보던 것과 인지적으로 같은 형태를 목표로 한다 (요구사항 6).   */
+.prose { max-width: 72ch; }
+
+.prose > *:first-child { margin-top: 0; }
+
+.prose h1 {
+  font-size: 2.1rem; line-height: 1.3; letter-spacing: -0.024em;
+  margin: 0 0 1.5rem; color: var(--fg-strong); font-weight: 700;
+}
+
+/* h2 — 문서의 큰 단락. 색 + 좌측 막대 + 하단선으로 확실히 끊는다 */
+.prose h2 {
+  position: relative;
+  font-size: 1.36rem; line-height: 1.45; letter-spacing: -0.012em;
+  margin: 2.8rem 0 .9rem; padding: 0 0 .45rem .7rem;
+  color: var(--h2); font-weight: 650;
+  border-bottom: 1px solid var(--line-soft);
+}
+.prose h2::before {
+  content: ''; position: absolute; left: 0; top: .18em; bottom: .55rem;
+  width: 3px; border-radius: 2px; background: var(--h2); opacity: .75;
+}
+
+/* h3 — 하위 단락. 색만 다르고 장식은 없다 */
+.prose h3 {
+  font-size: 1.12rem; margin: 2rem 0 .55rem;
+  color: var(--h3); font-weight: 650;
+}
+
+/* h4 — 가장 작은 구분. 색을 빼고 자간으로 구분한다 */
+.prose h4 {
+  font-size: .95rem; margin: 1.6rem 0 .45rem;
+  color: var(--fg-dim); font-weight: 650; letter-spacing: .03em;
+}
+.prose h5, .prose h6 {
+  font-size: .9rem; margin: 1.4rem 0 .4rem;
+  color: var(--fg-faint); font-weight: 600; letter-spacing: .04em;
+}
+
+.prose p { margin: 1.1rem 0; }
+.prose ul, .prose ol { margin: 1.1rem 0; padding-left: 1.4rem; }
+.prose li { margin: .35rem 0; }
+.prose ul > li::marker { color: var(--accent); }
+.prose ol > li::marker { color: var(--fg-faint); font-variant-numeric: tabular-nums; }
+.prose li > ul, .prose li > ol { margin: .35rem 0; }
+
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 2.4rem 0; }
+
+.prose blockquote {
+  margin: 1.5rem 0; padding: .35rem 0 .35rem 1.1rem;
+  border-left: 3px solid var(--quote-bar); color: var(--fg-dim);
+}
+.prose blockquote p:first-child { margin-top: 0; }
+.prose blockquote p:last-child { margin-bottom: 0; }
+
+/* 강조 — 굵기만으로는 본문에 묻힌다. 색을 함께 준다 */
+.prose strong, .prose b {
+  color: var(--strong); font-weight: 650;
+}
+.prose em, .prose i {
+  color: var(--em); font-style: italic;
+}
+.prose del, .prose s { color: var(--fg-faint); text-decoration-thickness: 1px; }
+
+.prose mark { background: var(--mark); color: inherit; padding: 0 .2em; border-radius: 3px; }
+
+/* 체크박스 목록 */
+.prose input[type="checkbox"] { margin-right: .45rem; accent-color: var(--accent); }
+.prose li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.1rem; }
+.prose li:has(> input[type="checkbox"]:checked) { color: var(--fg-faint); text-decoration: line-through; }
+
+/* 내부 링크 — 본문 안에서 시각적으로 구분되어야 한다 */
+.prose a.internal {
+  color: var(--accent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  transition: border-color .15s;
+}
+.prose a.internal:hover { border-bottom-color: var(--accent); }
+
+/* 외부 링크 */
+.prose a:not(.internal) {
+  color: var(--accent);
+  border-bottom: 1px dotted color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* 코드 */
+.prose code {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .87em;
+  color: var(--code-fg);
+  background: var(--bg-soft);
+  border: 1px solid var(--line-soft);
+  padding: .1em .38em; border-radius: 4px;
+}
+.prose pre {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  margin: 1.4rem 0;
+  line-height: 1.7;
+}
+.prose pre code { background: none; border: 0; padding: 0; font-size: .85em; color: var(--fg); }
+
+/* 표 — 좁은 화면에서 가로 스크롤 (Vault 가 표를 많이 쓴다: 241개 문서) */
+.prose .table-scroll { overflow-x: auto; margin: 1.4rem 0; }
+.prose table { border-collapse: collapse; width: 100%; font-size: .93em; }
+.prose th, .prose td {
+  border: 1px solid var(--line);
+  padding: .55rem .85rem;
+  text-align: left; vertical-align: top;
+}
+.prose th { background: var(--bg-soft); font-weight: 650; color: var(--fg-strong); white-space: nowrap; }
+
+.prose img { max-width: 100%; height: auto; border-radius: 6px; }
+
+/* 수식 */
+.prose .katex-display { overflow-x: auto; overflow-y: hidden; padding: .4rem 0; }
+
+/* 콜아웃 (Vault 는 현재 쓰지 않지만 처리기는 켜져 있다) */
+.prose .callout {
+  margin: 1.4rem 0; padding: .9rem 1.1rem;
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-left: 3px solid var(--accent); border-radius: 6px;
+}
+.prose .callout-title { font-weight: 650; color: var(--fg-strong); }
+
+/* 제목 앵커 */
+.prose :is(h2, h3, h4) { scroll-margin-top: 5rem; }
+
+/* ── 다이어그램 ────────────────────────────────────────────────────────
+   본문 흐름과 확실히 구분되는 '도형 영역'으로 보이게 한다.
+   머리말(라벨 + 조작 힌트 + 도구)을 두어 읽는 글이 아니라 다루는 그림임을
+   드러내고, 배경·테두리로 본문에서 떼어 놓는다.                          */
+.prose figure.diagram {
+  margin: 2rem 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  overflow: hidden;
+}
+
+.prose figure.diagram:fullscreen {
+  margin: 0; border-radius: 0; display: flex; flex-direction: column;
+  background: var(--bg);
+}
+
+.diagram-head {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .5rem .75rem;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+  font-size: 11.5px; line-height: 1.5;
+}
+
+.diagram-label {
+  font-weight: 600; letter-spacing: .04em;
+  color: var(--fg-dim);
+  white-space: nowrap;
+}
+
+.diagram-hint {
+  color: var(--fg-faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@media (max-width: 640px) { .diagram-hint { display: none; } }
+
+.diagram-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+
+.diagram-tools button {
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 5px; background: transparent;
+  color: var(--fg-dim); font-size: 13px; line-height: 1; cursor: pointer;
+}
+.diagram-tools button:hover { background: var(--bg); color: var(--accent); }
+
+.diagram-zoom {
+  min-width: 40px; padding-left: 4px;
+  text-align: right; font-variant-numeric: tabular-nums;
+  color: var(--fg-faint);
+}
+
+.diagram-stage {
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  background:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--fg) 8%, transparent) 1px, transparent 0)
+    0 0 / 18px 18px;
+}
+.prose figure.diagram:fullscreen .diagram-stage { flex: 1; height: auto; }
+.diagram-stage.grabbing { cursor: grabbing; }
+.diagram-stage svg { display: block; width: 100%; height: 100%; user-select: none; }
+
+.diagram-error {
+  padding: 1.5rem; text-align: center;
+  color: var(--fg-faint); font-size: 13px;
+}
