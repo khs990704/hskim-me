@@ -317,23 +317,25 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
           return hover && (s === hover.id || t === hover.id) ? 0.7 : 0.18
         }}
         linkOpacity={1}
-        // 시냅스 신호 — 엣지를 따라 흐르는 빛.
-        // 3288개 전부에 흘리면 산만하므로 일부에만, 호버한 경로에는 확실하게.
+        // 시냅스 신호 — 고른 노드의 경로에서만 흐른다.
+        // 평소에도 일부 링크에 흘렸더니 '왜 얘만 반짝이지' 하는 불규칙함만 남았다.
+        // 신호는 '지금 보고 있는 연결' 을 알려주는 신호여야 한다.
         linkDirectionalParticles={(l: any) => {
-          if (l.hub) return 0
+          if (!hover || l.hub) return 0
           const s = typeof l.source === 'string' ? l.source : l.source.id
           const t = typeof l.target === 'string' ? l.target : l.target.id
-          if (hover && (s === hover.id || t === hover.id)) return 2
-          return (s.length + t.length) % 41 === 0 ? 1 : 0
+          return s === hover.id || t === hover.id ? 2 : 0
         }}
         linkDirectionalParticleWidth={1.1}
         linkDirectionalParticleSpeed={0.004}
-        linkDirectionalParticleColor={(l: any) => {
-          const s = typeof l.source === 'string' ? l.source : l.source.id
-          const t = typeof l.target === 'string' ? l.target : l.target.id
-          return hover && (s === hover.id || t === hover.id) ? '#7fb8d8' : '#3a6f8f'
+        linkDirectionalParticleColor={() => '#7fb8d8'}
+        onNodeHover={(n: any) => {
+          // 터치에서는 호버 이벤트가 오지 않는다. 탭으로 고른 상태를 지우지 않는다.
+          if (matchMedia('(pointer: coarse)').matches) return
+          setHover(n ?? null)
         }}
-        onNodeHover={(n: any) => setHover(n ?? null)}
+        // 빈 곳을 누르면 선택 해제
+        onBackgroundClick={() => setHover(null)}
         // 카메라가 노드로 다가가는 동안 화면을 완전히 덮은 뒤 넘어간다.
         //
         // 처음에는 70%만 덮고 620ms 에 이동했는데, 화면이 덜 덮인 상태에서
@@ -342,6 +344,15 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         // 완전히 덮고, 대신 전체 시간을 줄여 답답하지 않게 한다.
         onNodeClick={(n: any) => {
           if (leaving) return
+
+          // 터치에는 '마우스를 올린다' 가 없다.
+          // 첫 탭으로 고르고(이름·이웃 강조), 같은 노드를 다시 탭하면 이동한다.
+          // 바로 이동하면 무엇을 누르는지 확인할 방법이 없다.
+          if (matchMedia('(pointer: coarse)').matches && hover?.id !== n.id) {
+            setHover(n)
+            return
+          }
+
           const href = '/' + n.id
           if (matchMedia('(prefers-reduced-motion: reduce)').matches) { router.push(href); return }
           setLeaving(true)
@@ -358,7 +369,10 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
       {hover && !leaving && (
         <div className="pointer-events-none fixed bottom-16 left-1/2 z-20 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-full border border-[#2a3344] bg-[#0a0d14]/92 px-4 py-2 text-[13px] text-[#e8edf5] backdrop-blur sm:bottom-6">
           <span className="truncate">{hover.title}</span>
-          <span className="shrink-0 text-[#6b7688]">열기</span>
+          <span className="shrink-0 text-[#6b7688]">
+            <span className="hint-fine">열기</span>
+            <span className="hint-coarse">한 번 더 눌러 열기</span>
+          </span>
         </div>
       )}
 

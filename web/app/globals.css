@@ -305,7 +305,7 @@ a { color: inherit; text-decoration: none; }
 .hint-coarse { display: none; }
 @media (pointer: coarse) {
   .hint-fine { display: none; }
-  .hint-coarse { display: block; }
+  .hint-coarse { display: revert; }
 }
 
 /* ── 좁은 화면 대응 ────────────────────────────────────────────────────
