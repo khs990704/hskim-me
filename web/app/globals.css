@@ -305,7 +305,7 @@ a { color: inherit; text-decoration: none; }
 .hint-coarse { display: none; }
 @media (pointer: coarse) {
   .hint-fine { display: none; }
-  .hint-coarse { display: revert; }
+  .hint-coarse { display: block; }
 }
 
 /* ── 좁은 화면 대응 ────────────────────────────────────────────────────
@@ -336,4 +336,12 @@ a { color: inherit; text-decoration: none; }
 /* 모바일 브라우저 주소창이 접힐 때 높이가 튀지 않게 */
 @supports (height: 100svh) {
   .h-screen-safe { height: 100svh; }
+}
+
+/* 그래프 하단 이름표 — 마우스에서는 커서를 옮기는 순간 호버가 풀려 쓸 수 없다.
+   터치에서만 누를 수 있게 한다 */
+.tap-open { pointer-events: none; }
+@media (pointer: coarse) {
+  .tap-open { pointer-events: auto; }
+  .tap-open:active { border-color: #7dd3fc; }
 }
