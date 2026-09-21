@@ -8,8 +8,26 @@ import remarkRehype from 'remark-rehype'
 import rehypeSlug from 'rehype-slug'
 import rehypeKatex from 'rehype-katex'
 import rehypeStringify from 'rehype-stringify'
+import rehypeShiki from '@shikijs/rehype'
 import { ObsidianFlavoredMarkdown } from '@quartz-community/obsidian-flavored-markdown'
 import { CrawlLinks } from '@quartz-community/crawl-links'
+
+// 문법 강조는 빌드 시점에 끝낸다.
+// 브라우저에서 처리하면 해당 문서가 43개뿐인데도 모든 방문자가 하이라이터를 받는다.
+//
+// 다크·라이트 두 벌을 CSS 변수로 함께 내보내(defaultColor: false)
+// 테마 전환 시 다시 계산하지 않고 색만 바뀌게 한다.
+const SHIKI = {
+  themes: { light: 'github-light', dark: 'github-dark-dimmed' },
+  defaultColor: false,
+  // Vault 에 실제로 쓰인 언어 + 앞으로 쓸 만한 것
+  langs: [
+    'sql', 'cpp', 'c', 'python', 'bash', 'typescript', 'javascript', 'tsx', 'jsx',
+    'java', 'json', 'yaml', 'rust', 'go', 'html', 'css', 'markdown', 'diff', 'text',
+  ],
+  // 모르는 언어 때문에 빌드가 멈추지 않게 한다
+  fallbackLanguage: 'text',
+}
 
 export function makeProcessor(ctx) {
   const ofm = ObsidianFlavoredMarkdown({
@@ -31,6 +49,7 @@ export function makeProcessor(ctx) {
   proc = proc.use(rehypeSlug)
   for (const p of [ofm, crawl]) if (p.htmlPlugins) proc = proc.use(p.htmlPlugins(ctx))
   proc = proc.use(rehypeKatex, { throwOnError: false, strict: false })
+  proc = proc.use(rehypeShiki, SHIKI)
   proc = proc.use(rehypeStringify, { allowDangerousHtml: true })
 
   return { proc, textTransform: src => (ofm.textTransform ? ofm.textTransform(ctx, src) : src) }
