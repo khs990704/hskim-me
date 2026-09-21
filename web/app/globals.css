@@ -279,3 +279,24 @@ a { color: inherit; text-decoration: none; }
   padding: 1.5rem; text-align: center;
   color: var(--fg-faint); font-size: 13px;
 }
+
+/* ── 코드 문법 강조 ────────────────────────────────────────────────────
+   Shiki 가 빌드 시점에 다크·라이트 두 벌의 색을 CSS 변수로 함께 내보낸다.
+   (--shiki-light / --shiki-dark) 테마 전환 시 다시 계산하지 않고 색만 바뀐다. */
+:root[data-theme="light"] .prose .shiki,
+:root[data-theme="light"] .prose .shiki span {
+  color: var(--shiki-light);
+}
+:root[data-theme="dark"] .prose .shiki,
+:root[data-theme="dark"] .prose .shiki span {
+  color: var(--shiki-dark);
+}
+
+/* 배경은 Shiki 테마 대신 사이트 토큰을 쓴다. 코드블록만 색이 튀면 안 된다 */
+.prose pre.shiki { background: var(--bg-soft); }
+
+/* 가로로 긴 코드는 스크롤. tabindex 가 붙어 있어 키보드로도 넘긴다 */
+.prose pre.shiki:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* 언어 표시가 없는 코드블록은 강조되지 않는다. 본문 글자색을 그대로 쓴다 */
+.prose pre:not(.shiki) code { color: var(--fg); }

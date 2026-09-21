@@ -20,6 +20,7 @@
     "@quartz-community/obsidian-flavored-markdown": "^1.0.0",
     "@quartz-community/types": "^1.0.0",
     "@quartz-community/utils": "^1.0.1",
+    "@shikijs/rehype": "^4.4.3",
     "d3-force-3d": "^3.0.6",
     "github-slugger": "^2.0.0",
     "hast-util-to-jsx-runtime": "^2.3.6",
@@ -32,6 +33,7 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
+    "shiki": "^4.4.3",
     "unified": "^11.0.5",
     "vfile": "^6.0.3"
   }
