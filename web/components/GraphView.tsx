@@ -47,6 +47,23 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
   const [hover, setHover] = useState<GNode | null>(null)
   const [supported, setSupported] = useState<boolean | null>(null)
   const [leaving, setLeaving] = useState(false)
+  /** 데스크톱에서 이름표를 붙일 화면 좌표 (노드에 고정) */
+  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null)
+  /**
+   * 입력 장치. 마우스와 터치는 이름표 위치·동작이 다르다.
+   *
+   * 좌표(anchor) 유무로 판단하면 안 된다. 데스크톱에서도 호버 첫 프레임에는
+   * 좌표가 아직 없어서, 그 한 프레임 동안 터치용 하단 상자가 번쩍인다.
+   */
+  const [coarse, setCoarse] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const mq = matchMedia('(pointer: coarse)')
+    const sync = () => setCoarse(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
   // 노드는 커스텀 스프라이트라 nodeColor 로 색이 바뀌지 않는다.
   // 호버 강조는 재질을 직접 건드린다.
   const materials = useRef(new Map<string, any>())
@@ -224,6 +241,28 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     return () => clearTimeout(t)
   }, [hover, fgReady])
 
+  /**
+   * 이름표를 노드 옆에 붙인다 (마우스 전용).
+   *
+   * 화면 아래에 띄우면 노드는 위쪽에 있는데 이름은 맨 아래라, 시선을 옮기지 않으면
+   * 무엇을 가리키는지 알 수 없다. 노드 옆이면 눈이 움직일 필요가 없다.
+   *
+   * 커서를 따라다니게 하면 손떨림에 흔들리므로 노드의 화면 좌표에 고정한다.
+   * 카메라가 계속 도니 매 프레임 다시 계산한다.
+   */
+  useEffect(() => {
+    if (!hover || !fgReady || !fgRef.current || coarse !== false) { setAnchor(null); return }
+
+    let raf = 0
+    const follow = () => {
+      const p = fgRef.current?.graph2ScreenCoords?.(hover.x ?? 0, hover.y ?? 0, hover.z ?? 0)
+      if (p) setAnchor({ x: p.x, y: p.y })
+      raf = requestAnimationFrame(follow)
+    }
+    raf = requestAnimationFrame(follow)
+    return () => cancelAnimationFrame(raf)
+  }, [hover, fgReady, coarse])
+
   // 이웃 관계 — 호버 시 연결된 것만 남기고 나머지는 어둡게
   const neighbors = useMemo(() => {
     const m = new Map<string, Set<string>>()
@@ -264,6 +303,21 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
       mat.needsUpdate = true
     }
   }, [hover, neighbors])
+
+  /** 노드 열기 — 카메라가 다가간 뒤 이동한다 */
+  const openNode = useCallback((n: GNode) => {
+    if (leaving) return
+    const href = '/' + n.id
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { router.push(href); return }
+    setLeaving(true)
+    // 자동 회전과 궤도 컨트롤이 계속 돌면 카메라가 흔들려 매끄럽지 않다.
+    const controls = fgRef.current?.controls?.()
+    if (controls) { controls.autoRotate = false; controls.enabled = false }
+    const r = Math.hypot(n.x ?? 0, n.y ?? 0, n.z ?? 0) || 1
+    const k = 1 + 55 / r
+    fgRef.current?.cameraPosition({ x: (n.x ?? 0) * k, y: (n.y ?? 0) * k, z: (n.z ?? 0) * k }, n, 820)
+    setTimeout(() => router.push(href), 700)
+  }, [leaving, router])
 
   const dim = useCallback((id: string) => {
     if (!hover) return false
@@ -320,6 +374,12 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         // 시냅스 신호 — 고른 노드의 경로에서만 흐른다.
         // 평소에도 일부 링크에 흘렸더니 '왜 얘만 반짝이지' 하는 불규칙함만 남았다.
         // 신호는 '지금 보고 있는 연결' 을 알려주는 신호여야 한다.
+        // 신호는 '지금 보고 있는 연결' 을 뜻한다.
+        //
+        // MOC 링크에는 흘리지 않는다. 일부러 뺀 것이다.
+        // MOC 는 분류 목록이라 그 링크는 '실제 연관' 이 아니라 '목록 소속' 이다.
+        // 거기에 신호를 흘리면 있지도 않은 흐름을 암시하게 된다.
+        // (연결이 121개까지 있어 화면이 어지러워지는 문제도 있다)
         linkDirectionalParticles={(l: any) => {
           if (!hover || l.hub) return 0
           const s = typeof l.source === 'string' ? l.source : l.source.id
@@ -331,7 +391,7 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         linkDirectionalParticleColor={() => '#7fb8d8'}
         onNodeHover={(n: any) => {
           // 터치에서는 호버 이벤트가 오지 않는다. 탭으로 고른 상태를 지우지 않는다.
-          if (matchMedia('(pointer: coarse)').matches) return
+          if (coarse) return
           setHover(n ?? null)
         }}
         // 빈 곳을 누르면 선택 해제
@@ -343,37 +403,39 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         // 전환을 감추지도 못하고 기다리게만 한다.
         // 완전히 덮고, 대신 전체 시간을 줄여 답답하지 않게 한다.
         onNodeClick={(n: any) => {
-          if (leaving) return
-
           // 터치에는 '마우스를 올린다' 가 없다.
           // 첫 탭으로 고르고(이름·이웃 강조), 같은 노드를 다시 탭하면 이동한다.
-          // 바로 이동하면 무엇을 누르는지 확인할 방법이 없다.
-          if (matchMedia('(pointer: coarse)').matches && hover?.id !== n.id) {
+          if (coarse && hover?.id !== n.id) {
             setHover(n)
             return
           }
-
-          const href = '/' + n.id
-          if (matchMedia('(prefers-reduced-motion: reduce)').matches) { router.push(href); return }
-          setLeaving(true)
-          // 자동 회전과 궤도 컨트롤이 계속 돌면 카메라가 흔들려 매끄럽지 않다.
-          // 전환하는 동안에는 컨트롤을 멈추고 카메라만 움직인다.
-          const controls = fgRef.current?.controls?.()
-          if (controls) { controls.autoRotate = false; controls.enabled = false }
-          const r = Math.hypot(n.x, n.y, n.z) || 1
-          const k = 1 + 55 / r
-          fgRef.current?.cameraPosition({ x: n.x * k, y: n.y * k, z: n.z * k }, n, 820)
-          setTimeout(() => router.push(href), 700)
+          openNode(n)
         }}
       />
-      {hover && !leaving && (
-        <div className="pointer-events-none fixed bottom-16 left-1/2 z-20 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-full border border-[#2a3344] bg-[#0a0d14]/92 px-4 py-2 text-[13px] text-[#e8edf5] backdrop-blur sm:bottom-6">
-          <span className="truncate">{hover.title}</span>
-          <span className="shrink-0 text-[#6b7688]">
-            <span className="hint-fine">열기</span>
-            <span className="hint-coarse">한 번 더 눌러 열기</span>
-          </span>
+      {/* 마우스 — 노드 옆에 붙는다 */}
+      {hover && !leaving && coarse === false && anchor && (
+        <div
+          className="pointer-events-none fixed z-20 max-w-[18rem] rounded-lg border border-[#2a3344] bg-[#0a0d14]/92 px-3 py-1.5 text-[12.5px] leading-snug text-[#e8edf5] backdrop-blur"
+          style={{
+            left: Math.min(anchor.x + 16, innerWidth - 300),
+            top: Math.max(8, anchor.y - 14),
+          }}
+        >
+          <div className="line-clamp-2">{hover.title}</div>
+          <div className="mt-0.5 text-[11px] text-[#6b7688]">클릭해서 열기</div>
         </div>
+      )}
+
+      {/* 터치 — 손가락에 가리지 않도록 화면 아래에 고정 */}
+      {hover && !leaving && coarse === true && (
+        <button
+          type="button"
+          onClick={() => openNode(hover)}
+          className="tap-open fixed bottom-16 left-1/2 z-20 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 rounded-xl border border-[#2a3344] bg-[#0a0d14]/92 px-5 py-2 text-center text-[13px] text-[#e8edf5] backdrop-blur"
+        >
+          <span className="line-clamp-2 leading-snug">{hover.title}</span>
+          <span className="mt-0.5 block text-[11.5px] text-[#6b7688]">눌러서 열기</span>
+        </button>
       )}
 
       {/* 전환 중 화면을 완전히 덮는다. 덜 덮으면 페이지가 바뀌는 순간이 그대로 보인다 */}
