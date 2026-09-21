@@ -24,17 +24,17 @@ export default function Home() {
       <GraphStage />
 
       {/* 좌상단 — 이름과 한 줄 */}
-      <div className="pointer-events-none absolute left-6 top-6 z-10 sm:left-8 sm:top-8">
-        <h1 className="text-[1.6rem] font-bold tracking-tight">
+      <div className="pointer-events-none absolute left-5 top-5 z-10 max-w-[52vw] sm:left-8 sm:top-8 sm:max-w-xs">
+        <h1 className="text-[1.3rem] font-bold tracking-tight sm:text-[1.6rem]">
           hskim<span className="text-[#4a5468]">.me</span>
         </h1>
-        <p className="mt-1 max-w-xs text-[13px] leading-6 text-[#8b95a7]">
+        <p className="mt-1 hidden text-[13px] leading-6 text-[#8b95a7] sm:block">
           지식 노트와 프로젝트 기록을 연결해 둔 곳입니다.
         </p>
       </div>
 
       {/* 우상단 — 진입 경로 */}
-      <nav className="absolute right-5 top-6 z-10 flex gap-1.5 text-[13px] sm:right-8 sm:top-8">
+      <nav className="absolute right-4 top-5 z-10 flex gap-1 text-[12px] sm:right-8 sm:top-8 sm:gap-1.5 sm:text-[13px]">
         {[
           { href: '/index-all', label: '전체 목록' },
           { href: '/portfolio', label: '포트폴리오' },
@@ -42,19 +42,20 @@ export default function Home() {
           <Link
             key={l.href}
             href={l.href}
-            className="rounded-md border border-[#222b3a] bg-[#0a0d14]/70 px-3 py-1.5 text-[#c3cbd8] backdrop-blur transition-colors hover:border-[#7dd3fc] hover:text-[#7dd3fc]"
+            className="rounded-md border border-[#222b3a] bg-[#0a0d14]/70 px-2.5 py-1.5 text-[#c3cbd8] backdrop-blur transition-colors hover:border-[#7dd3fc] hover:text-[#7dd3fc] sm:px-3"
           >
             {l.label}
           </Link>
         ))}
       </nav>
 
-      {/* 좌하단 — 규모와 조작 힌트 */}
-      <div className="pointer-events-none absolute bottom-6 left-6 z-10 text-[11.5px] leading-5 text-[#4a5468] sm:left-8">
+      {/* 좌하단 — 규모와 조작 힌트. 입력 장치에 따라 문구가 바뀐다 */}
+      <div className="pointer-events-none absolute bottom-5 left-5 z-10 text-[11.5px] leading-5 text-[#4a5468] sm:bottom-6 sm:left-8">
         <div className="tabular-nums">
           문서 {docs.length} · 연결 {g.links.length}
         </div>
-        <div className="mt-0.5">드래그 회전 · 휠 확대 · 노드 클릭</div>
+        <div className="mt-0.5 hint-fine">드래그 회전 · 휠 확대 · 노드 클릭</div>
+        <div className="mt-0.5 hint-coarse">끌어서 회전 · 두 손가락 확대 · 노드 탭</div>
       </div>
 
       {/* 크롤러와 JavaScript 미사용 환경의 진입 경로 (D-09) */}

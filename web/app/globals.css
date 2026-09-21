@@ -300,3 +300,40 @@ a { color: inherit; text-decoration: none; }
 
 /* 언어 표시가 없는 코드블록은 강조되지 않는다. 본문 글자색을 그대로 쓴다 */
 .prose pre:not(.shiki) code { color: var(--fg); }
+
+/* 입력 장치별 조작 안내 — 마우스와 터치는 조작이 다르다 */
+.hint-coarse { display: none; }
+@media (pointer: coarse) {
+  .hint-fine { display: none; }
+  .hint-coarse { display: block; }
+}
+
+/* ── 좁은 화면 대응 ────────────────────────────────────────────────────
+   기준: 360px 폭에서도 글자가 뭉치거나 넘치지 않을 것.            */
+
+/* 제목은 화면 폭에 따라 줄인다. 2.1rem 은 360px 화면에서 두세 줄로 접힌다 */
+.prose h1 { font-size: clamp(1.55rem, 5.2vw + 0.6rem, 2.1rem); }
+.prose h2 { font-size: clamp(1.18rem, 2.2vw + 0.85rem, 1.36rem); }
+
+/* 한글은 단어 중간에서 끊지 않되(keep-all), 끊을 데가 없으면 넘치느니 끊는다.
+   긴 URL·영문 식별자·코드가 가로 스크롤을 만들지 않게 한다 */
+.prose :is(h1, h2, h3, h4, p, li, td, th, blockquote) { overflow-wrap: anywhere; }
+
+/* 좁은 화면에서 표 여백을 줄여 열이 덜 뭉개지게 */
+@media (max-width: 640px) {
+  .prose { font-size: 15px; }
+  .prose th, .prose td { padding: .45rem .6rem; }
+  .prose pre { padding: .8rem .85rem; border-radius: 6px; }
+  .prose blockquote { padding-left: .9rem; }
+}
+
+/* 터치 기기에서는 다이어그램 조작 버튼을 키운다. 24px 은 손가락으로 누르기 작다 */
+@media (pointer: coarse) {
+  .diagram-tools button { width: 32px; height: 32px; font-size: 15px; }
+  .diagram-head { padding: .6rem .7rem; }
+}
+
+/* 모바일 브라우저 주소창이 접힐 때 높이가 튀지 않게 */
+@supports (height: 100svh) {
+  .h-screen-safe { height: 100svh; }
+}

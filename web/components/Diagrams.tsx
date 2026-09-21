@@ -145,26 +145,71 @@ function attach(fig: HTMLElement, stage: HTMLElement) {
   }
 
   const onWheel = (e: WheelEvent) => { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1 / 1.15 : 1.15) }
+
+  // 포인터를 모두 추적한다.
+  //   1개 — 끌어서 이동
+  //   2개 — 벌려서 확대 (터치에는 휠이 없으므로 이게 유일한 확대 수단이다)
+  const active = new Map<number, { x: number; y: number }>()
   let drag: { cx: number; cy: number; x: number; y: number; upp: number } | null = null
+  let pinch: { dist: number } | null = null
+
+  const twoPointers = () => {
+    const [a, b] = [...active.values()]
+    return {
+      dist: Math.hypot(a.x - b.x, a.y - b.y),
+      cx: (a.x + b.x) / 2,
+      cy: (a.y + b.y) / 2,
+    }
+  }
+
   const onDown = (e: PointerEvent) => {
-    if (e.button !== 0) return
-    drag = { cx: e.clientX, cy: e.clientY, x: view.x, y: view.y, upp: unitsPerPixel() }
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    active.set(e.pointerId, { x: e.clientX, y: e.clientY })
     stage.setPointerCapture(e.pointerId)
-    stage.classList.add('grabbing')
+
+    if (active.size === 2) {
+      drag = null
+      pinch = { dist: twoPointers().dist }
+      stage.classList.remove('grabbing')
+    } else if (active.size === 1) {
+      drag = { cx: e.clientX, cy: e.clientY, x: view.x, y: view.y, upp: unitsPerPixel() }
+      stage.classList.add('grabbing')
+    }
   }
+
   const onMove = (e: PointerEvent) => {
-    if (!drag) return
-    view.x = drag.x - (e.clientX - drag.cx) * drag.upp
-    view.y = drag.y - (e.clientY - drag.cy) * drag.upp
-    apply()
+    if (!active.has(e.pointerId)) return
+    active.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+    if (pinch && active.size === 2) {
+      const { dist, cx, cy } = twoPointers()
+      if (dist > 0 && pinch.dist > 0) zoomAt(cx, cy, pinch.dist / dist)
+      pinch.dist = dist
+      return
+    }
+    if (drag && active.size === 1) {
+      view.x = drag.x - (e.clientX - drag.cx) * drag.upp
+      view.y = drag.y - (e.clientY - drag.cy) * drag.upp
+      apply()
+    }
   }
-  const endDrag = () => { drag = null; stage.classList.remove('grabbing') }
+
+  const onUp = (e: PointerEvent) => {
+    active.delete(e.pointerId)
+    if (active.size < 2) pinch = null
+    if (active.size === 0) { drag = null; stage.classList.remove('grabbing') }
+    // 손가락 하나를 떼면 남은 하나로 이동을 이어간다
+    if (active.size === 1) {
+      const [p] = [...active.values()]
+      drag = { cx: p.x, cy: p.y, x: view.x, y: view.y, upp: unitsPerPixel() }
+    }
+  }
 
   stage.addEventListener('wheel', onWheel, { passive: false })
   stage.addEventListener('pointerdown', onDown)
   stage.addEventListener('pointermove', onMove)
-  stage.addEventListener('pointerup', endDrag)
-  stage.addEventListener('pointercancel', endDrag)
+  stage.addEventListener('pointerup', onUp)
+  stage.addEventListener('pointercancel', onUp)
   stage.addEventListener('dblclick', fit)
 
   // 머리말 — 본문과 구분되는 도형 영역임을 드러낸다
@@ -177,7 +222,9 @@ function attach(fig: HTMLElement, stage: HTMLElement) {
 
   const hint = document.createElement('span')
   hint.className = 'diagram-hint'
-  hint.textContent = '휠 확대 · 드래그 이동 · 더블클릭 전체 보기'
+  hint.textContent = matchMedia('(pointer: coarse)').matches
+    ? '두 손가락 확대 · 끌어서 이동 · 두 번 눌러 전체'
+    : '휠 확대 · 드래그 이동 · 더블클릭 전체 보기'
 
   const tools = document.createElement('div')
   tools.className = 'diagram-tools'
