@@ -289,13 +289,9 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         // 30 을 넘어 이웃을 덮어버려 군집이 보이지 않는다.
         // 가장 큰 노드가 이웃 거리의 절반쯤 되도록 맞춘다.
         nodeThreeObject={makeStar}
-        nodeLabel={(n: any) => `<div style="
-            font-family: Pretendard, sans-serif; font-size: 12.5px;
-            background: rgba(10,13,20,.92); color: #e8edf5;
-            border: 1px solid #2a3344; border-radius: 6px;
-            padding: 5px 9px; white-space: nowrap;">
-            ${n.title}<span style="color:#6b7688"> · 연결 ${n.degree}</span>
-          </div>`}
+        // 커서를 따라다니는 툴팁은 그래프를 가리고, 터치에서는 손가락에 덮인다.
+        // 이름은 화면 아래 고정 위치에 한 곳에서만 보여 준다.
+        nodeLabel={() => ''}
         // 허브(MOC) 링크는 분류 안의 거의 모든 문서를 향해 뻗어 나가 화면을 덮는다.
         // 평소에는 감추고, 그 노드에 마우스를 올렸을 때만 보여 준다.
         linkVisibility={(l: any) => {
@@ -360,9 +356,9 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         }}
       />
       {hover && !leaving && (
-        <div className="pointer-events-none fixed bottom-6 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#2a3344] bg-[#0a0d14]/90 px-4 py-2 text-[13px] text-[#e8edf5] backdrop-blur">
-          {hover.title}
-          <span className="ml-2 text-[#6b7688]">클릭해서 열기</span>
+        <div className="pointer-events-none fixed bottom-16 left-1/2 z-20 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-full border border-[#2a3344] bg-[#0a0d14]/92 px-4 py-2 text-[13px] text-[#e8edf5] backdrop-blur sm:bottom-6">
+          <span className="truncate">{hover.title}</span>
+          <span className="shrink-0 text-[#6b7688]">열기</span>
         </div>
       )}
 
