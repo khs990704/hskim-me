@@ -46,3 +46,4 @@ web/out/
 web/.next/
 web/public/tree.json
 web/tsconfig.tsbuildinfo
+web/public/graph.json

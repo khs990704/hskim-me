@@ -77,5 +77,12 @@ root.children.forEach(prune)
 fs.mkdirSync(PUBLIC, { recursive: true })
 fs.writeFileSync(path.join(PUBLIC, 'tree.json'), JSON.stringify(root.children))
 
-const size = fs.statSync(path.join(PUBLIC, 'tree.json')).size
-console.log(`  tree.json  문서 ${docs.length}개 · ${(size / 1024).toFixed(0)}KB`)
+const treeSize = fs.statSync(path.join(PUBLIC, 'tree.json')).size
+console.log(`  tree.json   문서 ${docs.length}개 · ${(treeSize / 1024).toFixed(0)}KB`)
+
+// 그래프는 메인 화면에서만 쓴다. 페이지에 박지 않고 따로 받아 캐시되게 한다.
+const GRAPH_SRC = path.join(HERE, '..', '..', 'pipeline', 'out', 'graph.json')
+fs.copyFileSync(GRAPH_SRC, path.join(PUBLIC, 'graph.json'))
+const g = JSON.parse(fs.readFileSync(GRAPH_SRC, 'utf8'))
+const graphSize = fs.statSync(path.join(PUBLIC, 'graph.json')).size
+console.log(`  graph.json  노드 ${g.nodes.length} · 엣지 ${g.links.length} · ${(graphSize / 1024).toFixed(0)}KB`)

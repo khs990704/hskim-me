@@ -26,15 +26,29 @@ function seeded(seed) {
 }
 
 const graph = JSON.parse(fs.readFileSync(GRAPH, 'utf8'))
+
+// 허브(MOC)는 분류 안의 거의 모든 문서를 가리킨다.
+// 이 링크를 그대로 두면 모든 점이 허브로 끌려가 주제 군집이 뭉개진다.
+//
+// 그렇다고 완전히 빼면 허브로만 이어져 있던 분류가 본체에서 떨어져 나간다.
+// 실제로 Open Source(gstack)는 외부 링크가 0개, Mathematics 는 6%뿐이라
+// 제거하자마자 반발력에 밀려 멀찍이 날아갔다.
+//
+// 그래서 '약한 긴 끈'으로 남긴다. 주제 링크가 배치를 지배하되,
+// 고립된 분류가 본체에서 이탈하지는 않게 한다.
 const nodes = graph.nodes.map(n => ({ ...n }))
-const links = graph.links.map(l => ({ ...l }))
+const realLinks = graph.links.filter(l => !l.hub).map(l => ({ ...l }))
+const hubLinks = graph.links.filter(l => l.hub).map(l => ({ ...l }))
 
 const realRandom = Math.random
 Math.random = seeded(20260920)
 
 const sim = forceSimulation(nodes, 3)
-  .force('link', forceLink(links).id(d => d.id).distance(28).strength(0.6))
-  .force('charge', forceManyBody().strength(-140).distanceMax(600))
+  .force('link', forceLink(realLinks).id(d => d.id).distance(28).strength(0.6))
+  .force('hub', forceLink(hubLinks).id(d => d.id).distance(110).strength(0.1))
+  // 반발 범위를 좁힌다. 600 이면 멀리 있는 군집끼리도 계속 밀어내
+  // 외부 링크가 없는 작은 분류(Open Source 등)가 화면 밖으로 밀려난다.
+  .force('charge', forceManyBody().strength(-140).distanceMax(300))
   .force('center', forceCenter(0, 0, 0))
   .stop()
 
@@ -47,8 +61,12 @@ const scale = maxR > 0 ? 500 / maxR : 1
 const round = v => Math.round(v * 100) / 100
 
 const posById = new Map(nodes.map(n => [n.id, [round(n.x * scale), round(n.y * scale), round(n.z * scale)]]))
+
 graph.nodes = graph.nodes.map(n => ({ ...n, pos: posById.get(n.id) }))
-graph.layout = { algorithm: 'd3-force-3d', ticks: TICKS, seed: 20260920, radius: 500 }
+graph.layout = {
+  algorithm: 'd3-force-3d', ticks: TICKS, seed: 20260920, radius: 500,
+  hubLinkStrength: 0.1, chargeDistanceMax: 300,
+}
 
 fs.writeFileSync(GRAPH, JSON.stringify(graph))  // 브라우저가 첫 화면에서 받는 파일이라 압축 저장
 
@@ -65,5 +83,6 @@ for (let i = 0; i < sample.length; i++) {
 const size = (fs.statSync(GRAPH).size / 1024).toFixed(0)
 
 console.log(`\n  좌표 계산 완료 — 노드 ${graph.nodes.length} · 엣지 ${graph.links.length} · ${TICKS} tick`)
+console.log(`  주제 링크 ${realLinks.length} (strength 0.6) · 허브 링크 ${hubLinks.length} (strength 0.035)`)
 console.log(`  반경 500 정규화 · 표본 최소 간격 ${minDist.toFixed(1)}`)
 console.log(`  graph.json ${size}KB\n`)
