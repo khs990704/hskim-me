@@ -224,7 +224,8 @@ const portfolioByTitle = new Map()
  * Vault 는 그대로 두고 빌드 시점에만 나눈다.
  */
 function portfolioDocs(p) {
-  const split = splitPortfolio(p.tree)
+  const { pages: split, orphan } = splitPortfolio(p.tree)
+  report.portfolio.orphan = orphan
   const anchors = rewriteAnchors(split)
   report.portfolio.pages = split.length
   report.portfolio.anchorsRewritten = anchors.rewritten
@@ -370,6 +371,10 @@ console.log(`  표 ${report.tables} · 코드 ${report.code} · 수식 ${report.
 const pf = report.portfolio
 const relCount = portfolioOut.filter(d => d.related?.length).length
 console.log(`  포트폴리오 ↔ 프로젝트 케이스 연결 — ${relCount}쌍`)
+if (pf.orphan?.length) {
+  console.log(`  ⚠ 페이지가 만들어지지 않은 포트폴리오 섹션: ${pf.orphan.join(', ')}`)
+  console.log(`    하위에 ### 항목이 없으면 페이지가 생기지 않습니다.`)
+}
 console.log(`  포트폴리오 분할 — ${pf.pages}개 페이지 · 앵커 ${pf.anchorsRewritten}개 전환 / ${pf.anchorsDropped}개 평문화`)
 console.log(`  H1 없음 ${report.noH1.length} · 요약 없음 ${report.emptyDescription.length} · 첫 문장만 사용 ${report.longDescription.length}`)
 const pd = report.pruned
