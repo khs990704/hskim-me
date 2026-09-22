@@ -157,6 +157,8 @@
 
 ## D-11. 정식 주소는 `www.hskim.me`
 
+> ⚠️ **D-13 으로 대체됨** (2026-09-22) — zone hold 가 해제되어 apex 를 쓸 수 있게 됐다.
+
 **결정** — 사이트의 정식(canonical) 주소를 `https://www.hskim.me` 로 한다. `hskim.me`(apex)는 zone hold 가 해제되는 시점에 리다이렉트로 붙인다.
 
 **경위** — `hskim.me` 를 Cloudflare 에 추가하려 할 때 **zone hold** 에 막혔다. zone hold 는 Enterprise 전용 기능이고 Enterprise zone 에 기본 적용되므로, 사업자 계정(hosting.kr 추정)이 이 도메인의 zone 을 보유하고 있다는 뜻이다. 우회 경로를 전부 시도했다.
@@ -204,3 +206,63 @@
 **허용되는 조정** — 가독성을 위한 전역 파라미터(반발 범위, 링크 거리, 노드 크기)는 조정한다. 분류별로 다른 힘을 주는 것만 하지 않는다.
 
 **결정일** — 2026-09-21
+
+---
+
+## D-13. 정식 주소를 `hskim.me` 로 (D-11 대체)
+
+**결정** — 사이트의 정식(canonical) 주소를 `https://hskim.me` 로 한다. `www.hskim.me` 는 301 로 합류시킨다.
+
+**경위** — D-11 에서 `www` 를 정식으로 삼은 이유는 **apex 를 쓸 수 없었기 때문**이다(zone hold). 2026-09-22 hosting.kr 이 hold 를 해제해 제약이 사라졌다.
+
+**근거**
+- 개인 브랜드 도메인은 **도메인 자체가 이름**이다. `hskim.me` 가 `www.hskim.me` 보다 짧고 읽기 좋다.
+- 아직 공개 전(`noindex`)이라 색인이 쌓이지 않았다. **지금 바꾸면 SEO 손실이 0** 이다. 공개 후에 바꾸면 그동안의 노출을 잃는다.
+- 정적 사이트라 www 의 기술적 이점(쿠키 스코프, CNAME 사용 가능)이 의미가 없다. Cloudflare DNS 는 apex 에서도 CNAME 플래트닝을 제공한다.
+
+**함께 회복되는 것** — 도메인이 Cloudflare zone 에 들어오면서 **Cloudflare Access** 를 쓸 수 있게 된다. D-11 에서 잃었던 공개 전 잠금 수단이다(기획 §10 계층 4).
+
+**적용 범위** — `canonical`, `sitemap.xml`, OG URL 을 모두 apex 로 바꾼다.
+
+**적용 시점 — 보류 (2026-09-22)**
+hosting.kr 이 zone hold 해제를 완료했다고 회신했으나, Cloudflare API 가 여전히 `code 1428` 로 거부한다.
+
+```
+POST /client/v4/zones → {"code":1428,"message":"The zone name provided is subject to a hold..."}
+```
+
+apex 가 실제로 연결되기 전까지 코드의 `BASE` 는 `www.hskim.me` 로 되돌려 둔다.
+없는 주소를 canonical·OG 로 내보내지 않기 위함이다. **결정 자체는 유효하며, 연결되는 즉시 적용한다.**
+
+**결정일** — 2026-09-22
+
+---
+
+## D-14. 포트폴리오는 빌드 시점에 나눈다 · URL 에 분류를 넣지 않는다
+
+**결정**
+
+1. **Vault 는 한 파일 그대로 둔다.** `03 Portfolio/Portfolio.md` 를 쪼개지 않고, 파이프라인이 빌드할 때 페이지로 나눈다.
+2. **URL 에 분류를 넣지 않는다.** `/portfolio/bidvett` 이지 `/portfolio/개인-팀-프로젝트/bidvett` 이 아니다.
+
+**1번 근거** — Vault 의 `AGENTS.md` 가 *"본문은 `03 Portfolio/Portfolio.md` 한 파일에 유지한다"* 로 정하고 있다. 쪼개면 고객이 만든 운영 규칙을 깨고 집필 방식도 바뀐다. 파이프라인이 원본을 읽기만 하는 기존 원칙과도 일치한다(D-03).
+
+**2번 근거** — **분류는 바뀌지만 프로젝트 이름은 잘 안 바뀐다.** 회사 프로젝트가 일반화 버전으로 복귀할 때(P7), 프로젝트를 다른 분류로 옮길 때, 분류를 신설·통합할 때마다 URL 이 바뀌어 링크가 깨진다. 색인이 쌓인 주소가 404 가 되는 것은 D-09 에서 피하기로 한 것이다.
+
+분류는 **화면에서 보여준다** — `/portfolio` 인덱스에서 분류별로 묶고, 각 페이지 상단 breadcrumb 에 표시한다. 보여주는 것과 주소는 별개로 둘 수 있다.
+
+**`/notes/*`·`/projects/*` 와 다른 이유** — 그쪽은 Vault 의 실제 폴더 구조이고 잘 바뀌지 않는다. 포트폴리오 분류는 읽는 순서를 위한 **편집상의 묶음**이라 성격이 다르다.
+
+**구조**
+
+```
+Vault                          사이트
+03 Portfolio/Portfolio.md      /about                  소개 + 핵심 역량
+  ## 소개                  →    /portfolio             프로젝트 목록 (분류별 묶음)
+  ## 핵심 역량             ↗    /portfolio/<프로젝트>    본문 1개 = 1페이지
+  ### BidVett             →
+```
+
+**함께 처리할 것** — 문서 내 앵커 링크(`[[#BidVett]]`)를 페이지 간 링크로 변환. 제목 변경 시 `slug-map.json` 기반 301.
+
+**결정일** — 2026-09-22

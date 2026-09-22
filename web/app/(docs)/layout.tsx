@@ -12,9 +12,19 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             hskim<span className="text-[var(--fg-faint)]">.me</span>
           </Link>
           <nav className="flex items-center gap-1 text-[13px] text-[var(--fg-dim)]">
-            <Link href="/index-all" className="rounded px-2.5 py-1.5 hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]">
-              전체 목록
-            </Link>
+            {[
+              { href: '/about', label: '소개' },
+              { href: '/portfolio', label: '포트폴리오' },
+              { href: '/index-all', label: '전체 목록' },
+            ].map(l => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="hidden rounded px-2.5 py-1.5 hover:bg-[var(--bg-soft)] hover:text-[var(--fg)] sm:block"
+              >
+                {l.label}
+              </Link>
+            ))}
             <ThemeToggle />
           </nav>
         </div>

@@ -83,14 +83,25 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
       .then((g: Graph) => {
         // 좌표는 빌드 시점에 계산해 뒀다. 고정해서 시뮬레이션을 돌리지 않는다.
         // 첫 프레임부터 완성된 배치가 나오고, 새로고침해도 같은 자리에 있다.
+        const noPos = g.nodes.filter(n => !n.pos).length
+        if (noPos) {
+          // 좌표가 없으면 시뮬레이션이 돌긴 하지만 배치가 매번 달라진다.
+          // 조용히 넘어가지 않고 알린다 — 파이프라인이 덜 돈 것이다.
+          console.warn(`[graph] 좌표 없는 노드 ${noPos}/${g.nodes.length}개. \`npm run content\` 를 실행하세요.`)
+        }
         for (const n of g.nodes) {
+          if (!n.pos) continue
           ;[n.x, n.y, n.z] = n.pos
           ;[n.fx, n.fy, n.fz] = n.pos
         }
         setGraph(g)
         onReady?.(g.nodes.length)
       })
-      .catch(() => setGraph({ nodes: [], links: [] }))
+      .catch(err => {
+        // 전에는 여기서 조용히 빈 그래프로 넘어가, 화면만 비고 원인은 안 보였다
+        console.error('[graph] 불러오기 실패', err)
+        setGraph({ nodes: [], links: [] })
+      })
   }, [supported, onReady])
 
   // 인스턴스가 붙을 때까지 기다린다.

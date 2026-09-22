@@ -6,6 +6,8 @@ const OUT = path.join(process.cwd(), '..', 'pipeline', 'out')
 const CONTENT = path.join(OUT, 'content')
 
 export type LinkRef = { route: string; title: string }
+/** 같은 프로젝트를 다루는 다른 성격의 문서 (포트폴리오 ↔ 프로젝트 케이스) */
+export type RelatedRef = { route: string; title: string; kind: 'portfolio' | 'project' }
 export type TocItem = { depth: number; text: string; id: string }
 export type Features = { math: boolean; mermaid: boolean; code: boolean; table: boolean; image: boolean }
 
@@ -22,6 +24,7 @@ export type Doc = {
   links: LinkRef[]
   backlinks: LinkRef[]
   tags: string[]
+  related?: RelatedRef[]
   features: Features
   locale: string
 }

@@ -5,6 +5,29 @@
 > The zone name provided is subject to a hold which disallows the creation of this zone.
 > Please contact the owner of the Cloudflare account that manages this domain to have the hold removed.
 
+## 진행 상황
+
+| 날짜 | 내용 |
+|---|---|
+| 2026-09-20 | hosting.kr 에 문의 (zone hold 해제 + apex 포워딩) |
+| 2026-09-22 | hosting.kr 회신 — **해제 처리 완료** |
+| 2026-09-22 | Cloudflare **API 로 재확인 → `code 1428` 로 여전히 거부** |
+| 2026-09-22 | hosting.kr 에 API 응답 첨부해 재문의 |
+| 2026-09-22 | Cloudflare 커뮤니티 포럼에 게시 (Getting Started) |
+
+```
+POST /client/v4/zones
+{"success":false,"errors":[{"code":1428,
+ "message":"The zone name provided is subject to a hold which disallows the creation of this zone."}]}
+```
+
+대시보드 화면이 아니라 **API 가 직접 거부**하므로 UI 캐시 문제가 아니다.
+확인해야 할 두 가지 — 하위 도메인 차단(`include_subdomains`) 잔존 여부, 그리고 실제 보유 계정.
+
+**대기 중.** 사이트는 `www.hskim.me` 로 정상 동작하므로 다른 작업을 막지 않는다.
+
+---
+
 ## 핵심 단서 — zone hold 는 Enterprise 전용
 
 Cloudflare 지원 화면의 안내로 확인된 사실이다.

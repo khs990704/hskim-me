@@ -11,6 +11,16 @@ import { ROUTES, DROP_SEGMENTS } from '../config.mjs'
 
 const stripOrder = seg => seg.replace(/^\d{2}\s+/, '')
 
+/** URL 세그먼트 정규화. 한글은 그대로 두고 소문자·하이픈만 정리한다 (D-09) */
+export function normalizeSegment(seg) {
+  return seg.trim().toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[&]/g, '')
+    .replace(/[?#\[\]<>:"|*\\]/g, '')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 export function publicRoute(relPath) {
   const parts = relPath.replace(/\.md$/, '').split('/')
   const top = parts[0]
@@ -25,14 +35,7 @@ export function publicRoute(relPath) {
   }
 
   // MOC 같은 폴더 직속 문서는 라우트 루트에 둔다.
-  const tail = rest.map(seg =>
-    seg.trim().toLowerCase()
-       .replace(/\s+/g, '-')
-       .replace(/[&]/g, '')
-       .replace(/[?#\[\]<>:"|*\\]/g, '')
-       .replace(/-{2,}/g, '-')
-       .replace(/^-|-$/g, '')
-  )
+  const tail = rest.map(normalizeSegment)
   return [mapping?.route ?? 'notes', ...tail].filter(Boolean).join('/')
 }
 
