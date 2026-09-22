@@ -110,7 +110,19 @@ export function splitPortfolio(tree) {
       headingIds: [p.headingId].filter(Boolean),
     })
   }
-  return pages
+  // 어느 페이지도 만들지 못한 ## 섹션을 알린다.
+  // '## 연락처' 같은 새 섹션을 추가했는데 하위 ### 가 없으면 조용히 사라진다.
+  const madeProjects = new Set(projects.map(p => p.category))
+  const orphan = []
+  let seen = null
+  for (const node of top) {
+    if (level(node) !== 2) continue
+    const t = textOf(node)
+    if (DROP_SECTIONS.includes(t) || ABOUT_SECTIONS.includes(t) || INDEX_SECTIONS.includes(t)) continue
+    if (!madeProjects.has(t)) orphan.push(t)
+  }
+
+  return { pages, orphan }
 }
 
 /**
