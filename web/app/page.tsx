@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { allDocs, graph } from '../lib/content'
 import GraphStage from '../components/GraphStage'
+import Search from '../components/Search'
 
 export const metadata: Metadata = {
   title: 'hskim.me',
@@ -15,6 +16,12 @@ export const metadata: Metadata = {
  * 그래프가 화면을 채우고 그 위에 최소한의 오버레이만 얹는다.
  * 오버레이는 서버에서 렌더되므로 JavaScript 나 WebGL 이 없어도 남는다.
  */
+const LINKS = [
+  { href: '/about', label: '소개' },
+  { href: '/index-all', label: '전체 목록' },
+  { href: '/portfolio', label: '포트폴리오' },
+]
+
 export default function Home() {
   const docs = allDocs()
   const g = graph()
@@ -33,29 +40,48 @@ export default function Home() {
         </p>
       </div>
 
-      {/* 우상단 — 진입 경로 */}
-      <nav className="absolute right-4 top-5 z-10 flex gap-1 text-[12px] sm:right-8 sm:top-8 sm:gap-1.5 sm:text-[13px]">
-        {[
-          { href: '/index-all', label: '전체 목록' },
-          { href: '/portfolio', label: '포트폴리오' },
-        ].map(l => (
+      {/* 우상단 — 검색과 진입 경로 */}
+      <nav className="absolute right-4 top-5 z-10 flex items-center gap-1 text-[12px] sm:right-8 sm:top-8 sm:gap-1.5 sm:text-[13px]">
+        <div className="[&_button]:border-[#2a3344] [&_button]:bg-[#121722]/85 [&_button]:text-[#c3cbd8] [&_button]:backdrop-blur [&_kbd]:border-[#2a3344] [&_kbd]:bg-[#0a0d14]">
+          <Search />
+        </div>
+        {LINKS.map(l => (
           <Link
             key={l.href}
             href={l.href}
-            className="rounded-md border border-[#222b3a] bg-[#0a0d14]/70 px-2.5 py-1.5 text-[#c3cbd8] backdrop-blur transition-colors hover:border-[#7dd3fc] hover:text-[#7dd3fc] sm:px-3"
+            className="hidden rounded-md border border-[#222b3a] bg-[#0a0d14]/70 px-2.5 py-1.5 text-[#c3cbd8] backdrop-blur transition-colors hover:border-[#7dd3fc] hover:text-[#7dd3fc] sm:block sm:px-3"
           >
             {l.label}
           </Link>
         ))}
       </nav>
 
-      {/* 좌하단 — 규모와 조작 힌트. 입력 장치에 따라 문구가 바뀐다 */}
-      <div className="pointer-events-none absolute bottom-5 left-5 z-10 text-[11.5px] leading-5 text-[#4a5468] sm:bottom-6 sm:left-8">
-        <div className="tabular-nums">
-          문서 {docs.length} · 연결 {g.links.length}
+      {/*
+        화면 아래 — 규모·조작 힌트와 진입 경로.
+        좁은 화면에서는 둘이 겹치므로 한 줄에 양끝으로 배치하고,
+        자리가 모자라면 접히게 둔다.
+      */}
+      <div className="pointer-events-none absolute inset-x-5 bottom-5 z-10 flex flex-col items-end gap-2 sm:inset-x-8 sm:bottom-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <div className="text-right text-[11.5px] leading-5 text-[#4a5468] sm:text-left">
+          <div className="tabular-nums">
+            문서 {docs.length} · 연결 {g.links.length}
+          </div>
+          <div className="mt-0.5 hint-fine">드래그 회전 · 휠 확대 · 노드 클릭</div>
+          <div className="mt-0.5 hint-coarse">끌어서 회전 · 두 손가락 확대</div>
         </div>
-        <div className="mt-0.5 hint-fine">드래그 회전 · 휠 확대 · 노드 클릭</div>
-        <div className="mt-0.5 hint-coarse">끌어서 회전 · 두 손가락 확대 · 노드 탭</div>
+
+        {/* 메인에는 헤더도 서랍도 없다. 좁은 화면에서는 여기가 유일한 진입 경로다 */}
+        <nav className="pointer-events-auto flex justify-end gap-1.5 whitespace-nowrap text-[12px] sm:hidden">
+          {LINKS.map(l => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="rounded-md border border-[#222b3a] bg-[#0a0d14]/80 px-2.5 py-1.5 text-[#c3cbd8] backdrop-blur"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
       </div>
 
       {/* 크롤러와 JavaScript 미사용 환경의 진입 경로 (D-09) */}

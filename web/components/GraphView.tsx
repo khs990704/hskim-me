@@ -437,12 +437,13 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         </div>
       )}
 
-      {/* 터치 — 손가락에 가리지 않도록 화면 아래에 고정 */}
+      {/* 터치 — 손가락에 가리지 않도록 화면 아래에 고정.
+          아래 진입 버튼(화면 끝에서 56px)은 덮지 않고, 그 위 조작 안내는 덮어도 된다 */}
       {hover && !leaving && coarse === true && (
         <button
           type="button"
           onClick={() => openNode(hover)}
-          className="tap-open fixed bottom-16 left-1/2 z-20 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 rounded-xl border border-[#2a3344] bg-[#0a0d14]/92 px-5 py-2 text-center text-[13px] text-[#e8edf5] backdrop-blur"
+          className="tap-open fixed bottom-20 left-1/2 z-20 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 rounded-xl border border-[#2a3344] bg-[#0a0d14]/92 px-5 py-2 text-center text-[13px] text-[#e8edf5] backdrop-blur"
         >
           <span className="line-clamp-2 leading-snug">{hover.title}</span>
           <span className="mt-0.5 block text-[11.5px] text-[#6b7688]">눌러서 열기</span>

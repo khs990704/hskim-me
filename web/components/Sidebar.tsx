@@ -9,6 +9,13 @@ export type Node = { n: string; k: string; r?: string; children?: Node[] }
 
 let cached: Node[] | null = null
 
+/** 좁은 화면에서는 헤더에 들어가지 않는 진입 경로. 서랍 맨 위에 모은다 */
+const DRAWER_LINKS = [
+  { href: '/about', label: '소개' },
+  { href: '/index-all', label: '전체 목록' },
+  { href: '/portfolio', label: '포트폴리오' },
+]
+
 /** 현재 항목이 이 구간 밖에 있을 때만 스크롤한다 (컨테이너 높이 비율) */
 const COMFORT_TOP = 0.25
 const COMFORT_BOTTOM = 0.75
@@ -214,6 +221,19 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
           </button>
         </div>
         {/* 항목을 누르면 닫는다. 같은 문서를 다시 눌러 경로가 안 바뀌는 경우도 포함 */}
+        <div className="flex shrink-0 flex-wrap gap-1.5 border-b border-[var(--line-soft)] px-3 py-2.5 text-[12.5px]">
+          {DRAWER_LINKS.map(l => (
+            <Link
+              key={l.href}
+              href={l.href}
+              onClick={() => setDrawer(false)}
+              className="rounded-md border border-[var(--line)] px-2.5 py-1.5 text-[var(--fg-dim)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+
         <div
           className="min-h-0 flex-1 overflow-y-auto"
           onClick={e => { if ((e.target as HTMLElement).closest('a')) setDrawer(false) }}

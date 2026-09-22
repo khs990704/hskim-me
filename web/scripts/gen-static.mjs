@@ -132,5 +132,15 @@ if (missing) {
 }
 
 fs.copyFileSync(GRAPH_SRC, path.join(PUBLIC, 'graph.json'))
+
+// 검색 색인. 검색을 처음 열 때만 받으므로 페이지 로딩에는 영향이 없다.
+const SEARCH_SRC = path.join(HERE, '..', '..', 'pipeline', 'out', 'search-index.json')
+if (!fs.existsSync(SEARCH_SRC)) {
+  console.error('\n  search-index.json 이 없습니다. 저장소 루트에서 `npm run content` 를 실행하세요.\n')
+  process.exit(1)
+}
+fs.copyFileSync(SEARCH_SRC, path.join(PUBLIC, 'search-index.json'))
+const searchSize = fs.statSync(path.join(PUBLIC, 'search-index.json')).size
+console.log(`  search-index.json  ${(searchSize / 1024).toFixed(0)}KB`)
 const graphSize = fs.statSync(path.join(PUBLIC, 'graph.json')).size
 console.log(`  graph.json  노드 ${g.nodes.length} · 엣지 ${g.links.length} · ${(graphSize / 1024).toFixed(0)}KB`)
