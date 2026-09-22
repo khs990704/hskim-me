@@ -7,7 +7,7 @@
   "scripts": {
     "stage": "node src/stage.mjs",
     "guard": "node src/guard.mjs",
-    "build": "node src/stage.mjs && node src/guard.mjs && node src/build.mjs && node src/layout.mjs",
+    "build": "node src/stage.mjs && node src/guard.mjs && node src/build.mjs && node src/layout.mjs && node src/search-index.mjs",
     "preview": "node src/preview.mjs",
     "report": "node src/classify-broken.mjs",
     "company": "node src/company-digest.mjs && node src/company-verdict.mjs",

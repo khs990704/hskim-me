@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Sidebar from '../../components/Sidebar'
 import ThemeToggle from '../../components/ThemeToggle'
+import Search from '../../components/Search'
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,10 +13,11 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             hskim<span className="text-[var(--fg-faint)]">.me</span>
           </Link>
           <nav className="flex items-center gap-1 text-[13px] text-[var(--fg-dim)]">
+            <Search />
             {[
               { href: '/about', label: '소개' },
-              { href: '/portfolio', label: '포트폴리오' },
               { href: '/index-all', label: '전체 목록' },
+              { href: '/portfolio', label: '포트폴리오' },
             ].map(l => (
               <Link
                 key={l.href}
