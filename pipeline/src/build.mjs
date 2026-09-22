@@ -15,6 +15,7 @@ import { publicRoute, kindOf } from './slug.mjs'
 import { makeProcessor } from './render.mjs'
 import { makeResolver } from './resolve.mjs'
 import { rewriteLinks } from './rewrite-links.mjs'
+import { splitPortfolio, rewriteAnchors } from './split-portfolio.mjs'
 import { pruneBrokenReferences, unwrapBrokenLinks, removeSections, markDeadAnchors } from './prune.mjs'
 
 const OUT = path.join(ROOT, 'out')
@@ -86,6 +87,7 @@ const report = {
   noH1: [], brokenLinks: [], ambiguousLinks: [], emptyDescription: [], longDescription: [],
   linkCount: 0, tables: 0, code: 0, callouts: 0, math: 0, images: 0,
   pruned: { rows: 0, items: 0, paragraphs: 0, tables: 0, lists: 0, headings: 0, unwrapped: 0, dropped: 0, detail: [] },
+  portfolio: { pages: 0, anchorsRewritten: 0, anchorsDropped: 0, routes: [] },
   sectionsRemoved: [],
 }
 
@@ -198,7 +200,110 @@ fs.mkdirSync(path.join(OUT, 'content'), { recursive: true })
 
 const linkInfo = slug => ({ route: slugToRoute.get(slug), title: routeToTitle.get(slugToRoute.get(slug)) })
 
+/**
+ * 포트폴리오와 프로젝트 케이스를 잇는다.
+ *
+ * 같은 프로젝트를 다루지만 성격이 다르다.
+ *   포트폴리오  — 서술형. 문제·역할·판단을 이야기로
+ *   케이스 노트 — 구조화 기록. 사용 기술·구현 흐름·기여
+ * 읽는 사람이 다르므로 둘 다 두고 서로 가리킨다.
+ *
+ * 제목이 같은 것끼리 맺는다. Vault 안에서 같은 프로젝트는 같은 이름을 쓴다.
+ */
+const normTitle = t => t.toLowerCase().replace(/[^a-z0-9가-힣]/g, '')
+const caseByTitle = new Map()
 for (const p of pages) {
+  if (p.kind !== 'project') continue
+  const key = normTitle(p.title)
+  if (!caseByTitle.has(key)) caseByTitle.set(key, { route: p.route, title: p.title })
+}
+const portfolioByTitle = new Map()
+
+/**
+ * 포트폴리오는 한 파일이 여러 페이지가 된다 (D-14).
+ * Vault 는 그대로 두고 빌드 시점에만 나눈다.
+ */
+function portfolioDocs(p) {
+  const split = splitPortfolio(p.tree)
+  const anchors = rewriteAnchors(split)
+  report.portfolio.pages = split.length
+  report.portfolio.anchorsRewritten = anchors.rewritten
+  report.portfolio.anchorsDropped = anchors.dropped
+  report.portfolio.routes = split.map(s => s.route)
+
+  return split.map(sec => {
+    const tree = { type: 'root', children: sec.nodes }
+
+    const toc = []
+    const features = { math: false, mermaid: false, code: false, table: false, image: false }
+    visit(tree, 'element', node => {
+      const tag = node.tagName
+      const cls = String(node.properties?.className ?? '')
+      // 조각의 첫 제목은 페이지 제목이 되므로 목차에 넣지 않는다
+      if (/^h[2-4]$/.test(tag) && node !== sec.nodes[0]) {
+        toc.push({ depth: Number(tag[1]), text: text(node).trim(), id: node.properties?.id ?? '' })
+      }
+      if (tag === 'table') features.table = true
+      if (tag === 'pre') features.code = true
+      if (tag === 'img') features.image = true
+      if (cls.includes('katex')) features.math = true
+      if (cls.includes('mermaid')) features.mermaid = true
+    })
+
+    let description = ''
+    visit(tree, 'element', node => {
+      if (description || node.tagName !== 'p') return
+      const t = text(node).replace(/\s+/g, ' ').trim()
+      if (t.length >= 20) description = t
+    })
+
+    const links = []
+    visit(tree, 'element', node => {
+      if (node.tagName !== 'a') return
+      const href = node.properties?.href
+      if (typeof href === 'string' && href.startsWith('/')) {
+        const route = decodeURIComponent(href.slice(1)).split('#')[0]
+        if (route && !links.some(l => l.route === route)) links.push({ route, title: routeToTitle.get(route) ?? route })
+      }
+    })
+
+    return {
+      route: sec.route,
+      slug: p.slug,
+      title: sec.title,
+      description: firstSentence(description),
+      source: p.rel,
+      kind: 'portfolio',
+      category: sec.category,
+      html: proc.stringify(tree),
+      toc,
+      links,
+      backlinks: sec.route === 'portfolio' ? [...(backlinks.get(p.slug) ?? [])].map(linkInfo) : [],
+      tags: [],
+      features,
+      related: sec.route.startsWith('portfolio/')
+        ? [caseByTitle.get(normTitle(sec.title))].filter(Boolean).map(r => ({ ...r, kind: 'project' }))
+        : [],
+      locale: 'ko',
+    }
+  })
+}
+
+const write = doc => {
+  const dest = path.join(OUT, 'content', doc.route + '.json')
+  fs.mkdirSync(path.dirname(dest), { recursive: true })
+  fs.writeFileSync(dest, JSON.stringify(doc, null, 2))
+}
+
+// 먼저 포트폴리오를 만들어 제목 → 라우트 맵을 채운다 (케이스에서 역참조하기 위해)
+const portfolioOut = pages.filter(p => p.kind === 'portfolio').flatMap(portfolioDocs)
+for (const d of portfolioOut) {
+  if (d.route.startsWith('portfolio/')) portfolioByTitle.set(normTitle(d.title), { route: d.route, title: d.title })
+}
+portfolioOut.forEach(write)
+
+for (const p of pages) {
+  if (p.kind === 'portfolio') continue
   const doc = {
     route: p.route,
     slug: p.slug,
@@ -213,11 +318,12 @@ for (const p of pages) {
     backlinks: [...(backlinks.get(p.slug) ?? [])].map(linkInfo),
     tags: p.tags,
     features: p.features,   // 프론트엔드가 KaTeX·Mermaid 를 필요한 문서에서만 로드하기 위한 힌트
+    related: p.kind === 'project'
+      ? [portfolioByTitle.get(normTitle(p.title))].filter(Boolean).map(r => ({ ...r, kind: 'portfolio' }))
+      : [],
     locale: 'ko',
   }
-  const dest = path.join(OUT, 'content', p.route + '.json')
-  fs.mkdirSync(path.dirname(dest), { recursive: true })
-  fs.writeFileSync(dest, JSON.stringify(doc, null, 2))
+  write(doc)
 }
 
 // MOC(Map of Content) 는 분류 안의 거의 모든 문서를 가리키는 색인 문서다.
@@ -261,6 +367,10 @@ console.log(`    해석 실패 ${report.brokenLinks.length} · 중복 이름 ${r
 console.log(`  노드 ${nodes.length}개 · 고립 ${isolated.length}개 · URL 충돌 ${report.duplicateRoutes.length}건`)
 console.log(`  허브(MOC) ${hubIds.size}개 · 허브 엣지 ${edges.filter(e => e.hub).length}개 (배치 계산에서 제외)`)
 console.log(`  표 ${report.tables} · 코드 ${report.code} · 수식 ${report.math} · 콜아웃 ${report.callouts} · 이미지 ${report.images}`)
+const pf = report.portfolio
+const relCount = portfolioOut.filter(d => d.related?.length).length
+console.log(`  포트폴리오 ↔ 프로젝트 케이스 연결 — ${relCount}쌍`)
+console.log(`  포트폴리오 분할 — ${pf.pages}개 페이지 · 앵커 ${pf.anchorsRewritten}개 전환 / ${pf.anchorsDropped}개 평문화`)
 console.log(`  H1 없음 ${report.noH1.length} · 요약 없음 ${report.emptyDescription.length} · 첫 문장만 사용 ${report.longDescription.length}`)
 const pd = report.pruned
 if (report.sectionsRemoved.length) {
