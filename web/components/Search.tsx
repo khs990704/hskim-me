@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { search, type Hit, type SearchDoc } from '../lib/search'
+import { search, PAGE_SIZE, type Hit, type SearchDoc } from '../lib/search'
 import Highlight from './Highlight'
 
 /** 색인은 한 번만 받아 세션 내내 재사용한다 */
@@ -33,9 +33,23 @@ export default function Search() {
   const [ready, setReady] = useState(false)
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<Hit[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(0)
   const [cursor, setCursor] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
+  /**
+   * 커서를 마지막으로 움직인 것이 키보드인지.
+   *
+   * 마우스와 키보드가 같은 커서를 쓰면서 서로를 방해한다.
+   *   키보드로 내리면  → 목록이 스크롤되고, 멈춰 있는 마우스 밑으로 항목이
+   *                      지나가며 hover 가 터져 선택을 빼앗는다
+   *   마우스로 가리키면 → 선택 항목을 화면 안으로 끌어오느라 목록이 밀린다
+   *
+   * 어느 쪽이 마지막으로 '실제로' 움직였는지 기억해서 둘을 떼어 놓는다.
+   * hover 는 마우스가 정말 움직인 뒤에만 받는다.
+   */
+  const byKeyboard = useRef(false)
 
   useEffect(() => setMounted(true), [])
 
@@ -64,11 +78,31 @@ export default function Search() {
     }
   }, [open])
 
+  // 검색어가 바뀌면 첫 쪽으로 돌아간다. 4쪽을 보다가 다른 것을 찾으면
+  // 그 검색어의 4쪽이 아니라 처음부터 보여야 한다.
+  useEffect(() => { setPage(0) }, [q])
+
   useEffect(() => {
-    if (!cachedIndex) { setHits([]); return }
-    setHits(search(cachedIndex, q))
+    if (!cachedIndex) { setHits([]); setTotal(0); return }
+    const r = search(cachedIndex, q, page)
+    setHits(r.hits)
+    setTotal(r.total)
     setCursor(0)
-  }, [q, ready])
+  }, [q, ready, page])
+
+  const pages = Math.ceil(total / PAGE_SIZE)
+
+  /** 쪽을 넘기면서 커서를 어디에 둘지 함께 정한다 */
+  const turn = useCallback((to: number, at: 'top' | 'bottom') => {
+    if (to < 0 || to >= pages) return
+    setPage(to)
+    // hits 가 바뀐 뒤에 커서를 옮겨야 한다
+    requestAnimationFrame(() => {
+      byKeyboard.current = true
+      setCursor(at === 'top' ? 0 : Math.min(PAGE_SIZE, total - to * PAGE_SIZE) - 1)
+      listRef.current?.parentElement?.scrollTo({ top: 0 })
+    })
+  }, [pages, total])
 
   const go = useCallback((hit: Hit) => {
     setOpen(false)
@@ -77,13 +111,29 @@ export default function Search() {
   }, [router])
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); setCursor(c => Math.min(c + 1, hits.length - 1)) }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setCursor(c => Math.max(c - 1, 0)) }
-    else if (e.key === 'Enter' && hits[cursor]) { e.preventDefault(); go(hits[cursor]) }
+    byKeyboard.current = true
+    // 목록 끝에서 한 번 더 누르면 다음 쪽으로 넘어간다.
+    // 키보드만 쓰는 사람이 쪽 단추를 찾아 마우스를 잡지 않아도 되게 한다.
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (cursor >= hits.length - 1) turn(page + 1, 'top')
+      else setCursor(c => c + 1)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (cursor === 0) turn(page - 1, 'bottom')
+      else setCursor(c => c - 1)
+    } else if (e.key === 'Enter' && hits[cursor]) {
+      e.preventDefault()
+      go(hits[cursor])
+    }
   }
 
-  // 키보드로 이동할 때 선택 항목이 화면에 남아 있게
+  // 키보드로 옮겼을 때만 선택 항목을 화면 안으로 끌어온다.
+  //
+  // 마우스로 가리킨 항목까지 끌어오면 목록이 커서를 피해 밀려난다. 이미 눈에
+  // 보이는 것을 가리켰는데 화면이 움직이는 셈이라, 누르려던 항목이 달아난다.
   useEffect(() => {
+    if (!byKeyboard.current) return
     listRef.current?.querySelector('[data-active="true"]')?.scrollIntoView({ block: 'nearest' })
   }, [cursor])
 
@@ -118,7 +168,12 @@ export default function Search() {
           </kbd>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div
+          className="max-h-[60vh] overflow-y-auto"
+          // 마우스가 실제로 움직였을 때만 hover 로 선택이 넘어간다.
+          // 스크롤에 실려 항목이 지나가는 것은 마우스가 움직인 것이 아니다.
+          onMouseMove={() => { byKeyboard.current = false }}
+        >
           {!ready && q && (
             <p className="px-4 py-8 text-center text-[13px] text-[var(--fg-faint)]">색인을 불러오는 중…</p>
           )}
@@ -138,7 +193,7 @@ export default function Search() {
                 <button
                   type="button"
                   data-active={i === cursor || undefined}
-                  onMouseEnter={() => setCursor(i)}
+                  onMouseEnter={() => { if (!byKeyboard.current) setCursor(i) }}
                   onClick={() => go(hit)}
                   className={`block w-full border-l-2 px-4 py-2.5 text-left transition-colors ${
                     i === cursor
@@ -163,9 +218,37 @@ export default function Search() {
           </ul>
         </div>
 
-        {hits.length > 0 && (
-          <div className="border-t border-[var(--line-soft)] px-4 py-2 text-[11px] text-[var(--fg-faint)]">
-            {hits.length}개 결과
+        {total > 0 && (
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--line-soft)] px-4 py-2 text-[11px] text-[var(--fg-faint)]">
+            <span className="tabular-nums">{total}개 결과</span>
+
+            {pages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => turn(page - 1, 'top')}
+                  disabled={page === 0}
+                  aria-label="이전 쪽"
+                  className="grid h-6 w-6 place-items-center rounded transition-colors enabled:hover:bg-[var(--bg-soft)] enabled:hover:text-[var(--fg)] disabled:opacity-30"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <path d="M15 6l-6 6 6 6" />
+                  </svg>
+                </button>
+                <span className="tabular-nums px-0.5">{page + 1} / {pages}</span>
+                <button
+                  type="button"
+                  onClick={() => turn(page + 1, 'top')}
+                  disabled={page >= pages - 1}
+                  aria-label="다음 쪽"
+                  className="grid h-6 w-6 place-items-center rounded transition-colors enabled:hover:bg-[var(--bg-soft)] enabled:hover:text-[var(--fg)] disabled:opacity-30"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <path d="M9 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
