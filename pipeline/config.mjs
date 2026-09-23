@@ -34,3 +34,13 @@ export const ROUTES = [
   { prefix: '02 Project Cases', route: 'projects', kind: 'project' },
   { prefix: '03 Portfolio', route: 'portfolio', kind: 'portfolio' },
 ]
+
+/**
+ * 본문이 표뿐이라 첫 문단을 뽑을 수 없는 페이지의 설명.
+ *
+ * /portfolio 는 '프로젝트 한눈에 보기' 표 하나로만 이루어져 있다.
+ * 검색 결과와 링크 미리보기에 그대로 나가는 글이라 비워 둘 수 없다.
+ */
+export const ROUTE_DESCRIPTIONS = {
+  portfolio: '개인·팀 프로젝트와 데이터 분석·모델링 프로젝트를 한눈에 모아 둔 목록입니다.',
+}

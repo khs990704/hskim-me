@@ -9,7 +9,7 @@ import path from 'node:path'
 import { VFile } from 'vfile'
 import { visit } from 'unist-util-visit'
 import { slugifyFilePath } from '@quartz-community/utils'
-import { STAGE, ROOT } from '../config.mjs'
+import { STAGE, ROOT, ROUTE_DESCRIPTIONS } from '../config.mjs'
 import { readFrontmatter } from './frontmatter.mjs'
 import { publicRoute, kindOf } from './slug.mjs'
 import { makeProcessor } from './render.mjs'
@@ -17,6 +17,7 @@ import { makeResolver } from './resolve.mjs'
 import { rewriteLinks } from './rewrite-links.mjs'
 import { splitPortfolio, rewriteAnchors } from './split-portfolio.mjs'
 import { pruneBrokenReferences, unwrapBrokenLinks, removeSections, markDeadAnchors } from './prune.mjs'
+import { META_LINE } from './meta-line.mjs'
 
 const OUT = path.join(ROOT, 'out')
 
@@ -62,6 +63,22 @@ const text = node => {
   const go = n => { if (n.type === 'text') acc.push(n.value); (n.children ?? []).forEach(go) }
   go(node)
   return acc.join('')
+}
+
+/**
+ * 설명으로 쓸 첫 문단.
+ *
+ * 제목 바로 밑에 오는 '라벨: 값' 줄은 사람이 읽을 문장이 아니므로 건너뛴다.
+ * 판별 기준은 meta-line.mjs 에 있다.
+ */
+function leadParagraph(tree) {
+  let found = ''
+  visit(tree, 'element', node => {
+    if (found || node.tagName !== 'p') return
+    const t = text(node).replace(/\s+/g, ' ').trim()
+    if (t.length >= 20 && !META_LINE.test(t)) found = t
+  })
+  return found
 }
 
 // ---------- 준비 ----------
@@ -124,12 +141,7 @@ for (const d of docs) {
     })
     if (!title) { title = path.basename(d.rel, '.md'); report.noH1.push(d.rel) }
 
-    let para = ''
-    visit(tree, 'element', node => {
-      if (para || node.tagName !== 'p') return
-      const t = text(node).replace(/\s+/g, ' ').trim()
-      if (t.length >= 20) para = t
-    })
+    const para = leadParagraph(tree)
     let description = firstSentence(para)
     if (!description) report.emptyDescription.push(d.rel)
     if (para.length > description.length) report.longDescription.push({ file: d.rel, full: para.length, kept: description.length })
@@ -251,12 +263,7 @@ function portfolioDocs(p) {
       if (cls.includes('mermaid')) features.mermaid = true
     })
 
-    let description = ''
-    visit(tree, 'element', node => {
-      if (description || node.tagName !== 'p') return
-      const t = text(node).replace(/\s+/g, ' ').trim()
-      if (t.length >= 20) description = t
-    })
+    const description = leadParagraph(tree)
 
     const links = []
     visit(tree, 'element', node => {
@@ -272,7 +279,7 @@ function portfolioDocs(p) {
       route: sec.route,
       slug: p.slug,
       title: sec.title,
-      description: firstSentence(description),
+      description: firstSentence(description) || ROUTE_DESCRIPTIONS[sec.route] || '',
       source: p.rel,
       kind: 'portfolio',
       category: sec.category,

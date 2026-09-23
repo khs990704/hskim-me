@@ -301,6 +301,16 @@ a { color: inherit; text-decoration: none; }
 /* 언어 표시가 없는 코드블록은 강조되지 않는다. 본문 글자색을 그대로 쓴다 */
 .prose pre:not(.shiki) code { color: var(--fg); }
 
+/* iOS Safari 는 16px 미만인 입력란에 초점이 가면 화면을 확대한다. 되돌려 주지도 않는다.
+   viewport 의 maximum-scale 로 막는 방법이 흔히 쓰이지만 그러면 두 손가락 확대까지
+   막혀 본문을 키워 읽을 수 없게 된다. 글자를 키워서 확대할 이유를 없앤다.
+
+   폭이 아니라 입력 장치로 가른다. 폰을 가로로 눕히면 640px 을 넘기 때문이다.
+   레이어 밖이라 Tailwind 의 text-[14px] 보다 우선한다. */
+@media (pointer: coarse) {
+  input, textarea, select { font-size: 16px; }
+}
+
 /* 입력 장치별 조작 안내 — 마우스와 터치는 조작이 다르다 */
 .hint-coarse { display: none; }
 @media (pointer: coarse) {
