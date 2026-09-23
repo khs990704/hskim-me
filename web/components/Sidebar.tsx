@@ -198,7 +198,8 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
   // position:fixed 요소가 화면이 아니라 헤더를 기준으로 배치된다.
   // 그대로 두면 서랍이 헤더 높이 안에 갇힌다.
   const drawerUI = (
-    <div className={`fixed inset-0 z-50 lg:hidden ${drawer ? '' : 'pointer-events-none'}`}>
+    // 닫힌 서랍의 링크 477개가 탭 순서에 남지 않게 한다 (검색 패널과 같은 이유)
+    <div className={`fixed inset-0 z-50 lg:hidden ${drawer ? '' : 'pointer-events-none'}`} inert={!drawer}>
       <div
         onClick={() => setDrawer(false)}
         className={`absolute inset-0 bg-black/50 transition-opacity duration-200 ${drawer ? 'opacity-100' : 'opacity-0'}`}

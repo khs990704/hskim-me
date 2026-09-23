@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    사이트 아이콘 — 연결된 노드 셋.
+    16px 로 줄었을 때 살아남아야 하므로 점 세 개와 선 두 개만 남겼다.
+    배경을 칠하는 이유는 밝은 탭 배경에서도 흰 점이 보이게 하기 위함이다.
+  -->
+  <rect width="32" height="32" rx="7" fill="#0b0f1a"/>
+  <g stroke="#7dd3fc" stroke-width="1.6" stroke-linecap="round" opacity=".75">
+    <path d="M10.5 21.5 L16 11"/>
+    <path d="M16 11 L22 19.5"/>
+  </g>
+  <circle cx="16" cy="11" r="4" fill="#e8f6ff"/>
+  <circle cx="10.5" cy="21.5" r="2.8" fill="#7dd3fc"/>
+  <circle cx="22" cy="19.5" r="2.4" fill="#a78bfa"/>
+</svg>

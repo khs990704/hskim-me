@@ -33,7 +33,7 @@ export default function Home() {
       {/* 좌상단 — 이름과 한 줄 */}
       <div className="pointer-events-none absolute left-5 top-5 z-10 max-w-[52vw] sm:left-8 sm:top-8 sm:max-w-xs">
         <h1 className="text-[1.3rem] font-bold tracking-tight sm:text-[1.6rem]">
-          hskim<span className="text-[#4a5468]">.me</span>
+          hskim<span className="text-[#78839c]">.me</span>
         </h1>
         <p className="mt-1 hidden text-[13px] leading-6 text-[#8b95a7] sm:block">
           지식 노트와 프로젝트 기록을 연결해 둔 곳입니다.
@@ -62,7 +62,7 @@ export default function Home() {
         자리가 모자라면 접히게 둔다.
       */}
       <div className="pointer-events-none absolute inset-x-5 bottom-5 z-10 flex flex-col items-end gap-2 sm:inset-x-8 sm:bottom-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-        <div className="text-right text-[11.5px] leading-5 text-[#4a5468] sm:text-left">
+        <div className="text-right text-[11.5px] leading-5 text-[#78839c] sm:text-left">
           <div className="tabular-nums">
             문서 {docs.length} · 연결 {g.links.length}
           </div>
