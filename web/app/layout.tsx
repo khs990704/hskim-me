@@ -26,15 +26,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko" data-theme="dark" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/index.min.css"
-        />
+        {/*
+          폰트는 우리가 들고 있다 (scripts/fetch-fonts.mjs).
+          CDN 에 두었을 때는 렌더 차단 경로에 남의 서버가 끼어 300ms 를 먹었다.
+
+          preload 하는 네 조각은 우리 글 전체 글자의 96%를 덮는다.
+          한글 서브셋은 쓰임이 한쪽으로 몰려 있어 — 91번 하나가 69%다 —
+          몇 개만 미리 당겨도 첫 화면이 대체 폰트로 그려졌다가 밀리는 일이 없다.
+        */}
+        {[91, 90, 89, 88].map(n => (
+          <link
+            key={n}
+            rel="preload"
+            as="font"
+            type="font/woff2"
+            crossOrigin=""
+            href={`/fonts/pretendard-1.3.9/PretendardVariable.subset.${n}.woff2`}
+          />
+        ))}
+        <link rel="stylesheet" href="/fonts/fonts.css" />
       </head>
       <body>{children}</body>
     </html>
