@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   title: { default: SITE, template: `%s — ${SITE}` },
   description: '지식 노트와 프로젝트 기록을 연결해 공개하는 개인 사이트',
   robots: { index: false, follow: false },   // P7 공개 시점에 해제
+  // 선언이 없으면 브라우저가 /favicon.ico 를 찾다가 404 를 낸다
+  icons: { icon: '/icon.svg', apple: '/apple-icon.png' },
 }
 
 // 첫 페인트 전에 테마를 결정한다. 없으면 화면이 번쩍인다.

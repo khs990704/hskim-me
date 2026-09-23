@@ -138,7 +138,10 @@ export default function Search() {
   }, [cursor])
 
   const panel = (
-    <div className={`fixed inset-0 z-[60] ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
+    // 닫혀 있어도 DOM 에 남는다(열고 닫을 때 애니메이션을 주려고).
+    // aria-hidden 만으로는 안의 단추가 탭 순서에 그대로 남아, 키보드로 넘기면
+    // 보이지 않는 곳으로 초점이 사라진다. inert 가 초점·클릭·읽기를 함께 막는다.
+    <div className={`fixed inset-0 z-[60] ${open ? '' : 'pointer-events-none'}`} inert={!open}>
       <div
         onClick={() => setOpen(false)}
         className={`absolute inset-0 bg-black/55 transition-opacity duration-150 ${open ? 'opacity-100' : 'opacity-0'}`}
@@ -259,7 +262,6 @@ export default function Search() {
     <>
       <button
         onClick={() => setOpen(true)}
-        aria-label="검색"
         title="검색 (Ctrl+K)"
         // 헤더와 같은 배경이면 입력창처럼 보이지 않는다.
         // 한 단계 눌러 앉힌 배경으로 '여기에 쓸 수 있다' 를 드러낸다.
@@ -268,8 +270,8 @@ export default function Search() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
           <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
         </svg>
-        <span className="hidden sm:inline">검색</span>
-        <kbd className="ml-auto hidden rounded border border-[var(--line)] px-1 text-[10px] md:inline">Ctrl K</kbd>
+        <span className="sr-only sm:not-sr-only">검색</span>
+        <kbd aria-hidden className="ml-auto hidden rounded border border-[var(--line)] px-1 text-[10px] md:inline">Ctrl K</kbd>
       </button>
       {mounted && createPortal(panel, document.body)}
     </>
