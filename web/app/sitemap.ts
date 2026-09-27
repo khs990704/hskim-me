@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { allDocs } from '../lib/content'
 
-const BASE = 'https://www.hskim.me'
+// 정식 주소 (D-13). www 는 Cloudflare 규칙으로 여기로 301 된다
+const BASE = 'https://hskim.me'
 
 export const dynamic = 'force-static'
 

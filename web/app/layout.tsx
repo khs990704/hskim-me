@@ -3,7 +3,8 @@ import { social } from '../lib/og'
 import './globals.css'
 
 const SITE = 'hskim.me'
-const BASE = 'https://www.hskim.me'
+// 정식 주소 (D-13). www 는 Cloudflare 규칙으로 여기로 301 된다
+const BASE = 'https://hskim.me'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),

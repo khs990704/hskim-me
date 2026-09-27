@@ -17,6 +17,7 @@
 | 2026-09-27 | **해제 확인** — Cloudflare 에 zone 추가 성공 |
 | 2026-09-27 | 레코드 대조(MX 2·TXT 2·www 일치), DNSSEC 꺼짐 확인, `www` 프록시 끔 |
 | 2026-09-27 | 네임서버 `aarav` · `elisa`.ns.cloudflare.com 으로 변경. 등록소 반영 16:36 KST |
+| 2026-09-28 | Cloudflare 활성화 → Pages 에 `hskim.me` 연결 → `www` 301 → **완료** |
 
 ```
 POST /client/v4/zones
@@ -27,7 +28,7 @@ POST /client/v4/zones
 대시보드 화면이 아니라 **API 가 직접 거부**하므로 UI 캐시 문제가 아니다.
 확인해야 할 두 가지 — 하위 도메인 차단(`include_subdomains`) 잔존 여부, 그리고 실제 보유 계정.
 
-**해제됨 (2026-09-27).** 네임서버 전환 후 Cloudflare 활성화 대기. 다음은 Pages 에 `hskim.me` 연결.
+**완료 (2026-09-28).** `hskim.me` 개통, `www` 는 `hskim.me` 로 301.
 
 ---
 
