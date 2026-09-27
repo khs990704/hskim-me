@@ -12,10 +12,8 @@
 #
 # 해제 절차 — company-case-review.md 의 체크리스트를 통과한 섹션만 이 목록에서 뺀다.
 
-03 Portfolio/Portfolio.md | 실무 프로젝트            | 회사 프로젝트 본문 전체. 아래 하위 섹션이 모두 제외되면 빈 제목만 남으므로 함께 지정
-03 Portfolio/Portfolio.md | Company MLOps Platform  | 회사 프로젝트. 검수 전까지 비공개
-03 Portfolio/Portfolio.md | NSR                     | 회사 프로젝트. 검수 전까지 비공개
-03 Portfolio/Portfolio.md | On-device Security      | 회사 프로젝트. ⛔ 케이스와 동일한 암호·TEE 구현 내용 포함
-03 Portfolio/Portfolio.md | SecuAI Model Security Platform | 회사 프로젝트. 검수 전까지 비공개
-03 Portfolio/Portfolio.md | SecuAI MLOps Pipeline   | 회사 프로젝트. 검수 전까지 비공개
-03 Portfolio/Portfolio.md | Hazard Data             | 회사 프로젝트. 검수 전까지 비공개
+# ── 회사 케이스 공통 (D-16) ─────────────────────────────────────────────
+# 경로가 '/**' 로 끝나면 그 아래 모든 노트에 적용한다.
+# 본문은 Vault 에서 공개 기준에 맞게 쓰여 있다. 여기서는 독자에게 의미 없는 내부 자료만 뺀다.
+02 Project Cases/Project Index/03 Company/** | 블로그/포트폴리오 후보    | 글감 메모
+02 Project Cases/Project Index/03 Company/** | 원본 구성               | 사내 저장소 폴더 이름

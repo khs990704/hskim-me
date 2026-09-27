@@ -4,7 +4,7 @@
 // Vault 원본은 읽기만 하며 어떤 경우에도 쓰지 않는다.
 import fs from 'node:fs'
 import path from 'node:path'
-import { VAULT, STAGE, WHITELIST, OPT_IN, ROOT } from '../config.mjs'
+import { VAULT, STAGE, WHITELIST, OPT_IN, OPT_IN_APPROVED, ROOT } from '../config.mjs'
 import { readFrontmatter } from './frontmatter.mjs'
 
 const EXCLUDE = fs.readFileSync(path.join(ROOT, 'exclude.txt'), 'utf8')
@@ -45,7 +45,8 @@ function decide(rel, raw) {
 
   // D-08: 회사 케이스는 기본 비공개. publish: true 가 있어야 통과.
   if (OPT_IN.some(base => isUnder(rel, base))) {
-    if (data.publish !== true) {
+    const approved = OPT_IN_APPROVED.some(base => isUnder(rel, base))
+    if (data.publish !== true && !approved) {
       stats.optInCandidates.push(rel)
       return { ok: false, reason: 'optInMissing' }
     }

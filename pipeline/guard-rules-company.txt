@@ -1,0 +1,24 @@
+# 회사 프로젝트 전용 가드 규칙 (D-16)
+#
+# 적용 범위: 02 Project Cases/Project Index/03 Company/ 아래 노트와 03 Portfolio/Portfolio.md
+# 형식은 guard-rules.txt 와 같다.  심각도 | 분류 | 정규식 | 설명
+#
+# 왜 따로 두는가 —
+#   지식 노트에는 AES-256-GCM 같은 말이 정상적으로 들어간다(암호 일반을 설명하므로).
+#   회사 노트에서는 같은 말이 '우리 제품이 이렇게 동작한다' 는 설계 공개가 된다.
+#   Vault 의 'Project 케이스 지식화 규칙 > 회사 실무 케이스 공개 기준' 을 놓쳐도
+#   사이트로 새어 나가지 않게 여기서 배포를 멈춘다.
+#
+# 걸리면: 해당 문장을 규칙 문서의 '표현 예시' 처럼 고쳐 쓴다.
+#   예) 'AES-256-GCM으로 암호화하고 ML-KEM-512로 키를 래핑했다'
+#     → '표준 대칭키 암호와 양자내성 암호를 함께 써서 모델을 보호했다'
+#
+# 오탐이 확실하면 guard-allow.txt 에 파일과 분류를 적는다.
+
+error | company-crypto | \bAES-(?:\d{3}|GCM|CBC|CTR)\b | 대칭키 알고리즘과 모드 조합
+error | company-crypto | \bGCM (?:태그|tag)\b | 인증 태그 처리 방식
+error | company-crypto | \bML-KEM(?:-\d+)?\b|\bKyber\d*\b | 양자내성 알고리즘과 파라미터
+error | company-crypto | 공유 비밀|shared secret | 키 합의 절차
+error | company-crypto | (?:키|key)\s*(?:래핑|언래핑|wrapping|unwrapping|wrap|unwrap)\b | 키 래핑 절차
+error | company-crypto | (?:순열|노이즈|잡음).{0,30}(?:되돌|역변환|역순열|복원) | 가중치 난독화 복원 방식
+error | company-crypto | \b\d+\s?(?:MiB|MB) (?:조각|단위)|짝수 인덱스 | 보안 저장소 분할 규칙

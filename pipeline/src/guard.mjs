@@ -5,17 +5,27 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { STAGE, ROOT } from '../config.mjs'
 
-const RULES = fs.readFileSync(path.join(ROOT, 'guard-rules.txt'), 'utf8')
+const loadRules = (file, scope, flags = 'g') => fs.readFileSync(path.join(ROOT, file), 'utf8')
   .split('\n')
   .map(l => l.trim())
   .filter(l => l && !l.startsWith('#'))
   .map(line => {
     // 정규식 자체에 '|' 가 들어가므로 설명은 마지막 필드로 고정해 파싱한다.
     const m = line.match(/^(\w+)\s*\|\s*([\w-]+)\s*\|\s*(.+?)\s*\|\s*([^|]*)$/)
-    if (!m) throw new Error(`guard-rules.txt 형식 오류: ${line}`)
+    if (!m) throw new Error(`${file} 형식 오류: ${line}`)
     const [, severity, category, pattern, description] = m
-    return { severity, category, description, re: new RegExp(pattern, 'g') }
+    return { severity, category, description, scope, re: new RegExp(pattern, flags) }
   })
+
+// 회사 프로젝트 전용 규칙은 회사 노트와 포트폴리오에만 건다 (D-16).
+// 지식 노트에서는 같은 표현이 암호 일반의 설명이라 정상이다.
+const COMPANY_SCOPE = rel =>
+  rel.startsWith('02 Project Cases/Project Index/03 Company/') || rel === '03 Portfolio/Portfolio.md'
+
+const RULES = [
+  ...loadRules('guard-rules.txt', () => true),
+  ...loadRules('guard-rules-company.txt', COMPANY_SCOPE, 'gi'),
+]
 
 // 예외 목록 — '검토했고 안전하다고 판단했다'는 기록
 const ALLOW = fs.readFileSync(path.join(ROOT, 'guard-allow.txt'), 'utf8')
@@ -47,6 +57,7 @@ for (const f of walk(STAGE)) {
   const lines = fs.readFileSync(f.abs, 'utf8').split('\n')
   lines.forEach((line, i) => {
     for (const rule of RULES) {
+      if (!rule.scope(f.rel)) continue
       rule.re.lastIndex = 0
       const m = rule.re.exec(line)
       if (!m) continue

@@ -16,20 +16,26 @@ import { makeProcessor } from './render.mjs'
 import { makeResolver } from './resolve.mjs'
 import { rewriteLinks } from './rewrite-links.mjs'
 import { splitPortfolio, rewriteAnchors } from './split-portfolio.mjs'
-import { pruneBrokenReferences, unwrapBrokenLinks, removeSections, markDeadAnchors } from './prune.mjs'
+import { pruneBrokenReferences, unwrapBrokenLinks, repairBrokenCells, removeSections, markDeadAnchors } from './prune.mjs'
 import { META_LINE } from './meta-line.mjs'
 
 const OUT = path.join(ROOT, 'out')
 
-// 섹션 단위 제외 규칙
+// 섹션 단위 제외 규칙. 경로가 '/**' 로 끝나면 그 폴더 아래 전부에 적용한다
 const SECTION_EXCLUDES = new Map()
+const SECTION_EXCLUDES_UNDER = []   // [폴더, 제목]
 for (const line of fs.readFileSync(path.join(ROOT, 'exclude-sections.txt'), 'utf8').split('\n')) {
   const t = line.trim()
   if (!t || t.startsWith('#')) continue
   const [file, title] = t.split('|').map(x => x.trim())
+  if (file.endsWith('/**')) { SECTION_EXCLUDES_UNDER.push([file.slice(0, -3), title]); continue }
   if (!SECTION_EXCLUDES.has(file)) SECTION_EXCLUDES.set(file, [])
   SECTION_EXCLUDES.get(file).push(title)
 }
+const sectionExcludesFor = rel => [
+  ...(SECTION_EXCLUDES.get(rel) ?? []),
+  ...SECTION_EXCLUDES_UNDER.filter(([dir]) => rel.startsWith(dir + '/')).map(([, title]) => title),
+]
 const toPosix = p => p.split(path.sep).join('/')
 
 function walk(dir, rel = '', out = []) {
@@ -154,6 +160,7 @@ for (const d of docs) {
 }
 
 const routeToTitle = new Map(pages.map(p => [p.route, p.title]))
+const routeToDescription = new Map(pages.map(p => [p.route, p.description]))
 
 // ---------- 2) 연결 ----------
 const backlinks = new Map()
@@ -175,7 +182,7 @@ for (const p of pages) {
   })
 
   // 섹션 단위 제외를 먼저 적용하고, 그 섹션을 가리키는 앵커를 비공개로 표시한다
-  const titles = SECTION_EXCLUDES.get(p.rel) ?? []
+  const titles = sectionExcludesFor(p.rel)
   if (titles.length) {
     const { removed, deadAnchors } = removeSections(p.tree, titles)
     if (removed.length) report.sectionsRemoved.push({ file: p.rel, sections: removed.map(r => r.title) })
@@ -196,6 +203,8 @@ for (const p of pages) {
   const uw = unwrapBrokenLinks(p.tree)
   report.pruned.unwrapped += uw.unwrapped
   report.pruned.dropped = (report.pruned.dropped ?? 0) + uw.dropped
+  report.pruned.repairedCells = (report.pruned.repairedCells ?? 0) +
+    repairBrokenCells(p.tree, route => routeToDescription.get(route) ?? '')
 
   // 목차는 정리 후 다시 만든다. 제거된 섹션 제목이 목차에 남으면 안 된다.
   const toc = []
@@ -388,7 +397,7 @@ const pd = report.pruned
 if (report.sectionsRemoved.length) {
   for (const s of report.sectionsRemoved) console.log(`  섹션 제외 — ${s.file}: ${s.sections.join(', ')}`)
 }
-console.log(`  비공개 참조 정리 — 표 행 ${pd.rows} · 목록 항목 ${pd.items} · 문단 ${pd.paragraphs} · 빈 표 ${pd.tables} · 빈 목록 ${pd.lists} · 빈 섹션 제목 ${pd.headings} · 링크 평문화 ${pd.unwrapped} · 항목 제거 ${pd.dropped ?? 0}`)
+console.log(`  비공개 참조 정리 — 표 행 ${pd.rows} · 목록 항목 ${pd.items} · 문단 ${pd.paragraphs} · 빈 표 ${pd.tables} · 빈 목록 ${pd.lists} · 빈 섹션 제목 ${pd.headings} · 링크 평문화 ${pd.unwrapped} · 항목 제거 ${pd.dropped ?? 0} · 깨진 칸 복구 ${pd.repairedCells ?? 0}`)
 console.log('\n  연결 상위 5개')
 for (const h of hubs) console.log(`    ${String(h.degree).padStart(4)}  ${h.title}`)
 if (report.failed.length) { console.log('\n  실패:'); for (const f of report.failed.slice(0,5)) console.log(`    ${f.file} — ${f.error}`) }
