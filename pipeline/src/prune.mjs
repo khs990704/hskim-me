@@ -155,9 +155,11 @@ const SEP_ONLY = /^[\s,·、;]*$/
 export function unwrapBrokenLinks(tree) {
   const stat = { unwrapped: 0, dropped: 0 }
 
-  const walk = (node, inEnum) => {
+  // cell: 지금 걷고 있는 표 칸. 여기서 항목을 빼면 표시해 둔다(repairBrokenCells 가 쓴다)
+  const walk = (node, inEnum, cell) => {
     if (!node.children) return
     const enumHere = inEnum || (node.type === 'element' && ENUM_TAGS.has(node.tagName))
+    const cellHere = node.type === 'element' && node.tagName === 'td' ? node : cell
     const next = []
     let skipNextSeparator = false
 
@@ -170,6 +172,7 @@ export function unwrapBrokenLinks(tree) {
       if (child.type === 'element' && isBroken(child)) {
         if (enumHere) {
           stat.dropped++
+          if (cellHere) cellHere.properties = { ...cellHere.properties, dataDropped: true }
           // 제거한 항목에 붙어 있던 구분자 하나만 같이 없앤다
           const last = next[next.length - 1]
           if (last && last.type === 'text' && SEP_ONLY.test(last.value) && last.value.trim() !== '') next.pop()
@@ -180,7 +183,7 @@ export function unwrapBrokenLinks(tree) {
         next.push(...child.children)
         continue
       }
-      walk(child, enumHere)
+      walk(child, enumHere, cellHere)
       next.push(child)
     }
 
@@ -191,6 +194,51 @@ export function unwrapBrokenLinks(tree) {
     node.children = next
   }
 
-  walk(tree, false)
+  walk(tree, false, null)
   return stat
+}
+
+/**
+ * 링크가 빠져 문장이 깨진 표 칸을 고친다.
+ *
+ * 표의 설명 칸이 하위 노트 이름으로 문장을 시작하는 경우가 있다.
+ *   [[OP-TEE]]의 파일·키 저장소와 모델 복원, [[C ONNX Packaging]]의 모델 패키징…
+ * 하위 노트가 비공개면 이름만 빠지고 조사가 남는다.
+ *   의 파일·키 저장소와 모델 복원, 의 모델 패키징…
+ *
+ * 이런 칸은 그 줄의 첫 칸이 가리키는 노트의 한 줄 설명으로 바꾼다. 표의 첫 칸이
+ * 노트이고 나머지 칸이 그 노트를 설명하는 구성(MOC, 허브 노트)에서 뜻이 맞는다.
+ * 문장이 깨지지 않은 칸은 건드리지 않는다. 링크 목록에서 하나가 빠진 정도라면
+ * 남은 목록이 그대로 읽히기 때문이다.
+ *
+ * describe(route) 가 설명을 못 주면 칸을 비운다. 깨진 문장보다 빈칸이 낫다.
+ */
+const BROKEN_CELL = /^(의|와|과|및|를|을|은|는|에|로)\s|,\s*(의|와|과|및|를|을)\s/
+
+export function repairBrokenCells(tree, describe) {
+  let repaired = 0
+  visit(tree, 'element', row => {
+    if (row.tagName !== 'tr') return
+    const cells = (row.children ?? []).filter(c => c.type === 'element' && c.tagName === 'td')
+    if (cells.length < 2) return
+    let route = null
+    visit(cells[0], 'element', a => {
+      if (route || a.tagName !== 'a') return
+      const href = a.properties?.href
+      if (typeof href === 'string' && href.startsWith('/')) {
+        try { route = decodeURIComponent(href.slice(1)).split('#')[0] } catch { route = href.slice(1).split('#')[0] }
+      }
+    })
+    for (const cell of cells.slice(1)) {
+      if (!cell.properties?.dataDropped) continue
+      delete cell.properties.dataDropped
+      if (!BROKEN_CELL.test(textOf(cell))) continue
+      const text = route ? describe(route) : ''
+      cell.children = text ? [{ type: 'text', value: text }] : []
+      repaired++
+    }
+  })
+  // 고치지 않은 칸의 표시도 지운다. HTML 로 새어 나가면 안 된다
+  visit(tree, 'element', n => { if (n.properties?.dataDropped) delete n.properties.dataDropped })
+  return repaired
 }
