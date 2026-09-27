@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { social } from '../../../lib/og'
 import type { Metadata } from 'next'
 import { allDocs } from '../../../lib/content'
 
@@ -6,6 +7,7 @@ export const metadata: Metadata = {
   title: '전체 목록',
   description: '공개된 지식 노트와 프로젝트 기록 전체 목록',
   alternates: { canonical: '/index-all' },
+  ...social('_index', '전체 목록', '공개된 지식 노트와 프로젝트 기록 전체 목록', 'website'),
 }
 
 const strip = (s: string) => s.replace(/^\d{2}\s+/, '')

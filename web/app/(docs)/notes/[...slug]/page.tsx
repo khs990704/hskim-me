@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { social } from '../../../../lib/og'
 import type { Metadata } from 'next'
 import { allDocs, getDoc } from '../../../../lib/content'
 import DocPage from '../../../../components/DocPage'
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: doc.title,
     description: doc.description,
     alternates: { canonical: '/' + doc.route },
-    openGraph: { title: doc.title, description: doc.description, type: 'article' },
+    ...social(doc.route, doc.title, doc.description),
   }
 }
 

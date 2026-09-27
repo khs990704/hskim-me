@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { social } from '../../../lib/og'
 import type { Metadata } from 'next'
 import { getDoc, allDocs } from '../../../lib/content'
 import NoteBody from '../../../components/NoteBody'
@@ -9,6 +10,7 @@ export function generateMetadata(): Metadata {
     title: '포트폴리오',
     description: doc?.description || '만든 것들과 그 과정에 대한 기록',
     alternates: { canonical: '/portfolio' },
+    ...social('portfolio', '포트폴리오', doc?.description || '만든 것들과 그 과정에 대한 기록'),
   }
 }
 

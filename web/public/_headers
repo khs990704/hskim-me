@@ -9,3 +9,8 @@
 # Next.js 가 파일 이름에 해시를 넣는다. 같은 이유로 안전하다.
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
+
+# 링크 미리보기 이미지. 주소는 그대로인 채 제목이 바뀌면 내용이 바뀌므로 immutable 은 아니다.
+# 하루만 캐시한다.
+/og/*
+  Cache-Control: public, max-age=86400

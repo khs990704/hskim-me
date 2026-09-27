@@ -54,6 +54,16 @@ for (const r of routes) {
   const lacks = []
   if (!/<meta name="description"/.test(html)) lacks.push('description')
   if (!/<link rel="canonical"/.test(html)) lacks.push('canonical')
+
+  // 링크 미리보기 이미지. 경로가 어긋나면 미리보기만 조용히 깨지므로 파일까지 본다
+  const og = html.match(/<meta property="og:image" content="([^"]+)"/)?.[1]
+  if (!og) lacks.push('og:image')
+  else {
+    const file = path.join(OUT, decodeURIComponent(new URL(og, 'https://x').pathname))
+    if (!fs.existsSync(file)) lacks.push(`og:image 파일 없음(${og})`)
+  }
+  if (!/<meta name="twitter:card" content="summary_large_image"/.test(html)) lacks.push('twitter:card')
+
   if (lacks.length) noMeta.push([r, lacks.join(' · ')])
 }
 
@@ -64,9 +74,9 @@ console.log(`\n  메타 태그 검사 — 페이지 ${routes.length}개`)
 if (noMeta.length) {
   console.error(`  ⚠ 빠진 페이지 ${noMeta.length}개\n`)
   for (const [r, lacks] of noMeta.slice(0, 20)) console.error(`    /${r} — ${lacks}`)
-  console.error('\n  해당 라우트의 generateMetadata 에 description 과 alternates.canonical 을 넣으세요.\n')
+  console.error('\n  해당 라우트의 generateMetadata 에 description, alternates.canonical, social() 을 넣으세요.\n')
   process.exit(1)
 }
-console.log('  모든 페이지에 description 과 canonical 이 있습니다')
+console.log('  모든 페이지에 description · canonical · og:image(파일 포함) · twitter:card 가 있습니다')
 console.log(has404 ? '  404.html 있음\n' : '  ⚠ 404.html 없음 — app/not-found.tsx 를 확인하세요\n')
 if (!has404) process.exit(1)

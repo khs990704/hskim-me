@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { social } from '../lib/og'
 import type { Metadata } from 'next'
 import { allDocs, graph } from '../lib/content'
 import GraphStage from '../components/GraphStage'
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
   title: 'hskim.me',
   description: '지식 노트와 프로젝트 기록을 연결해 공개하는 개인 사이트',
   alternates: { canonical: '/' },
+  ...social('_site', 'hskim.me', '지식 노트와 프로젝트 기록을 연결해 공개하는 개인 사이트', 'website'),
 }
 
 /**

@@ -93,6 +93,19 @@ for (const w of MONO_WEIGHTS) {
 }
 save(`${MONO_DIR}/OFL.txt`, await get(`${MONO}/LICENSE`))
 
+// ── OG 이미지용 (빌드 때만 씀. 사이트에는 나가지 않는다) ──────────────
+// OG 이미지를 그리는 Satori 는 woff2 를 읽지 못해 OTF 가 따로 필요하다.
+const OG_DIR = path.join(HERE, '..', 'assets', 'og-fonts')
+const OG_BASE = `https://cdn.jsdelivr.net/npm/pretendard@${PRETENDARD.replace(/^v/, '')}/dist/public/static`
+fs.mkdirSync(OG_DIR, { recursive: true })
+for (const w of ['Bold', 'Medium']) {
+  const file = `Pretendard-${w}.otf`
+  const buf = await get(`${OG_BASE}/${file}`, true)
+  if (buf.length < 100000 || buf.subarray(0, 4).toString() !== 'OTTO') throw new Error('OTF 가 아님: ' + file)
+  fs.writeFileSync(path.join(OG_DIR, file), buf)
+}
+fs.writeFileSync(path.join(OG_DIR, 'OFL.txt'), await get(`${GH}/LICENSE`))
+
 const header = `/* scripts/fetch-fonts.mjs 가 만든 파일. 직접 고치지 말 것.\n` +
   `   Pretendard ${PRETENDARD} (OFL) · JetBrains Mono 5 (OFL) */\n`
 save('fonts.css', header + rules.join('\n') + '\n')
