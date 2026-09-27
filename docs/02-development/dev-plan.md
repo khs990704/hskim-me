@@ -333,3 +333,6 @@
 | 2026-09-27 | P7 | 빌드 뒤 검사에 og:image(파일 존재까지)·twitter:card 추가 | 567/567 |
 | 2026-09-27 | P2 | **zone hold 해제** — Cloudflare zone 추가, 네임서버 전환(레코드 대조·DNSSEC 확인 후) | 활성화 대기 |
 | 2026-09-27 | — | obsidian-git 자동 백업 켬 (편집 멈춘 뒤 30분) · 개념 노트 13개 작성 | 상세: [작업 일지](../03-worklog/2026-09-27.md) |
+| 2026-09-28 | P2 | Cloudflare 활성화 · Pages 에 `hskim.me` 연결 (Universal 인증서 `*.hskim.me, hskim.me`) | apex 개통 |
+| 2026-09-28 | P2 | **D-13 적용** — `www` → `hskim.me` 301 (Redirect Rule, 경로·쿼리 유지), Always Use HTTPS | 코드 정식 주소 `https://hskim.me` |
+| 2026-09-28 | P2 | 빌드 뒤 검사에 canonical·og:image 주소가 정식 주소인지 확인 추가 | 567/567 |

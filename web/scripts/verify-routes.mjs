@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url'
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const CONTENT = path.join(HERE, '..', '..', 'pipeline', 'out', 'content')
 const OUT = path.join(HERE, '..', 'out')
+/** 정식 주소. app/layout.tsx 의 BASE 와 같아야 한다 */
+const ORIGIN = 'https://hskim.me'
 
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out
@@ -63,6 +65,11 @@ for (const r of routes) {
     if (!fs.existsSync(file)) lacks.push(`og:image 파일 없음(${og})`)
   }
   if (!/<meta name="twitter:card" content="summary_large_image"/.test(html)) lacks.push('twitter:card')
+
+  // 정식 주소(D-13). www 나 pages.dev 가 섞이면 검색 엔진이 주소를 둘로 나눠 본다
+  const canonical = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1] ?? ''
+  if (canonical && !canonical.startsWith(ORIGIN + '/') && canonical !== ORIGIN) lacks.push(`canonical 주소(${canonical})`)
+  if (og && !og.startsWith(ORIGIN + '/')) lacks.push(`og:image 주소(${og})`)
 
   if (lacks.length) noMeta.push([r, lacks.join(' · ')])
 }
