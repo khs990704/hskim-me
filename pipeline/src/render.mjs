@@ -4,6 +4,7 @@ import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import lineBreaks from './line-breaks.mjs'
 import remarkRehype from 'remark-rehype'
 import rehypeSlug from 'rehype-slug'
 import rehypeKatex from 'rehype-katex'
@@ -45,6 +46,8 @@ export function makeProcessor(ctx) {
   let proc = unified().use(remarkParse)
   for (const p of [ofm]) if (p.markdownPlugins) proc = proc.use(p.markdownPlugins(ctx))
   proc = proc.use(remarkGfm).use(remarkMath)
+  // 한 번 줄바꿈 처리 — 라벨 줄과 문장 끝은 줄바꿈, 문장 중간은 이어 붙임 (line-breaks.mjs)
+  proc = proc.use(lineBreaks)
   proc = proc.use(remarkRehype, { allowDangerousHtml: true })
   proc = proc.use(rehypeSlug)
   for (const p of [ofm, crawl]) if (p.htmlPlugins) proc = proc.use(p.htmlPlugins(ctx))

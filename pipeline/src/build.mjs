@@ -66,7 +66,11 @@ function firstSentence(t) {
 
 const text = node => {
   const acc = []
-  const go = n => { if (n.type === 'text') acc.push(n.value); (n.children ?? []).forEach(go) }
+  const go = n => {
+    if (n.type === 'text') acc.push(n.value)
+    else if (n.type === 'element' && n.tagName === 'br') acc.push(' ')   // 줄바꿈은 낱말 사이 공백
+    ;(n.children ?? []).forEach(go)
+  }
   go(node)
   return acc.join('')
 }
