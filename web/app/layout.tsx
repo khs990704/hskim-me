@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { social } from '../lib/og'
 import './globals.css'
 
 const SITE = 'hskim.me'
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
   title: { default: SITE, template: `%s — ${SITE}` },
   description: '지식 노트와 프로젝트 기록을 연결해 공개하는 개인 사이트',
   robots: { index: false, follow: false },   // P7 공개 시점에 해제
+  // 페이지가 따로 정하지 않으면 사이트 카드를 쓴다
+  ...social('_site', SITE, '지식 노트와 프로젝트 기록을 연결해 공개하는 개인 사이트', 'website'),
   // 선언이 없으면 브라우저가 /favicon.ico 를 찾다가 404 를 낸다
   icons: { icon: '/icon.svg', apple: '/apple-icon.png' },
 }
