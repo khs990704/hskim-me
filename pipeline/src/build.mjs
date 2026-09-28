@@ -260,6 +260,20 @@ function portfolioDocs(p) {
   return split.map(sec => {
     const tree = { type: 'root', children: sec.nodes }
 
+    // 제목 단계를 페이지 기준으로 올린다.
+    // 원본 한 파일 안에서 프로젝트는 ### 라, 나눈 페이지가 h1 없이 h3 부터 시작했다.
+    // 화면 읽기 프로그램은 h1 으로 페이지 제목을 찾고 단계로 구조를 읽는다 (KWCAG 1.3.2).
+    // 첫 제목은 h1, 나머지는 같은 폭만큼 올리되 h2 보다 위로는 올리지 않는다
+    // (/about 처럼 같은 단계의 ## 가 여럿이면 h1 이 둘이 되지 않게).
+    const base = /^h[1-6]$/.test(sec.nodes[0]?.tagName ?? '') ? Number(sec.nodes[0].tagName[1]) : 1
+    // /portfolio 인덱스는 페이지 틀이 h1(포트폴리오)을 직접 그리므로 올리지 않는다
+    if (base > 1 && sec.route !== 'portfolio') {
+      visit(tree, 'element', node => {
+        if (!/^h[1-6]$/.test(node.tagName)) return
+        node.tagName = node === sec.nodes[0] ? 'h1' : `h${Math.max(2, Number(node.tagName[1]) - (base - 1))}`
+      })
+    }
+
     const toc = []
     const features = { math: false, mermaid: false, code: false, table: false, image: false }
     visit(tree, 'element', node => {

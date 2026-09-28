@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { search, PAGE_SIZE, type Hit, type SearchDoc } from '../lib/search'
 import Highlight from './Highlight'
+import { useModalFocus } from '../lib/use-modal-focus'
 
 /** 색인은 한 번만 받아 세션 내내 재사용한다 */
 let cachedIndex: SearchDoc[] | null = null
@@ -38,6 +39,7 @@ export default function Search() {
   const [cursor, setCursor] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   /**
    * 커서를 마지막으로 움직인 것이 키보드인지.
    *
@@ -52,6 +54,7 @@ export default function Search() {
   const byKeyboard = useRef(false)
 
   useEffect(() => setMounted(true), [])
+  useModalFocus(open, dialogRef)
 
   // Cmd/Ctrl + K 로 열고 Esc 로 닫는다
   useEffect(() => {
@@ -147,7 +150,9 @@ export default function Search() {
         className={`absolute inset-0 bg-black/55 transition-opacity duration-150 ${open ? 'opacity-100' : 'opacity-0'}`}
       />
       <div
+        ref={dialogRef}
         role="dialog"
+        aria-modal="true"
         aria-label="검색"
         className={`absolute left-1/2 top-[12vh] w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface)] shadow-2xl transition-all duration-150 ${
           open ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
@@ -163,6 +168,14 @@ export default function Search() {
             value={q}
             onChange={e => setQ(e.target.value)}
             onKeyDown={onKeyDown}
+            // 결과 목록은 Tab 이 아니라 ↑↓ 로 고른다. 화면 읽기 프로그램이 지금 고른 항목을
+            // 읽을 수 있게 입력창과 목록을 combobox·listbox 로 묶는다 (KWCAG 4.2.1)
+            aria-label="검색어"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={hits.length > 0}
+            aria-controls="search-results"
+            aria-activedescendant={hits[cursor] ? `search-opt-${cursor}` : undefined}
             placeholder="제목·본문 전체에서 찾기"
             className="w-full bg-transparent py-3.5 text-[14px] text-[var(--fg)] outline-none placeholder:text-[var(--fg-faint)]"
           />
@@ -190,11 +203,15 @@ export default function Search() {
               <span className="text-[11.5px]">↑↓ 이동 · Enter 열기</span>
             </p>
           )}
-          <ul ref={listRef}>
+          <ul ref={listRef} id="search-results" role="listbox" aria-label="검색 결과">
             {hits.map((hit, i) => (
-              <li key={hit.doc.r}>
+              <li key={hit.doc.r} role="presentation">
                 <button
                   type="button"
+                  id={`search-opt-${i}`}
+                  role="option"
+                  aria-selected={i === cursor}
+                  tabIndex={-1}
                   data-active={i === cursor || undefined}
                   onMouseEnter={() => { if (!byKeyboard.current) setCursor(i) }}
                   onClick={() => go(hit)}
@@ -219,6 +236,11 @@ export default function Search() {
               </li>
             ))}
           </ul>
+        </div>
+
+        {/* 결과 수가 바뀌면 화면 읽기 프로그램이 알린다. 알림 영역은 미리 있어야 읽힌다 */}
+        <div className="sr-only" aria-live="polite">
+          {ready && q ? (total ? `${total}개 결과` : '결과가 없습니다') : ''}
         </div>
 
         {total > 0 && (

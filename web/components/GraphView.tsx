@@ -45,6 +45,8 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
   const [graph, setGraph] = useState<Graph | null>(null)
   const [size, setSize] = useState({ w: 0, h: 0 })
   const [hover, setHover] = useState<GNode | null>(null)
+  /** 이용자가 회전 멈춤 단추로 멈췄는지. 멈췄으면 조작 뒤에도 다시 돌지 않는다 */
+  const userPaused = useRef(false)
   const [supported, setSupported] = useState<boolean | null>(null)
   const [leaving, setLeaving] = useState(false)
   /** 데스크톱에서 이름표를 붙일 화면 좌표 (노드에 고정) */
@@ -212,8 +214,16 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     const pause = () => {
       controls.autoRotate = false
       clearTimeout(idle)
-      idle = setTimeout(() => { controls.autoRotate = true }, RESUME_MS)
+      idle = setTimeout(() => { if (!userPaused.current) controls.autoRotate = true }, RESUME_MS)
     }
+
+    // 회전 멈춤 단추 (RotateToggle). 움직이는 화면에는 멈출 방법이 있어야 한다 (KWCAG 2.2.2)
+    const onToggle = (e: Event) => {
+      userPaused.current = (e as CustomEvent<boolean>).detail
+      clearTimeout(idle)
+      controls.autoRotate = !userPaused.current
+    }
+    addEventListener('graph-rotate', onToggle)
     const onMove = (e: PointerEvent) => { if (e.buttons !== 0) pause() }
 
     const el = fgRef.current.renderer?.().domElement as HTMLElement | undefined
@@ -224,6 +234,7 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     return () => {
       clearTimeout(idle)
       clearTimeout(fit)
+      removeEventListener('graph-rotate', onToggle)
       canvas?.removeEventListener('dblclick', reset)
       el?.removeEventListener('pointerdown', pause)
       el?.removeEventListener('pointerup', pause)
@@ -248,7 +259,7 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
       controls.autoRotate = false
       return
     }
-    const t = setTimeout(() => { controls.autoRotate = true }, 2500)
+    const t = setTimeout(() => { if (!userPaused.current) controls.autoRotate = true }, 2500)
     return () => clearTimeout(t)
   }, [hover, fgReady])
 

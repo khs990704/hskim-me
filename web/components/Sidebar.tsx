@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useModalFocus } from '../lib/use-modal-focus'
 
 /** tree.json 의 노드. 키를 짧게 쓴 이유는 477개 × 반복이라 용량 차이가 크기 때문. */
 export type Node = { n: string; k: string; r?: string; children?: Node[] }
@@ -38,6 +39,8 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
   const [tree, setTree] = useState<Node[] | null>(cached)
   const [open, setOpen] = useState<Set<string>>(new Set())
   const [drawer, setDrawer] = useState(false)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const revealedFor = useRef<string>('')
   const [mounted, setMounted] = useState(false)
@@ -111,9 +114,13 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
   //
   // 본문 스크롤을 잠그면 스크롤바가 사라지면서 그 폭만큼 본문이 오른쪽으로 밀린다.
   // 사라진 폭을 그대로 여백으로 채워 화면이 움직이지 않게 한다.
+  useModalFocus(mode === 'trigger' && drawer, drawerRef)
+
   useEffect(() => {
     if (mode !== 'trigger' || !drawer) return
 
+    // 열면 초점을 서랍 안으로 옮긴다. 밀려 들어오는 애니메이션 뒤에
+    const focus = setTimeout(() => closeRef.current?.focus(), 30)
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawer(false) }
     addEventListener('keydown', onKey)
 
@@ -125,6 +132,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
     if (gap > 0) body.style.paddingRight = `${gap}px`
 
     return () => {
+      clearTimeout(focus)
       removeEventListener('keydown', onKey)
       body.style.overflow = prevOverflow
       body.style.paddingRight = prevPadding
@@ -205,6 +213,10 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
         className={`absolute inset-0 bg-black/50 transition-opacity duration-200 ${drawer ? 'opacity-100' : 'opacity-0'}`}
       />
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="문서 목록"
         className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-[var(--line)] bg-[var(--bg)] shadow-2xl transition-transform duration-200 ease-out ${
           drawer ? 'translate-x-0' : '-translate-x-full'
         }`}
@@ -212,6 +224,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--line-soft)] px-4">
           <span className="text-[13px] font-medium text-[var(--fg-dim)]">문서 목록</span>
           <button
+            ref={closeRef}
             onClick={() => setDrawer(false)}
             aria-label="닫기"
             className="grid h-7 w-7 place-items-center rounded text-[var(--fg-dim)] hover:bg-[var(--bg-soft)]"

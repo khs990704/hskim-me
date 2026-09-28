@@ -231,6 +231,8 @@ function attach(fig: HTMLElement, stage: HTMLElement) {
   const mk = (t: string, title: string, fn: () => void) => {
     const b = document.createElement('button')
     b.type = 'button'; b.textContent = t; b.title = title
+    // 기호(− + ⤿ ⤢)만으로는 화면 읽기 프로그램이 무슨 단추인지 알리지 못한다
+    b.setAttribute('aria-label', title)
     b.addEventListener('click', fn)
     tools.appendChild(b)
   }
