@@ -41,7 +41,8 @@ export default function Page() {
         {[...groups.entries()].map(([key, items]) => (
           <section key={key}>
             <h2 className="mb-2.5 text-[13px] font-medium tracking-wide text-[var(--fg-faint)]">
-              {key.split(' / ').map(strip).join(' / ')}
+              {/* 분류가 없는 것은 소개·포트폴리오 두 쪽이다. 빈 제목은 화면 읽기 프로그램에 '제목' 만 읽힌다 */}
+              {key ? key.split(' / ').map(strip).join(' / ') : '소개 · 포트폴리오'}
             </h2>
             <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2 xl:grid-cols-3">
               {items.map(d => (
