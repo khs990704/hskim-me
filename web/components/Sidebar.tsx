@@ -41,6 +41,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
   const [drawer, setDrawer] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const openerRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const revealedFor = useRef<string>('')
   const [mounted, setMounted] = useState(false)
@@ -114,7 +115,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
   //
   // 본문 스크롤을 잠그면 스크롤바가 사라지면서 그 폭만큼 본문이 오른쪽으로 밀린다.
   // 사라진 폭을 그대로 여백으로 채워 화면이 움직이지 않게 한다.
-  useModalFocus(mode === 'trigger' && drawer, drawerRef)
+  useModalFocus(mode === 'trigger' && drawer, drawerRef, openerRef)
 
   useEffect(() => {
     if (mode !== 'trigger' || !drawer) return
@@ -261,6 +262,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
   return (
     <>
       <button
+        ref={openerRef}
         onClick={() => setDrawer(o => !o)}
         aria-label={drawer ? '문서 목록 닫기' : '문서 목록 열기'}
         aria-expanded={drawer}
