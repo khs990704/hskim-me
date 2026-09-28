@@ -7,7 +7,7 @@
   "scripts": {
     "stage": "node src/stage.mjs",
     "guard": "node src/guard.mjs",
-    "build": "node src/stage.mjs && node src/guard.mjs && node src/build.mjs && node src/layout.mjs && node src/search-index.mjs",
+    "build": "node src/stage.mjs && node src/guard.mjs && node src/build.mjs && node src/profile.mjs && node src/layout.mjs && node src/search-index.mjs",
     "preview": "node src/preview.mjs",
     "report": "node src/classify-broken.mjs",
     "company": "node src/company-digest.mjs && node src/company-verdict.mjs",
@@ -35,6 +35,7 @@
     "remark-rehype": "^11.1.2",
     "shiki": "^4.4.3",
     "unified": "^11.0.5",
-    "vfile": "^6.0.3"
+    "vfile": "^6.0.3",
+    "yaml": "^2.9.1"
   }
 }
