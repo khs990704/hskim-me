@@ -14,6 +14,7 @@ import remarkGfm from 'remark-gfm'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { STAGE, ROOT, PROFILE } from '../config.mjs'
+import { RECORD_IDS } from '../achievements.mjs'
 
 const OUT = path.join(ROOT, 'out')
 const SRC = path.join(STAGE, PROFILE)
@@ -81,6 +82,7 @@ const profile = {
   certs: [],
   featured: [],
   traits: [],
+  records: [],
   sections: {},
 }
 
@@ -174,6 +176,17 @@ list(data.traits, 'traits').forEach((t, i) => {
   })
 })
 
+// ---------- 기록 업적 ----------
+// 숫자로 셀 수 없는 일 (패키지 배포, 연구과제 참여 …). id 는 achievements.mjs 의 record 값
+list(data.records, 'records').forEach((r, i) => {
+  const w = `records[${i + 1}]`
+  const id = str(r.id, `${w}.id`)
+  if (id && !RECORD_IDS[id]) err(`${w}.id`, `모르는 기록입니다: ${id} (쓸 수 있는 것: ${Object.entries(RECORD_IDS).map(([k, v]) => `${k}(${v})`).join(', ')})`)
+  const date = dateStr(r.date)
+  if (date && !YMD.test(date)) err(`${w}.date`, `2024-05 또는 2024-05-12 모양이어야 합니다 (지금: ${date})`)
+  profile.records.push({ id, date: date || null, note: str(r.note, `${w}.note`, { required: false }) })
+})
+
 // ---------- 본문 절 ----------
 // `## 자기소개` 처럼 제목으로 나눈다. 화면의 어느 칸에 들어갈지는 제목으로 정한다.
 const md = unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeStringify)
@@ -198,5 +211,5 @@ if (errors.length) {
   process.exit(1)
 }
 fs.writeFileSync(path.join(OUT, 'profile.json'), JSON.stringify(profile, null, 2))
-console.log(`\n  프로필 — 경력 ${profile.career.length} · 학력 ${profile.education.length} · 교육 ${profile.training.length} · 자격 ${profile.certs.length} · 대표 프로젝트 ${profile.featured.length} · 핵심 역량 ${profile.traits.length} · 본문 절 ${Object.keys(profile.sections).length}`)
+console.log(`\n  프로필 — 경력 ${profile.career.length} · 학력 ${profile.education.length} · 교육 ${profile.training.length} · 자격 ${profile.certs.length} · 대표 프로젝트 ${profile.featured.length} · 핵심 역량 ${profile.traits.length} · 기록 업적 ${profile.records.length} · 본문 절 ${Object.keys(profile.sections).length}`)
 for (const w of warns) console.log(`  ! ${w}`)
