@@ -7,7 +7,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { STAGE, ROOT, VAULT } from '../config.mjs'
-import { SKILLS, DOMAINS } from '../skills.mjs'
+import { SKILLS, DOMAINS, IMPLIES, NO_CODE_PROJECTS } from '../skills.mjs'
 import { ACHIEVEMENTS, RARITY, GROUPS } from '../achievements.mjs'
 
 const OUT = path.join(ROOT, 'out')
@@ -114,7 +114,18 @@ const listSkills = type => [...skillMap.values()]
   .map(s => ({ name: s.name, domain: s.domain, projects: [...s.projects].sort() }))
   .sort((a, b) => b.projects.length - a.projects.length || a.name.localeCompare(b.name))
 const tools = listSkills('tool')
+
+// 언어 — 프로젝트 케이스에 적힌 것만 센다
 const languages = listSkills('language')
+
+// 언어 누락 검사 — Pandas 를 썼는데 Python 이 없다면 적는 것을 잊은 것이다
+for (const p of projects) {
+  if (NO_CODE_PROJECTS.includes(p.name)) continue
+  for (const [lang, from] of Object.entries(IMPLIES)) {
+    const via = p.techs.find(t => from.includes(t))
+    if (via && !p.techs.includes(lang)) warns.push(`언어 누락 의심 — ${p.name}: ${via} 를 썼는데 관련 기술에 ${lang} 이 없습니다`)
+  }
+}
 
 // 능력치 = 그 분야의 기술(도구 · 개념)을 하나라도 쓴 프로젝트 수
 const stats = Object.entries(DOMAINS).map(([key, label]) => {

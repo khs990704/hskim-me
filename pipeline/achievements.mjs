@@ -89,6 +89,8 @@ export const ACHIEVEMENTS = [
 
   // ── 스킬 — 기술 스택 ──
   { id: 'skill-lang-3', group: 'skill', title: '다국어 구사자', cond: '프로그래밍 언어 3개', rarity: 'rare', count: M => M.languages.length, target: 3 },
+  { id: 'skill-lang-5', group: 'skill', title: '바벨의 통역사', cond: '프로그래밍 언어 5개', rarity: 'epic', count: M => M.languages.length, target: 5 },
+  { id: 'skill-lang-7', group: 'skill', title: '만국의 언어술사', cond: '프로그래밍 언어 7개', rarity: 'legendary', count: M => M.languages.length, target: 7 },
   { id: 'skill-tools-30', group: 'skill', title: '도구 수집가', cond: '기술 30종', rarity: 'rare', count: M => M.tools.length, target: 30 },
   { id: 'skill-tools-100', group: 'skill', title: '기술 백과', cond: '기술 100종', rarity: 'epic', count: M => M.tools.length, target: 100 },
   { id: 'skill-all-stats', group: 'skill', title: '만능 모험가', cond: '능력치 6개 모두 1 이상', rarity: 'epic', count: M => M.stats.filter(s => s.value > 0).length, target: M => M.stats.length },
