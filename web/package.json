@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "node scripts/guard-dev.mjs && node scripts/gen-static.mjs && node scripts/gen-og.mjs",
+    "prebuild": "node scripts/guard-dev.mjs && node scripts/gen-static.mjs && node scripts/gen-pixel-font.mjs && node scripts/gen-og.mjs",
     "build": "next build",
     "postbuild": "node scripts/verify-routes.mjs",
     "typecheck": "tsc --noEmit",
-    "dev": "node scripts/gen-static.mjs && next dev",
+    "dev": "node scripts/gen-static.mjs && node scripts/gen-pixel-font.mjs && next dev",
     "start": "next start"
   },
   "dependencies": {
@@ -29,6 +29,7 @@
     "postcss": "^8.5.28",
     "satori": "^0.33.5",
     "sharp": "^0.35.4",
+    "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3"
   }

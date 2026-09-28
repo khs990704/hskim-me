@@ -238,6 +238,7 @@ const M = {
   tools, languages, stats,
   careerMonths,
   licenses, courses, coursesBestYear,
+  licensesIn: field => licenses.filter(c => c.field === field),
   dates,
   life,
 }
