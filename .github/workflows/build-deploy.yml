@@ -40,6 +40,9 @@ jobs:
           repository: ${{ vars.VAULT_REPO }}
           ssh-key: ${{ secrets.VAULT_DEPLOY_KEY }}
           path: .vault
+          # 프로필 칭호의 꾸준함 계열이 커밋 날짜를 센다 (pipeline/src/character.mjs).
+          # 기본값(1)은 마지막 커밋만 받아 날짜를 셀 수 없다.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
