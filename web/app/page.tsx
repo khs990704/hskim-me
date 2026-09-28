@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { allDocs, graph } from '../lib/content'
 import GraphStage from '../components/GraphStage'
 import Search from '../components/Search'
+import RotateToggle from '../components/RotateToggle'
 
 export const metadata: Metadata = {
   title: 'hskim.me',
@@ -70,6 +71,7 @@ export default function Home() {
           </div>
           <div className="mt-0.5 hint-fine">드래그 회전 · 휠 확대 · 노드 클릭</div>
           <div className="mt-0.5 hint-coarse">끌어서 회전 · 두 손가락 확대</div>
+          <RotateToggle />
         </div>
 
         {/* 메인에는 헤더도 서랍도 없다. 좁은 화면에서는 여기가 유일한 진입 경로다 */}
