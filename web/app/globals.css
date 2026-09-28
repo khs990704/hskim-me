@@ -369,6 +369,10 @@ a { color: inherit; text-decoration: none; }
 /* 메인(.stage)은 테마와 관계없이 어두운 배경이라 밝은 선을 유지한다 */
 :root[data-theme="light"] :not(.stage *):focus-visible { outline-color: #0369a1; }
 
+/* 검색 입력창은 Tab 으로 들어왔을 때만 초점선을 그린다.
+   글자 입력창은 클릭·단축키로 열어도 늘 :focus-visible 이 되기 때문 (Search.tsx) */
+[role="combobox"]:focus-visible:not([data-tab="1"]) { outline: none; }
+
 /* 본문 바로가기로 옮겨 온 main 은 초점선을 그리지 않는다. 화면 전체에 테두리가 생긴다 */
 main:focus { outline: none; }
 

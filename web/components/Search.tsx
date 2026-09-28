@@ -40,6 +40,7 @@ export default function Search() {
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
+  const openerRef = useRef<HTMLButtonElement>(null)
   /**
    * 커서를 마지막으로 움직인 것이 키보드인지.
    *
@@ -52,9 +53,24 @@ export default function Search() {
    * hover 는 마우스가 정말 움직인 뒤에만 받는다.
    */
   const byKeyboard = useRef(false)
+  /**
+   * 입력창에 Tab 으로 들어왔는지.
+   *
+   * 브라우저는 글자 입력창을 클릭·단축키로 열어도 늘 :focus-visible 로 본다.
+   * 그러면 Ctrl+K 로 열 때마다 초점선이 떠서 Tab 을 누른 것처럼 보인다.
+   * 초점선은 Tab 으로 돌아왔을 때만 그린다 (data-tab, globals.css).
+   */
+  const lastKeyTab = useRef(false)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { lastKeyTab.current = e.key === 'Tab' }
+    const onPointer = () => { lastKeyTab.current = false }
+    addEventListener('keydown', onKey, true)
+    addEventListener('pointerdown', onPointer, true)
+    return () => { removeEventListener('keydown', onKey, true); removeEventListener('pointerdown', onPointer, true) }
+  }, [])
 
   useEffect(() => setMounted(true), [])
-  useModalFocus(open, dialogRef)
+  useModalFocus(open, dialogRef, openerRef)
 
   // Cmd/Ctrl + K 로 열고 Esc 로 닫는다
   useEffect(() => {
@@ -170,6 +186,7 @@ export default function Search() {
             onKeyDown={onKeyDown}
             // 결과 목록은 Tab 이 아니라 ↑↓ 로 고른다. 화면 읽기 프로그램이 지금 고른 항목을
             // 읽을 수 있게 입력창과 목록을 combobox·listbox 로 묶는다 (KWCAG 4.2.1)
+            onFocus={e => { e.currentTarget.dataset.tab = lastKeyTab.current ? '1' : '' }}
             aria-label="검색어"
             role="combobox"
             aria-autocomplete="list"
@@ -212,6 +229,10 @@ export default function Search() {
                   role="option"
                   aria-selected={i === cursor}
                   tabIndex={-1}
+                  // 화살표로 옮길 때마다 요약문 전체를 읽으면 목록을 훑을 수 없다.
+                  // 제목과 종류를 이름으로, 요약은 설명으로 (잠깐 멈추면 이어서 읽는다)
+                  aria-label={`${hit.doc.t}, ${KIND_LABEL[hit.doc.k] ?? hit.doc.k}`}
+                  aria-describedby={`search-opt-${i}-desc`}
                   data-active={i === cursor || undefined}
                   onMouseEnter={() => { if (!byKeyboard.current) setCursor(i) }}
                   onClick={() => go(hit)}
@@ -229,7 +250,7 @@ export default function Search() {
                       {KIND_LABEL[hit.doc.k] ?? hit.doc.k}
                     </span>
                   </div>
-                  <div className="mt-0.5 line-clamp-2 text-[12px] leading-5 text-[var(--fg-dim)]">
+                  <div id={`search-opt-${i}-desc`} className="mt-0.5 line-clamp-2 text-[12px] leading-5 text-[var(--fg-dim)]">
                     <Highlight text={hit.snippet} terms={hit.terms} />
                   </div>
                 </button>
@@ -283,6 +304,7 @@ export default function Search() {
   return (
     <>
       <button
+        ref={openerRef}
         onClick={() => setOpen(true)}
         title="검색 (Ctrl+K)"
         // 헤더와 같은 배경이면 입력창처럼 보이지 않는다.

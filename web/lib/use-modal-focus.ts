@@ -12,10 +12,18 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [ta
 const focusables = (root: HTMLElement) =>
   Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(el => el.getClientRects().length > 0)
 
-export function useModalFocus(open: boolean, box: RefObject<HTMLElement | null>) {
+export function useModalFocus(
+  open: boolean,
+  box: RefObject<HTMLElement | null>,
+  /** 돌아갈 곳을 알 수 없을 때 초점을 줄 곳 (보통 여는 단추) */
+  opener?: RefObject<HTMLElement | null>,
+) {
   useEffect(() => {
     if (!open) return
-    const back = document.activeElement as HTMLElement | null
+    // Safari 는 단추를 눌러도 그 단추에 초점을 주지 않는다. 그러면 열기 전 초점이
+    // body 라서, 닫을 때 페이지 맨 앞으로 튕긴다. 그럴 때는 여는 단추로 돌려보낸다.
+    const active = document.activeElement as HTMLElement | null
+    const back = active && active !== document.body ? active : opener?.current ?? null
 
     // 1) 끝 ↔ 처음 돌리기
     let backward = false
@@ -47,5 +55,5 @@ export function useModalFocus(open: boolean, box: RefObject<HTMLElement | null>)
       // 페이지를 옮긴 경우 여는 단추가 사라졌을 수 있다
       if (back?.isConnected) back.focus({ preventScroll: true })
     }
-  }, [open, box])
+  }, [open, box, opener])
 }
