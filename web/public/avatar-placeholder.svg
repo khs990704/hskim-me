@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="프로필 이미지 자리 (임시)">
+  <!-- 프로필 이미지를 받기 전까지 쓰는 임시 그림. Profile.md 의 avatar 를 채우면 대신 그 사진이 보인다 -->
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="38%" r="70%">
+      <stop offset="0" stop-color="#1a2440"/>
+      <stop offset="0.6" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#03040a"/>
+    </radialGradient>
+    <radialGradient id="planet" cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="#9fe3ff"/>
+      <stop offset="0.45" stop-color="#3a8fd0"/>
+      <stop offset="1" stop-color="#0f2a55"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" x2="1">
+      <stop offset="0" stop-color="#7dd3fc" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#7dd3fc" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="front"><rect x="0" y="330" width="640" height="310"/></clipPath>
+  </defs>
+  <rect width="640" height="640" fill="url(#sky)"/>
+  <g fill="#e8edf5">
+    <circle cx="92" cy="110" r="2.2" opacity=".8"/><circle cx="518" cy="86" r="1.6" opacity=".6"/>
+    <circle cx="560" cy="248" r="2.4" opacity=".7"/><circle cx="130" cy="468" r="1.8" opacity=".5"/>
+    <circle cx="470" cy="540" r="2" opacity=".6"/><circle cx="240" cy="70" r="1.4" opacity=".5"/>
+    <circle cx="60" cy="300" r="1.5" opacity=".6"/><circle cx="600" cy="420" r="1.3" opacity=".5"/>
+  </g>
+  <!-- 고리 뒤쪽 -->
+  <ellipse cx="320" cy="330" rx="230" ry="58" fill="none" stroke="url(#ring)" stroke-width="10" opacity=".45" transform="rotate(-14 320 330)"/>
+  <circle cx="320" cy="320" r="150" fill="url(#planet)"/>
+  <!-- 고리 앞쪽 -->
+  <ellipse cx="320" cy="330" rx="230" ry="58" fill="none" stroke="url(#ring)" stroke-width="10" clip-path="url(#front)" transform="rotate(-14 320 330)"/>
+</svg>
