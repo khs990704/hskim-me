@@ -224,7 +224,7 @@
 
 **적용 범위** — `canonical`, `sitemap.xml`, OG URL 을 모두 apex 로 바꾼다.
 
-**적용 시점 — 보류 (2026-09-22)**
+**적용 시점 — 보류 (2026-09-22, 9/28 해소)**
 hosting.kr 이 zone hold 해제를 완료했다고 회신했으나, Cloudflare API 가 여전히 `code 1428` 로 거부한다.
 
 ```
@@ -233,6 +233,14 @@ POST /client/v4/zones → {"code":1428,"message":"The zone name provided is subj
 
 apex 가 실제로 연결되기 전까지 코드의 `BASE` 는 `www.hskim.me` 로 되돌려 둔다.
 없는 주소를 canonical·OG 로 내보내지 않기 위함이다. **결정 자체는 유효하며, 연결되는 즉시 적용한다.**
+
+**적용 완료 (2026-09-28)**
+zone hold 는 2026-09-27 에 실제로 풀렸다(Cloudflare 에 zone 추가 성공). 네임서버를 Cloudflare 로 옮기고 9/28 활성화된 뒤 적용했다.
+- Pages 에 `hskim.me` 연결, Universal 인증서 `*.hskim.me, hskim.me`
+- Redirect Rule — `https://www.hskim.me/*` → `https://hskim.me/${1}`, 301, 쿼리 유지. Always Use HTTPS 켬
+- 코드 `BASE` 를 `https://hskim.me` 로. 빌드 뒤 검사가 canonical·og:image 주소를 확인한다
+
+경위 전체는 [zone-hold-request.md](../../infra/zone-hold-request.md).
 
 **결정일** — 2026-09-22
 

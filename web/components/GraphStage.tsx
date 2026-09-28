@@ -46,10 +46,16 @@ export default function GraphStage() {
 
   return (
     <>
-      <GraphView onReady={setCount} />
+      {/*
+        캔버스는 보조기기가 읽을 수 없다. 무엇이 그려져 있는지 말로 알리고,
+        같은 내용을 볼 수 있는 곳(전체 목록)을 알려 준다.
+      */}
+      <div role="img" aria-label="지식 그래프 — 문서를 점으로, 문서 사이의 링크를 선으로 그린 3D 그림입니다. 같은 문서는 전체 목록에서 볼 수 있습니다.">
+        <GraphView onReady={setCount} />
+      </div>
       {count === 0 && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          <span className="text-[12.5px] text-[#4a5468]">지식 그래프를 불러오는 중…</span>
+          <span className="text-[12.5px] text-[#78839c]">지식 그래프를 불러오는 중…</span>
         </div>
       )}
     </>
