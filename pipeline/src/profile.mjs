@@ -72,8 +72,9 @@ const profile = {
   nameEn: str(data.name_en, 'name_en'),
   class: str(data.class, 'class'),
   tagline: str(data.tagline, 'tagline'),
-  // 장착 칭호. 비워 두면 칭호 없이 보인다. 칭호 이름 확인은 업적 계산(A-2)에서 한다
-  title: str(data.title, 'title', { required: false }),
+  // 장착 칭호 — 본문 `## 칭호 장착` 의 체크박스로 고른다 (아래). 얻었는지는 character.mjs 가 확인한다
+  title: '',
+  titleList: [],
   avatar: str(data.avatar, 'avatar', { required: false }),
   links: {},
   career: [],
@@ -85,6 +86,8 @@ const profile = {
   records: [],
   sections: {},
 }
+
+if (data.title) err('title', '장착 칭호는 머리말 title 대신 본문 "## 칭호 장착" 의 체크박스로 고릅니다. title 줄을 지워 주세요')
 
 // ---------- 링크 ----------
 const links = data.links ?? {}
@@ -199,6 +202,23 @@ for (const line of body.split('\n')) {
   if (h) { current = h[1]; chunks[current] = []; continue }
   if (current) chunks[current].push(line)
 }
+// `## 칭호 장착` — 칭호 목록의 체크박스. 체크한 하나가 장착 칭호다. 사이트에는 싣지 않는다.
+//   - [x] 별을 잇는 자 — 공개 문서 500개 · 영웅
+const TITLE_SECTION = '칭호 장착'
+if (chunks[TITLE_SECTION]) {
+  const checked = []
+  for (const raw of chunks[TITLE_SECTION]) {
+    const m = raw.replace(/\r$/, '').match(/^\s*[-*]\s+\[([ xX])\]\s+(.+?)(?:\s+—\s.*)?\s*$/)
+    if (!m) continue
+    const name = m[2].replace(/^「|」$/g, '').trim()
+    profile.titleList.push(name)
+    if (m[1] !== ' ') checked.push(name)
+  }
+  if (checked.length > 1) err(TITLE_SECTION, `칭호는 하나만 장착할 수 있습니다 — 체크된 것 ${checked.length}개: ${checked.join(', ')}`)
+  profile.title = checked[0] ?? ''
+  delete chunks[TITLE_SECTION]
+}
+
 for (const [title, lines] of Object.entries(chunks)) {
   const text = lines.join('\n').trim()
   if (!text) continue

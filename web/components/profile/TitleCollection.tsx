@@ -1,8 +1,14 @@
 'use client'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { Achievement } from '../../lib/profile'
 import { DialogShell } from './Dialog'
 import { GroupIcon } from './icons'
+import { MoreButton } from './ShowMore'
+
+/** 접힌 상태에서 보이는 수 — 넓은 화면 2줄 */
+const COLLAPSED = 12
+const STATE_RANK: Record<Achievement['state'], number> = { done: 0, progress: 1, locked: 2, unknown: 2 }
+const RARITY_RANK: Record<Achievement['rarity'], number> = { legendary: 0, epic: 1, rare: 2, common: 3 }
 
 const STATES = [
   { key: 'all', label: '전체' },
@@ -35,9 +41,18 @@ export default function TitleCollection({ items, equipped }: { items: Achievemen
     return [...m]
   }, [items])
   const count = (k: Filter) => items.filter(a => (k === 'all' ? true : k === 'locked' ? a.state === 'locked' || a.state === 'unknown' : a.state === k)).length
-  const shown = items.filter(a =>
-    (group === 'all' || a.group === group) &&
-    (filter === 'all' || (filter === 'locked' ? a.state === 'locked' || a.state === 'unknown' : a.state === filter)))
+  const [expanded, setExpanded] = useState(false)
+  const listId = useId()
+  // 얻은 것 → 진행 중 → 못 얻은 것, 같은 상태에서는 희귀도 높은 순.
+  // 접혀 있어도 얻은 전설 · 영웅 칭호가 먼저 보이게. 같은 칸은 칭호 표의 순서를 지킨다.
+  const shown = items
+    .map((a, i) => ({ a, i }))
+    .filter(({ a }) =>
+      (group === 'all' || a.group === group) &&
+      (filter === 'all' || (filter === 'locked' ? a.state === 'locked' || a.state === 'unknown' : a.state === filter)))
+    .sort((x, y) => STATE_RANK[x.a.state] - STATE_RANK[y.a.state] || RARITY_RANK[x.a.rarity] - RARITY_RANK[y.a.rarity] || x.i - y.i)
+    .map(({ a }) => a)
+  const visible = expanded ? shown : shown.slice(0, COLLAPSED)
 
   const show = (a: Achievement) => setOpen(a)
   // 고른 항목이 정해지면 바로 연다. 다음 화면 갱신(requestAnimationFrame)을 기다리면
@@ -71,8 +86,8 @@ export default function TitleCollection({ items, equipped }: { items: Achievemen
 
       <p className="sr-only" aria-live="polite">{shown.length}개 칭호</p>
 
-      <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6">
-        {shown.map(a => {
+      <ul id={listId} className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6">
+        {visible.map(a => {
           const v = veiled(a)
           const pct = a.target ? Math.min(100, Math.round(((a.value ?? 0) / a.target) * 100)) : a.state === 'done' ? 100 : 0
           return (
@@ -98,6 +113,9 @@ export default function TitleCollection({ items, equipped }: { items: Achievemen
         })}
       </ul>
       {shown.length === 0 && <p className="py-6 text-center text-[13px] text-[var(--fg-faint)]">이 조건에 맞는 칭호가 없습니다</p>}
+      {shown.length > COLLAPSED && (
+        <MoreButton open={expanded} hidden={shown.length - COLLAPSED} controls={listId} onClick={() => setExpanded(o => !o)} />
+      )}
 
       <DialogShell ref={ref} onClose={() => setOpen(null)} title={open ? (veiled(open) ? '숨겨진 칭호' : `「${open.title}」`) : ''}>
         {open && (

@@ -5,6 +5,7 @@ import ForceDark from './ForceDark'
 import SkillBoard from './SkillBoard'
 import StatRadar from './StatRadar'
 import TitleCollection from './TitleCollection'
+import ShowMore from './ShowMore'
 import { LinkIcon } from './icons'
 
 /**
@@ -178,8 +179,9 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
           </Section>
 
           <Section id="licenses" title="자격 · 수료" sub="LICENSES · 자격증과 수료증">
-            <ul className="grid gap-2.5 sm:grid-cols-2">
-              {profile.certs.map(c => (
+            {/* 자격증 먼저, 그다음 수료증 최신순 — 접혀 있어도 자격증이 가려지지 않게 */}
+            <ShowMore limit={4} className="grid gap-2.5 sm:grid-cols-2">
+              {[...profile.certs].sort((a, b) => (a.kind === b.kind ? b.date.localeCompare(a.date) : a.kind === 'license' ? -1 : 1)).map(c => (
                 <li key={c.name + c.date} className="hud-cert" data-kind={c.kind}>
                   <span className="pixel hud-cert-kind">{c.kind === 'license' ? '자격증' : '수료증'}</span>
                   <p className="text-[14px] font-medium leading-snug text-[var(--fg-strong)]">{c.name}</p>
@@ -194,7 +196,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
                   </p>
                 </li>
               ))}
-            </ul>
+            </ShowMore>
           </Section>
 
           <Section id="quests" title="퀘스트 로그" sub="경력 · 학력">
@@ -211,7 +213,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
           </Section>
 
           <Section id="featured" title="주요 퀘스트" sub="대표 프로젝트">
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ShowMore limit={4} className="grid gap-3 sm:grid-cols-2">
               {profile.featured.map(p => (
                 <li key={p.slug}>
                   <Link href={'/' + p.route} className="hud-quest">
@@ -221,7 +223,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
                   </Link>
                 </li>
               ))}
-            </ul>
+            </ShowMore>
           </Section>
 
           <Section id="skills" title="스킬" sub="기술 스택 · 괄호 안은 쓴 프로젝트 수">
