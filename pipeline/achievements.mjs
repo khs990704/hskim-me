@@ -111,8 +111,9 @@ export const ACHIEVEMENTS = [
   { id: 'cert-orbit', group: 'cert', title: '궤도의 관측자', cond: '위성 영상 과정', rarity: 'common', count: M => orbit(M).length, target: 1, when: M => nth(orbit(M).map(c => c.date), 1) },
   { id: 'cert-edge', group: 'cert', title: '엣지의 개척자', cond: 'Jetson 과정', rarity: 'common', count: M => edge(M).length, target: 1, when: M => nth(edge(M).map(c => c.date), 1) },
   { id: 'cert-ds', group: 'cert', title: '데이터 가속자', cond: '데이터 사이언스 가속 과정', rarity: 'common', count: M => dsAccel(M).length, target: 1, when: M => nth(dsAccel(M).map(c => c.date), 1) },
-  { id: 'cert-cloud', group: 'cert', title: '구름 위의 설계자', cond: '클라우드 자격 1개', rarity: 'epic', record: 'cloud-cert' },
-  { id: 'cert-security', group: 'cert', title: '성벽의 수호자', cond: '보안 자격 1개', rarity: 'epic', record: 'security-cert' },
+  // 과정 수료증이 아니라 자격증(kind: license)만. Profile.md certs 의 field 로 분야를 적는다
+  { id: 'cert-cloud', group: 'cert', title: '구름 위의 설계자', cond: '클라우드 자격증 1개', rarity: 'epic', count: M => M.licensesIn('cloud').length, target: 1, when: M => nth(M.licensesIn('cloud').map(c => c.date), 1) },
+  { id: 'cert-security', group: 'cert', title: '성벽의 수호자', cond: '보안 자격증 1개', rarity: 'epic', count: M => M.licensesIn('security').length, target: 1, when: M => nth(M.licensesIn('security').map(c => c.date), 1) },
 
   // ── 경력 ──
   { id: 'career-12', group: 'career', title: '1년 차 모험가', cond: '경력 12개월', rarity: 'rare', count: M => M.careerMonths, target: 12 },
@@ -151,6 +152,16 @@ export const ACHIEVEMENTS = [
 ]
 
 /** Profile.md 의 records 에 쓸 수 있는 id 와 뜻 */
+/** Profile.md certs 의 field 에 쓸 수 있는 분야 */
+export const CERT_FIELDS = {
+  cloud: '클라우드',
+  security: '보안',
+  ai: 'AI',
+  data: '데이터',
+  infra: '인프라',
+  dev: '개발',
+}
+
 export const RECORD_IDS = Object.fromEntries(
   ACHIEVEMENTS.filter(a => a.record).map(a => [a.record, a.cond]),
 )

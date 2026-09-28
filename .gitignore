@@ -54,3 +54,6 @@ web/tsconfig.tsbuildinfo
 web/public/graph.json
 # 파이프라인이 Vault 첨부 이미지에서 만든다 (pipeline/src/media.mjs)
 web/public/media/
+# 스탯창 픽셀 글꼴 — 쓰는 글자만 잘라 빌드 때 만든다 (web/scripts/gen-pixel-font.mjs)
+web/public/fonts/galmuri-*/
+web/lib/pixel-font.generated.json

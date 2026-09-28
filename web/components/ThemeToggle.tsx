@@ -1,8 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+
+/** 항상 어두운 페이지 — 테마 단추를 두지 않는다 (눌러도 바뀌지 않으면 고장으로 보인다) */
+const ALWAYS_DARK = ['/about']
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const pathname = usePathname()
 
   useEffect(() => {
     const saved = localStorage.getItem('theme') as 'dark' | 'light' | null
@@ -16,6 +21,8 @@ export default function ThemeToggle() {
     document.documentElement.dataset.theme = next
     localStorage.setItem('theme', next)
   }
+
+  if (ALWAYS_DARK.includes(pathname.replace(/\/$/, ''))) return null
 
   return (
     <button

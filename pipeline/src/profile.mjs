@@ -14,7 +14,7 @@ import remarkGfm from 'remark-gfm'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import { STAGE, ROOT, PROFILE } from '../config.mjs'
-import { RECORD_IDS } from '../achievements.mjs'
+import { RECORD_IDS, CERT_FIELDS } from '../achievements.mjs'
 
 const OUT = path.join(ROOT, 'out')
 const SRC = path.join(STAGE, PROFILE)
@@ -137,9 +137,11 @@ list(data.certs, 'certs').forEach((c, i) => {
   // 확인 링크는 하나 또는 여럿 (같은 과정의 한 · 영 두 판처럼)
   const urls = (Array.isArray(c.url) ? c.url : c.url ? [c.url] : []).map(u => String(u).trim().replace(/#$/, ''))
   urls.forEach(u => { if (!URL_RE.test(u)) err(`${w}.url`, `https:// 로 시작하는 주소여야 합니다: ${u}`) })
+  const field = str(c.field, `${w}.field`, { required: false })
+  if (field && !CERT_FIELDS[field]) err(`${w}.field`, `모르는 분야입니다: ${field} (쓸 수 있는 것: ${Object.entries(CERT_FIELDS).map(([k, v]) => `${k}(${v})`).join(', ')})`)
   if (certNames.has(name)) warns.push(`${w} — 같은 이름이 두 번 있습니다: ${name}`)
   certNames.add(name)
-  profile.certs.push({ name, nameAlt: str(c.name_alt, `${w}.name_alt`, { required: false }), issuer: str(c.issuer, `${w}.issuer`), date, kind, urls })
+  profile.certs.push({ name, nameAlt: str(c.name_alt, `${w}.name_alt`, { required: false }), issuer: str(c.issuer, `${w}.issuer`), date, kind, field: field || null, urls })
 })
 // 최근 것부터
 profile.certs.sort((a, b) => b.date.localeCompare(a.date))
@@ -211,5 +213,56 @@ if (errors.length) {
   process.exit(1)
 }
 fs.writeFileSync(path.join(OUT, 'profile.json'), JSON.stringify(profile, null, 2))
+
+// ---------- /about 문서 ----------
+// 스탯창은 profile.json 으로 그리지만, 검색 · 문서 트리 · 링크 미리보기 이미지 · 경로 검사는
+// 다른 페이지처럼 문서(content/about.json)를 본다. 프로필 내용을 글로 풀어 문서 하나를 만든다.
+// 예전에는 Portfolio.md 의 ## 소개 · ## 핵심 역량 에서 만들었다 — 있으면 이것이 덮어쓴다.
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const ym = d => (d ? d.replace('-', '.') : '현재')
+const parts = []
+const toc = []
+const h2 = title => { const id = title.replace(/\s+/g, '-'); toc.push({ depth: 2, text: title, id }); parts.push(`<h2 id="${esc(id)}">${esc(title)}</h2>`) }
+if (profile.sections['자기소개']) { h2('자기소개'); parts.push(profile.sections['자기소개']) }
+if (profile.traits.length) {
+  h2('핵심 역량')
+  parts.push('<ul>' + profile.traits.map(t => `<li>${esc(t.name)} — ${esc(t.desc)}${t.projects.length ? ` (${t.projects.map(p => esc(p.title)).join(', ')})` : ''}</li>`).join('') + '</ul>')
+}
+if (profile.career.length || profile.education.length || profile.training.length) {
+  h2('경력 · 학력')
+  parts.push('<ul>' + [
+    ...profile.career.map(c => `<li>${ym(c.from)} ~ ${ym(c.to)} ${esc(c.org)} · ${esc(c.role)}</li>`),
+    ...profile.training.map(c => `<li>${ym(c.from)} ~ ${ym(c.to)} ${esc(c.org)} · ${esc(c.name)}</li>`),
+    ...profile.education.map(c => `<li>${ym(c.from)} ~ ${ym(c.to)} ${esc(c.org)} · ${esc(c.major)}</li>`),
+  ].join('') + '</ul>')
+}
+if (profile.certs.length) {
+  h2('자격 · 수료')
+  parts.push('<ul>' + profile.certs.map(c => `<li>${esc(c.name)}${c.nameAlt ? ` (${esc(c.nameAlt)})` : ''} · ${esc(c.issuer)} · ${ym(c.date.slice(0, 7))}</li>`).join('') + '</ul>')
+}
+if (profile.sections['사이드 퀘스트']) { h2('사이드 퀘스트'); parts.push(profile.sections['사이드 퀘스트']) }
+
+const projLinks = new Map()
+for (const p of [...profile.featured, ...profile.traits.flatMap(t => t.projects)]) projLinks.set(p.route, { route: p.route, title: p.title })
+const aboutDoc = {
+  route: 'about',
+  slug: '03-portfolio/profile',
+  title: '소개',
+  // 검색 결과 · 링크 미리보기에 뜨는 한 줄
+  description: `${profile.class} ${profile.name} — ${profile.tagline}`,
+  source: PROFILE,
+  kind: 'portfolio',
+  category: [],
+  html: parts.join('\n'),
+  toc,
+  links: [...projLinks.values()],
+  backlinks: [],
+  tags: [],
+  features: { math: false, mermaid: false, code: false, table: false, image: false },
+  related: [],
+  locale: 'ko',
+}
+fs.mkdirSync(path.join(OUT, 'content'), { recursive: true })
+fs.writeFileSync(path.join(OUT, 'content', 'about.json'), JSON.stringify(aboutDoc, null, 2))
 console.log(`\n  프로필 — 경력 ${profile.career.length} · 학력 ${profile.education.length} · 교육 ${profile.training.length} · 자격 ${profile.certs.length} · 대표 프로젝트 ${profile.featured.length} · 핵심 역량 ${profile.traits.length} · 기록 업적 ${profile.records.length} · 본문 절 ${Object.keys(profile.sections).length}`)
 for (const w of warns) console.log(`  ! ${w}`)
