@@ -336,3 +336,9 @@
 | 2026-09-28 | P2 | Cloudflare 활성화 · Pages 에 `hskim.me` 연결 (Universal 인증서 `*.hskim.me, hskim.me`) | apex 개통 |
 | 2026-09-28 | P2 | **D-13 적용** — `www` → `hskim.me` 301 (Redirect Rule, 경로·쿼리 유지), Always Use HTTPS | 코드 정식 주소 `https://hskim.me` |
 | 2026-09-28 | P2 | 빌드 뒤 검사에 canonical·og:image 주소가 정식 주소인지 확인 추가 | 567/567 |
+| 2026-09-28 | P7 | 본문 바로가기 · 전역 초점선 · 그래프 텍스트 대체, 보안 응답 헤더(CSP · HSTS 등) | securityheaders.com A |
+| 2026-09-28 | P7 | KWCAG 2.2 33항목 자체 점검 (`accessibility-kwcag.md`) — 7개 항목 13곳 수정, 접근성 트리 확인 | 적합 23 · 대체 2 · 해당 없음 8 |
+| 2026-09-28 | P7 | W3C Nu Html Checker 572쪽 · Chromium · Firefox · WebKit 호환성 | 오류 12 → 0, 3개 엔진 통과 |
+| 2026-09-28 | P7 | 프로필 · 사진 기록 기획 (`profile-and-life.md`) — 게임 스탯창, 칭호 도감 | 기획 확정 |
+| 2026-09-28 | P7 | A-1 `Profile.md` + 형식 검사 · A-2 칭호 78 · 레벨 · 능력치 · A-3 이미지 처리(위치 정보 삭제) · A-4 `/about` 스탯창 | 3개 엔진 · W3C 통과 |
+| 2026-09-28 | P7 | Vault 프로젝트 케이스 96곳에 사용 언어 추가 (본인 커밋 확장자 기준), 지식화 규칙에 언어 규칙 | 언어 누락 경고 0 |
