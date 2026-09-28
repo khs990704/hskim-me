@@ -18,7 +18,12 @@ export const WHITELIST = [
   '01 Knowledge DB',
   '02 Project Cases',
   '03 Portfolio/Portfolio.md',
+  '03 Portfolio/Profile.md',
 ]
+
+// 프로필 (기획 profile-and-life.md). 일반 문서가 아니라 /about 스탯창의 데이터다.
+// 공개 규칙 · 콘텐츠 가드는 다른 문서와 똑같이 거치고, 그래프 · 검색 · 트리에는 넣지 않는다.
+export const PROFILE = '03 Portfolio/Profile.md'
 
 // 옵트인 폴더 (D-08). 이 아래는 frontmatter에 publish: true 가 있어야만 통과한다.
 export const OPT_IN = [

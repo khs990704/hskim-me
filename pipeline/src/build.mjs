@@ -9,7 +9,7 @@ import path from 'node:path'
 import { VFile } from 'vfile'
 import { visit } from 'unist-util-visit'
 import { slugifyFilePath } from '@quartz-community/utils'
-import { STAGE, ROOT, ROUTE_DESCRIPTIONS } from '../config.mjs'
+import { STAGE, ROOT, ROUTE_DESCRIPTIONS, PROFILE } from '../config.mjs'
 import { readFrontmatter } from './frontmatter.mjs'
 import { publicRoute, kindOf } from './slug.mjs'
 import { makeProcessor } from './render.mjs'
@@ -92,7 +92,8 @@ function leadParagraph(tree) {
 }
 
 // ---------- 준비 ----------
-const docs = walk(STAGE).map(f => ({
+// 프로필은 문서가 아니라 데이터다 — profile.mjs 가 따로 읽는다
+const docs = walk(STAGE).filter(f => f.rel !== PROFILE).map(f => ({
   ...f,
   slug: slugifyFilePath(f.rel),
   route: publicRoute(f.rel),
