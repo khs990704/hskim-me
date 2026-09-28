@@ -6,6 +6,8 @@ import Search from '../../components/Search'
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      {/* 본문 바로가기 — 키보드 사용자가 헤더·목록을 건너뛴다. 포커스를 받을 때만 보인다 */}
+      <a href="#main" className="skip-link">본문 바로가기</a>
       <header className="sticky top-0 z-40 border-b border-[var(--line-soft)] bg-[var(--bg)]/85 backdrop-blur">
         <div className="flex h-14 items-center gap-2 px-3 sm:px-5">
           <Sidebar mode="trigger" />
@@ -35,7 +37,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-64 shrink-0 overflow-y-auto border-r border-[var(--line-soft)] lg:block">
           <Sidebar mode="tree" />
         </aside>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main id="main" tabIndex={-1} className="min-w-0 flex-1">{children}</main>
       </div>
     </>
   )

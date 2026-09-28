@@ -298,7 +298,7 @@ a { color: inherit; text-decoration: none; }
 .prose pre.shiki { background: var(--surface); }
 
 /* 가로로 긴 코드는 스크롤. tabindex 가 붙어 있어 키보드로도 넘긴다 */
-.prose pre.shiki:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+/* 초점 표시는 아래 공통 규칙을 따른다 */
 
 /* 언어 표시가 없는 코드블록은 강조되지 않는다. 본문 글자색을 그대로 쓴다 */
 .prose pre:not(.shiki) code { color: var(--fg); }
@@ -357,3 +357,26 @@ a { color: inherit; text-decoration: none; }
   .tap-open { pointer-events: auto; }
   .tap-open:active { border-color: #7dd3fc; }
 }
+
+/* ── 키보드 초점 ──────────────────────────────────────────────────────
+   브라우저 기본 초점선은 어두운 배경에서 잘 안 보이고 브라우저마다 다르다.
+   마우스 클릭에는 뜨지 않고(:focus-visible) 키보드로 옮길 때만 보이게 한다.
+   메인 화면은 토큰 밖의 고정색을 쓰므로 색도 고정한다. */
+:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+/* 메인(.stage)은 테마와 관계없이 어두운 배경이라 밝은 선을 유지한다 */
+:root[data-theme="light"] :not(.stage *):focus-visible { outline-color: #0369a1; }
+
+/* 본문 바로가기로 옮겨 온 main 은 초점선을 그리지 않는다. 화면 전체에 테두리가 생긴다 */
+main:focus { outline: none; }
+
+/* ── 본문 바로가기 ──────────────────────────────────────────────────── */
+.skip-link {
+  position: absolute; left: 12px; top: -100px; z-index: 100;
+  padding: 10px 16px; border-radius: 6px;
+  background: var(--fg-strong); color: var(--bg);
+  font-size: 14px; font-weight: 600; text-decoration: none;
+}
+.skip-link:focus { top: 12px; }

@@ -29,7 +29,7 @@ export default function Home() {
   const g = graph()
 
   return (
-    <main className="relative h-[100svh] overflow-hidden bg-[#03040a] text-[#e8edf5]">
+    <main className="stage relative h-[100svh] overflow-hidden bg-[#03040a] text-[#e8edf5]">
       <GraphStage />
 
       {/* 좌상단 — 이름과 한 줄 */}
