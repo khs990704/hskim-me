@@ -52,3 +52,5 @@ web/.next/
 web/public/tree.json
 web/tsconfig.tsbuildinfo
 web/public/graph.json
+# 파이프라인이 Vault 첨부 이미지에서 만든다 (pipeline/src/media.mjs)
+web/public/media/
