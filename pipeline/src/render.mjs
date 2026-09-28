@@ -5,6 +5,7 @@ import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import lineBreaks from './line-breaks.mjs'
+import mermaidClean, { tableAlign } from './html-standards.mjs'
 import remarkRehype from 'remark-rehype'
 import rehypeSlug from 'rehype-slug'
 import rehypeKatex from 'rehype-katex'
@@ -51,6 +52,8 @@ export function makeProcessor(ctx) {
   proc = proc.use(remarkRehype, { allowDangerousHtml: true })
   proc = proc.use(rehypeSlug)
   for (const p of [ofm, crawl]) if (p.htmlPlugins) proc = proc.use(p.htmlPlugins(ctx))
+  // HTML 표준 정리 — Quartz 의 도표 UI 제거, 표 칸 align → style (html-standards.mjs)
+  proc = proc.use(mermaidClean).use(tableAlign)
   proc = proc.use(rehypeKatex, { throwOnError: false, strict: false })
   proc = proc.use(rehypeShiki, SHIKI)
   proc = proc.use(rehypeStringify, { allowDangerousHtml: true })
