@@ -159,8 +159,12 @@ export const SKILLS = {
   // ── 언어 (능력치에는 넣지 않는다 — 한 언어가 여러 분야에 걸친다) ──
   'Python': [null, 'language'],
   'TypeScript': [null, 'language'],
+  'JavaScript': [null, 'language'],
+  'Java': [null, 'language'],
+  'C': [null, 'language'],
   'Rust': [null, 'language'],
   'SQL': [null, 'language'],
+  'Shell': [null, 'language'],
 
   // ── 쓰지 않음 ───────────────────────────────────────
   'SecuAI Model Security Platform': [null, 'skip'],   // 프로젝트 이름
@@ -169,3 +173,22 @@ export const SKILLS = {
   'Stable Sorting': [null, 'skip'],
   'Stack Pattern Matching': [null, 'skip'],
 }
+
+// ── 언어 누락 검사 ─────────────────────────────────────
+// 언어는 프로젝트 케이스의 `관련 기술:` 맨 앞에 직접 적는다 (Vault [[Project 케이스 지식화 규칙]]).
+// 아래 도구를 쓴 프로젝트에 그 언어가 없으면 적는 것을 잊은 것이다 — 빌드가 경고한다.
+// 세는 데는 쓰지 않는다. 짐작이 아니라 적힌 것만 센다.
+//   넣지 않은 것 — React · Vite (JavaScript 인지 TypeScript 인지 알 수 없음),
+//                   ONNX Runtime (C · C++ · Python · Rust 모두 가능)
+//                   MLflow (Java 백엔드에서 REST API 로도 부른다 — Company MLOps Platform)
+export const IMPLIES = {
+  Python: [
+    'Pandas', 'NumPy', 'Matplotlib', 'Seaborn', 'Plotly', 'BeautifulSoup', 'Selenium', 'RDKit',
+    'FastAPI', 'Django', 'SQLAlchemy', 'Alembic', 'PyTorch', 'Scikit-Learn Pipeline',
+    'NVIDIA NeMo', 'Python Data Analysis Stack',
+  ],
+  Java: ['Spring Boot', 'Android'],
+}
+
+// 코드가 없는 프로젝트 (문서 · 프롬프트 위주). 다루는 기술 이름은 있어도 언어가 없는 게 맞다.
+export const NO_CODE_PROJECTS = ['Idea Mining & Specification Validation Harness']
