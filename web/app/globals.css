@@ -553,6 +553,14 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 .hud-skill:hover { border-color: var(--accent); color: var(--accent); }
 .hud-skill-count { font-size: 11px; color: var(--fg-faint); }
 
+/* 전체 보기 · 접기 */
+.hud-more {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 4px;
+  border: 1px dashed var(--hud-line); font-size: 13px; color: var(--fg-dim); background: rgba(10, 14, 24, .5);
+}
+.hud-more:hover { border-color: var(--accent); border-style: solid; color: var(--accent); }
+.hud-more .pixel { font-size: 10px; }
+
 /* 처음 한 번 — 경험치 막대가 차오른다. 움직임 줄이기 설정이면 바로 완성된 모습 */
 @media (prefers-reduced-motion: no-preference) {
   .hud-xp > span { animation: hud-fill 1.2s cubic-bezier(.2, .8, .2, 1) both; }

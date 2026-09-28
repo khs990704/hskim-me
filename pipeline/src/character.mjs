@@ -261,8 +261,18 @@ const achievements = ACHIEVEMENTS.map(a => {
 })
 const earned = new Set(achievements.filter(a => a.state === 'done').map(a => a.title))
 if (profile.title && !earned.has(profile.title)) {
-  console.error(`\n  ✗ 캐릭터 — 장착 칭호 「${profile.title}」 을(를) 아직 얻지 않았거나 없는 칭호입니다 (Profile.md title)`)
+  const exists = ACHIEVEMENTS.some(a => a.title === profile.title)
+  console.error(`\n  ✗ 캐릭터 — 장착 칭호 「${profile.title}」 ${exists ? '은(는) 아직 얻지 않은 칭호입니다' : '이라는 칭호는 없습니다'} (Profile.md ## 칭호 장착)`)
   process.exit(1)
+}
+// 칭호 장착 목록과 칭호 표가 어긋나면 알린다 — 칭호를 새로 추가했거나 이름을 바꿨을 때
+if (profile.titleList?.length) {
+  const all = new Set(ACHIEVEMENTS.map(a => a.title))
+  const listed = new Set(profile.titleList)
+  const missing = ACHIEVEMENTS.filter(a => !listed.has(a.title)).map(a => a.title)
+  const stale = profile.titleList.filter(t => !all.has(t))
+  if (missing.length) warns.push(`Profile.md ## 칭호 장착 목록에 없는 칭호 ${missing.length}개 — 추가해 주세요: ${missing.join(', ')}`)
+  if (stale.length) warns.push(`Profile.md ## 칭호 장착 목록에 있지만 이제 없는 칭호 ${stale.length}개: ${stale.join(', ')}`)
 }
 
 // ---------- 레벨 · 경험치 ----------
