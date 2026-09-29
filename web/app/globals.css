@@ -487,10 +487,11 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
   background: color-mix(in srgb, var(--c) 18%, #0b1020);
 }
-.hud-badge-name { font-size: 12px; line-height: 1.35; color: var(--fg-strong); word-break: keep-all; }
+.hud-badge-name { font-size: 12px; line-height: 1.35; min-height: 2.7em; display: flex; align-items: center; color: var(--fg-strong); word-break: keep-all; }
 .hud-badge-meta { font-size: 10.5px; color: var(--c); }
 .hud-badge-bar { display: block; width: 80%; height: 4px; background: #0a0f1a; border-radius: 2px; overflow: hidden; }
 .hud-badge-bar > span { display: block; height: 100%; background: var(--c); }
+.hud-badge-bar[data-empty] { visibility: hidden; }
 /* 못 얻은 칭호 — 흐리게. 글자 대비는 4.5:1 을 지킨다 (이름 색은 유지, 보석만 흐림) */
 .hud-badge:not([data-state="done"]) { border-style: dashed; background: rgba(10, 14, 24, .55); }
 .hud-badge:not([data-state="done"]) .hud-badge-gem { filter: grayscale(.9) brightness(.7); }
@@ -546,12 +547,33 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 .hud-quest-cat { font-size: 11px; color: var(--r-epic); }
 .hud-quest-title { font-size: 16px; color: var(--fg-strong); }
 .hud-trait { padding: 14px 16px; border: 1px solid var(--hud-line); border-radius: 6px; background: rgba(10, 14, 24, .45); }
+.hud-trait-node {
+  display: grid; place-items: center; flex: none; width: 44px; height: 44px; color: var(--accent);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: color-mix(in srgb, var(--accent) 16%, #0b1020);
+}
+.hud-pips { display: inline-flex; gap: 3px; }
+.hud-pips > span { width: 10px; height: 10px; transform: rotate(45deg); border: 1px solid var(--hud-line); background: #0a0f1a; }
+.hud-pips > span[data-on] { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 6px -1px var(--accent); }
+.hud-trait-src { padding: 2px 8px; border-radius: 3px; border: 1px solid var(--hud-line); color: var(--fg); background: rgba(15, 22, 36, .8); }
+.hud-trait-src:hover { border-color: var(--accent); color: var(--accent); }
+.hud-link-row { width: 100%; justify-content: flex-start; }
 .hud-skill-row { display: grid; gap: 8px; }
 @media (min-width: 640px) { .hud-skill-row { grid-template-columns: 96px 1fr; align-items: start; } }
 .hud-skill-label { font-size: 13px; color: var(--fg-dim); padding-top: 5px; }
 .hud-skill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid var(--hud-line); border-radius: 4px; font-size: 13px; color: var(--fg); background: rgba(15, 22, 36, .8); }
 .hud-skill:hover { border-color: var(--accent); color: var(--accent); }
 .hud-skill-count { font-size: 11px; color: var(--fg-faint); }
+
+/* 접고 펴기 — 높이 0 → 전체로 부드럽게 (grid 행 높이 전환) */
+.hud-collapse { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s cubic-bezier(.2, .8, .2, 1); }
+.hud-collapse[data-open="true"] { grid-template-rows: 1fr; }
+.hud-collapse-inner { min-height: 0; overflow: hidden; }
+.hud-collapse-list { padding-top: 10px; }
+@media (prefers-reduced-motion: reduce) { .hud-collapse { transition: none; } }
+/* 요약 칸의 링크로 섹션에 갈 때 — 고정 헤더에 가리지 않게, 부드럽게 */
+.hud section { scroll-margin-top: 76px; }
+@media (prefers-reduced-motion: no-preference) { :root:has(.hud) { scroll-behavior: smooth; } }
 
 /* 전체 보기 · 접기 */
 .hud-more {

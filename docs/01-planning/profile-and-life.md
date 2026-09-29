@@ -291,7 +291,7 @@ Reddit 트로피 진열장처럼 둥근 배지를 격자로 늘어놓는다. 누
 
 `web/components/profile/` — `ProfilePage`(배치) · `TitleCollection`(칭호 도감) · `SkillBoard` · `StatRadar` · `Dialog` · `ForceDark` · `icons`.
 
-- **항상 어두운 우주** — layout 의 테마 스크립트가 `/about` 이면 dark 로 정하고(첫 로드 깜빡임 없음), 페이지 사이를 오갈 때는 `ForceDark` 가 맞추고 떠날 때 **이용자 설정으로** 되돌린다. 이 페이지에서는 테마 단추를 숨긴다. 왼쪽 문서 트리는 두고 고객이 보고 정한다.
+- **항상 어두운 우주** — layout 의 테마 스크립트가 `/about` 이면 dark 로 정하고(첫 로드 깜빡임 없음), 페이지 사이를 오갈 때는 `ForceDark` 가 맞추고 떠날 때 **이용자 설정으로** 되돌린다. 이 페이지에서는 테마 단추를 숨긴다. 왼쪽 문서 트리는 2026-09-29 고객 확인 후 뺐다 (`app/(profile)` 틀, 헤더는 공용 `SiteHeader`).
 - **픽셀 글꼴** — Galmuri 2.40.3 (OFL). `web/scripts/gen-pixel-font.mjs` 가 데이터(character · profile)와 스탯창 코드에 나오는 글자만 잘라 656KB → 25KB (545자). 해시 폴더라 1년 캐시. 빠진 글자는 Pretendard 로 보인다.
 - **about 문서** — 검색 · 트리 · 링크 미리보기 이미지 · 경로 검사를 위해 `profile.mjs` 가 `Profile.md` 로 `content/about.json` 도 만든다. `Portfolio.md` 의 `## 소개` · `## 핵심 역량` 은 지웠고 Vault `포트폴리오 작성 규칙` 에 옮긴 곳을 적었다.
 - **상세 창** — 브라우저 기본 `<dialog>`(초점 가두기 · Esc · 여는 단추로 복귀를 브라우저가 한다). 열리면 초점은 창 자체에 둔다(닫기 단추에 초점선이 먼저 뜨지 않게).

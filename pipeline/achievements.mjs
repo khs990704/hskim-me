@@ -37,7 +37,7 @@ export const GROUPS = {
   streak: '꾸준함',
   life: '생활',
   site: '사이트',
-  hidden: '숨김',
+  hidden: '???',        // 숨김 계열 — 이름부터 비밀스럽게
 }
 
 const cuda = courseTheme(/CUDA/i)

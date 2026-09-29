@@ -3,7 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { Achievement } from '../../lib/profile'
 import { DialogShell } from './Dialog'
 import { GroupIcon } from './icons'
-import { MoreButton } from './ShowMore'
+import { CollapseRest, MoreButton, useCollapse } from './ShowMore'
 
 /** 접힌 상태에서 보이는 수 — 넓은 화면 2줄 */
 const COLLAPSED = 12
@@ -41,7 +41,7 @@ export default function TitleCollection({ items, equipped }: { items: Achievemen
     return [...m]
   }, [items])
   const count = (k: Filter) => items.filter(a => (k === 'all' ? true : k === 'locked' ? a.state === 'locked' || a.state === 'unknown' : a.state === k)).length
-  const [expanded, setExpanded] = useState(false)
+  const { open: expanded, toggle, anchor } = useCollapse()
   const listId = useId()
   // 얻은 것 → 진행 중 → 못 얻은 것, 같은 상태에서는 희귀도 높은 순.
   // 접혀 있어도 얻은 전설 · 영웅 칭호가 먼저 보이게. 같은 칸은 칭호 표의 순서를 지킨다.
@@ -52,9 +52,33 @@ export default function TitleCollection({ items, equipped }: { items: Achievemen
       (filter === 'all' || (filter === 'locked' ? a.state === 'locked' || a.state === 'unknown' : a.state === filter)))
     .sort((x, y) => STATE_RANK[x.a.state] - STATE_RANK[y.a.state] || RARITY_RANK[x.a.rarity] - RARITY_RANK[y.a.rarity] || x.i - y.i)
     .map(({ a }) => a)
-  const visible = expanded ? shown : shown.slice(0, COLLAPSED)
+  const first = shown.slice(0, COLLAPSED)
+  const rest = shown.slice(COLLAPSED)
 
   const show = (a: Achievement) => setOpen(a)
+  const badge = (a: Achievement) => {
+          const v = veiled(a)
+          const pct = a.target ? Math.min(100, Math.round(((a.value ?? 0) / a.target) * 100)) : a.state === 'done' ? 100 : 0
+          return (
+            <li key={a.id}>
+              <button
+                type="button"
+                onClick={() => show(a)}
+                aria-haspopup="dialog"
+                className="hud-badge"
+                data-rarity={a.rarity}
+                data-state={a.state}
+                aria-label={`${v ? '숨겨진 칭호' : a.title}, ${a.rarityLabel}, ${STATE_LABEL[a.state]}${a.state === 'progress' && a.target ? `, ${num(a.value)} / ${num(a.target)}` : ''}${a.title === equipped ? ', 장착 중' : ''}`}
+              >
+                <span className="hud-badge-gem"><GroupIcon group={v ? 'hidden' : a.group} /></span>
+                <span className="pixel hud-badge-name">{v ? '???' : a.title}</span>
+                <span className="hud-badge-meta">{a.rarityLabel}</span>
+                {/* 막대 자리는 항상 둔다 — 얻은 칭호만 낮아지지 않게 (얻은 칭호는 보이지 않게) */}
+                <span className="hud-badge-bar" aria-hidden data-empty={a.state === 'done' || undefined}><span style={{ width: `${pct}%` }} /></span>
+              </button>
+            </li>
+          )
+        }
   // 고른 항목이 정해지면 바로 연다. 다음 화면 갱신(requestAnimationFrame)을 기다리면
   // WebKit 에서 창이 늦게 열려, 그사이 누른 Esc 가 먹히지 않았다.
   useEffect(() => { if (open && !ref.current?.open) ref.current?.showModal() }, [open])
@@ -86,35 +110,13 @@ export default function TitleCollection({ items, equipped }: { items: Achievemen
 
       <p className="sr-only" aria-live="polite">{shown.length}개 칭호</p>
 
-      <ul id={listId} className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6">
-        {visible.map(a => {
-          const v = veiled(a)
-          const pct = a.target ? Math.min(100, Math.round(((a.value ?? 0) / a.target) * 100)) : a.state === 'done' ? 100 : 0
-          return (
-            <li key={a.id}>
-              <button
-                type="button"
-                onClick={() => show(a)}
-                aria-haspopup="dialog"
-                className="hud-badge"
-                data-rarity={a.rarity}
-                data-state={a.state}
-                aria-label={`${v ? '숨겨진 칭호' : a.title}, ${a.rarityLabel}, ${STATE_LABEL[a.state]}${a.state === 'progress' && a.target ? `, ${num(a.value)} / ${num(a.target)}` : ''}${a.title === equipped ? ', 장착 중' : ''}`}
-              >
-                <span className="hud-badge-gem"><GroupIcon group={v ? 'hidden' : a.group} /></span>
-                <span className="pixel hud-badge-name">{v ? '???' : a.title}</span>
-                <span className="hud-badge-meta">{a.rarityLabel}</span>
-                {a.state !== 'done' && (
-                  <span className="hud-badge-bar" aria-hidden><span style={{ width: `${pct}%` }} /></span>
-                )}
-              </button>
-            </li>
-          )
-        })}
-      </ul>
+      <div ref={anchor}>
+        <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6">{first.map(badge)}</ul>
+        {rest.length > 0 && <CollapseRest open={expanded} id={listId} className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6 hud-collapse-list">{rest.map(badge)}</CollapseRest>}
+      </div>
       {shown.length === 0 && <p className="py-6 text-center text-[13px] text-[var(--fg-faint)]">이 조건에 맞는 칭호가 없습니다</p>}
       {shown.length > COLLAPSED && (
-        <MoreButton open={expanded} hidden={shown.length - COLLAPSED} controls={listId} onClick={() => setExpanded(o => !o)} />
+        <MoreButton open={expanded} hidden={shown.length - COLLAPSED} controls={listId} onClick={toggle} />
       )}
 
       <DialogShell ref={ref} onClose={() => setOpen(null)} title={open ? (veiled(open) ? '숨겨진 칭호' : `「${open.title}」`) : ''}>
