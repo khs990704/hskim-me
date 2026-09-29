@@ -23,6 +23,15 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
 
+# ── 테스트 주소는 검색에서 뺀다 (P7-4) ─────────────────────────────────
+# 같은 사이트가 hskim-me.pages.dev 와 배포마다 생기는 미리보기 주소(<id>.hskim-me.pages.dev)로도 열린다.
+# 검색 결과에는 정식 주소 hskim.me 만 나오게, 이 주소들에만 noindex 를 붙인다.
+https://hskim-me.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:sub.hskim-me.pages.dev/*
+  X-Robots-Tag: noindex
+
 # ── 캐시 ─────────────────────────────────────────────────────────────
 #
 # 폰트는 판 번호가 경로에 들어 있어(/fonts/pretendard-1.3.9/…) 내용이 바뀌면
