@@ -396,22 +396,66 @@ main:focus { outline: none; }
   --hud-line: #2a3650;
   --hud-panel: rgba(12, 17, 28, .72);
   position: relative;
+  isolation: isolate; /* 아래 ::before(z -1) 가 헤더 위로 올라가지 않고 이 안의 맨 뒤에 깔리게 */
   min-height: 100%;
+  background: #070a12;
+}
+/* 별 — 크기가 서로 다른(서로소) 무늬 네 겹을 겹친다. 한 겹의 반복은 눈에 띄어도
+   네 겹이 함께 같은 모양으로 돌아오는 거리는 아주 멀어 흩뿌린 듯 보인다 (그림 파일 없이).
+   위치 · 크기 · 색은 정해진 씨앗으로 한 번 뽑아 둔 값.
+   화면에 붙여 둔다(fixed) — 스크롤하면 패널만 지나가고 우주는 멈춰 있다.
+   background-attachment: fixed 는 iOS Safari 가 무시해서 쓰지 않는다 */
+.hud::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .7;
+  background-image:
+    radial-gradient(1px 1px at 262px 1px, color-mix(in srgb, #fff 86%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 263px 282px, color-mix(in srgb, #fff 97%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 97px 242px, color-mix(in srgb, #fff 49%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 272px 230px, color-mix(in srgb, #fff4d6 68%, transparent) 50%, transparent 51%),
+    radial-gradient(2.2px 2.2px at 301px 75px, color-mix(in srgb, #fff4d6 96%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 29px 8px, color-mix(in srgb, #cfe8ff 66%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 177px 180px, color-mix(in srgb, #e3d9ff 74%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 159px 185px, color-mix(in srgb, #cfe8ff 45%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 4px 87px, color-mix(in srgb, #cfe8ff 54%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 268px 380px, color-mix(in srgb, #fff 43%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 386px 314px, color-mix(in srgb, #e3d9ff 43%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 414px 323px, color-mix(in srgb, #e3d9ff 63%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 166px 338px, color-mix(in srgb, #fff 75%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 205px 64px, color-mix(in srgb, #e3d9ff 36%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 393px 306px, color-mix(in srgb, #cfe8ff 70%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 344px 272px, color-mix(in srgb, #fff 38%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 372px 2px, color-mix(in srgb, #e3d9ff 77%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 323px 201px, color-mix(in srgb, #fff 44%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 271px 379px, color-mix(in srgb, #cfe8ff 46%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 7px 137px, color-mix(in srgb, #fff 67%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 351px 30px, color-mix(in srgb, #e3d9ff 44%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 345px 489px, color-mix(in srgb, #fff 70%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 118px 449px, color-mix(in srgb, #fff4d6 70%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 235px 197px, color-mix(in srgb, #e3d9ff 87%, transparent) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 435px 154px, color-mix(in srgb, #fff4d6 58%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 70px 461px, color-mix(in srgb, #fff 82%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 306px 67px, color-mix(in srgb, #cfe8ff 38%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 150px 57px, color-mix(in srgb, #fff 81%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 555px 399px, color-mix(in srgb, #fff4d6 88%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 563px 78px, color-mix(in srgb, #fff 68%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 354px 45px, color-mix(in srgb, #fff4d6 98%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 335px 335px, color-mix(in srgb, #cfe8ff 35%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 229px 477px, color-mix(in srgb, #fff 87%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 731px 438px, color-mix(in srgb, #cfe8ff 38%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 416px 433px, color-mix(in srgb, #e3d9ff 62%, transparent) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 248px 324px, color-mix(in srgb, #cfe8ff 83%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 448px 242px, color-mix(in srgb, #e3d9ff 39%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 513px 62px, color-mix(in srgb, #cfe8ff 97%, transparent) 50%, transparent 51%),
+    radial-gradient(2.2px 2.2px at 292px 402px, color-mix(in srgb, #fff4d6 85%, transparent) 50%, transparent 51%),
+    radial-gradient(1px 1px at 145px 380px, color-mix(in srgb, #e3d9ff 58%, transparent) 50%, transparent 51%);
+  background-size: 317px 283px, 317px 283px, 317px 283px, 317px 283px, 317px 283px, 317px 283px, 317px 283px, 317px 283px, 317px 283px, 431px 389px, 431px 389px, 431px 389px, 431px 389px, 431px 389px, 431px 389px, 431px 389px, 431px 389px, 431px 389px, 431px 389px, 431px 389px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 577px 521px, 743px 661px, 743px 661px, 743px 661px, 743px 661px, 743px 661px, 743px 661px, 743px 661px, 743px 661px;
+}
+/* 성운 — 별 뒤에 같은 방식으로 고정 */
+.hud::after {
+  content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
   background:
     radial-gradient(1200px 600px at 80% -10%, rgba(76, 60, 160, .22), transparent 60%),
-    radial-gradient(900px 500px at -10% 30%, rgba(30, 110, 160, .18), transparent 60%),
-    #070a12;
-}
-/* 별 — 반복 무늬 하나로 (그림 파일 없이) */
-.hud::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .55;
-  background-image:
-    radial-gradient(1px 1px at 20px 30px, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 130px 80px, #cfe8ff 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 210px 150px, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 60px 190px, #e3d9ff 50%, transparent 51%),
-    radial-gradient(1px 1px at 250px 40px, #fff 50%, transparent 51%);
-  background-size: 280px 220px;
+    radial-gradient(900px 500px at -10% 30%, rgba(30, 110, 160, .18), transparent 60%);
 }
 .hud > * { position: relative; }
 .pixel { font-family: 'Galmuri11', 'Pretendard Variable', Pretendard, system-ui, sans-serif; letter-spacing: 0; }
@@ -440,7 +484,8 @@ main:focus { outline: none; }
 .hud-card { padding: 22px 20px; text-align: center; }
 /* 넓은 화면에서 카드를 고정한다. .hud-frame 의 position: relative 가 Tailwind 의 sticky 를 이기므로
    (층 밖 CSS 가 우선) 여기서 직접 준다 */
-@media (min-width: 1024px) { .hud-card { position: sticky; top: 80px; } }
+/* top = 헤더 높이(57px) + 위 여백(32px). 처음 자리와 같아야 스크롤할 때 카드가 움찔하지 않는다 */
+@media (min-width: 1024px) { .hud-card { position: sticky; top: 89px; } }
 .hud-tag { position: absolute; top: -9px; left: 16px; padding: 0 6px; font-size: 11px; color: var(--accent); background: #070a12; letter-spacing: .08em; }
 .hud-avatar { margin: 6px auto 0; width: 180px; height: 180px; border-radius: 50%; overflow: hidden;
   box-shadow: 0 0 0 2px var(--hud-line), 0 0 0 6px rgba(125, 211, 252, .08), 0 0 40px rgba(125, 211, 252, .18); }
@@ -453,7 +498,8 @@ main:focus { outline: none; }
 .hud-card .flex.justify-between { text-align: left; }
 .hud-xp, .hud-meter { display: block; height: 10px; border: 1px solid var(--hud-line); background: #0a0f1a; border-radius: 2px; overflow: hidden; }
 .hud-meter { height: 8px; }
-.hud-xp > span, .hud-meter > span { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--accent) 0 6px, #5fb8e6 6px 8px); }
+.hud-xp > span, .hud-meter > span { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--c, var(--accent)) 0 6px, color-mix(in srgb, var(--c, var(--accent)) 75%, #000) 6px 8px); }
+.hud-stat .hud-stat-value { color: var(--c, var(--fg-strong)); }
 .hud-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; border-top: 1px dashed var(--hud-line); padding-top: 14px; }
 .hud-summary dt { font-size: 11px; color: var(--fg-faint); }
 .hud-summary dd { font-size: 18px; color: var(--fg-strong); }
@@ -562,8 +608,17 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 @media (min-width: 640px) { .hud-skill-row { grid-template-columns: 96px 1fr; align-items: start; } }
 .hud-skill-label { font-size: 13px; color: var(--fg-dim); padding-top: 5px; }
 .hud-skill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid var(--hud-line); border-radius: 4px; font-size: 13px; color: var(--fg); background: rgba(15, 22, 36, .8); }
-.hud-skill:hover { border-color: var(--accent); color: var(--accent); }
-.hud-skill-count { font-size: 11px; color: var(--fg-faint); }
+/* 분야 색(--c, lib/domain-colors.ts) — 숫자는 모든 단계에서 그 색으로 또렷하게 두고,
+   많이 쓴 정도는 칸을 채우는 진하기로 나타낸다. 숫자가 함께 있어 색만으로 전하지 않는다 (KWCAG 1.4.1).
+   4단계는 배경이 진해 숫자를 밝은 글자로 바꾼다 (대비 4.5:1) */
+.hud-skill-count { font-size: 11px; color: var(--c, var(--accent)); }
+.hud-skill-label { color: var(--c, var(--fg-dim)); }
+.hud-skill[data-tier="2"] { border-color: color-mix(in srgb, var(--c, var(--accent)) 35%, var(--hud-line)); background: color-mix(in srgb, var(--c, var(--accent)) 8%, rgba(15, 22, 36, .8)); }
+.hud-skill[data-tier="3"] { border-color: color-mix(in srgb, var(--c, var(--accent)) 60%, var(--hud-line)); background: color-mix(in srgb, var(--c, var(--accent)) 16%, rgba(15, 22, 36, .8)); }
+.hud-skill[data-tier="4"] { border-color: var(--c, var(--accent)); background: color-mix(in srgb, var(--c, var(--accent)) 26%, rgba(15, 22, 36, .8)); color: var(--fg-strong); }
+.hud-skill[data-tier="4"] .hud-skill-count { color: var(--fg-strong); font-weight: 700; }
+.hud-skill:hover { border-color: var(--c, var(--accent)); color: var(--c, var(--accent)); box-shadow: 0 0 10px -2px var(--c, var(--accent)); }
+.hud-skill[data-tier="4"]:hover .hud-skill-count { color: var(--c, var(--accent)); }
 
 /* 접고 펴기 — 높이 0 → 전체로 부드럽게 (grid 행 높이 전환) */
 .hud-collapse { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s cubic-bezier(.2, .8, .2, 1); }
