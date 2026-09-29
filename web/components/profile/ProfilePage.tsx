@@ -3,7 +3,8 @@ import type { Character, MediaEntry, PixelFont, Profile } from '../../lib/profil
 import { Dialog } from './Dialog'
 import ForceDark from './ForceDark'
 import SkillBoard from './SkillBoard'
-import StatRadar from './StatRadar'
+import { DOMAIN_COLOR } from '../../lib/domain-colors'
+import StatRadar, { STAT_FILL } from './StatRadar'
 import TitleCollection from './TitleCollection'
 import ShowMore from './ShowMore'
 import { LinkIcon, TraitIcon } from './icons'
@@ -99,7 +100,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
                 title="경험치 내역"
                 className="hud-link text-[12px]"
                 ariaLabel={`경험치 ${ch.xp.toLocaleString('ko-KR')}, 다음 레벨까지 ${(ch.xpNextLevel - ch.xp).toLocaleString('ko-KR')} — 내역 보기`}
-                label={<span className="tabular-nums">{ch.xp.toLocaleString('ko-KR')} / {ch.xpNextLevel.toLocaleString('ko-KR')} XP</span>}
+                label={<span className="tabular-nums">{inLevel.toLocaleString('ko-KR')} / {levelSpan.toLocaleString('ko-KR')} XP</span>}
               >
                 <table className="hud-table">
                   <thead><tr><th scope="col">쌓인 것</th><th scope="col">개수</th><th scope="col">하나당</th><th scope="col">경험치</th></tr></thead>
@@ -113,13 +114,13 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
                 <p className="mt-3 text-[12.5px] text-[var(--fg-dim)]">{ch.xpFormula}. Lv.{ch.level + 1} 까지 {(ch.xpNextLevel - ch.xp).toLocaleString('ko-KR')} 남음.</p>
               </Dialog>
             </div>
-            {/* 막대 = 이번 레벨 안에서 모은 경험치. 노트 · 프로젝트 · 자격이 쌓이면 다음 빌드에서 차오른다 */}
+            {/* 막대 · 위의 숫자 = 이번 레벨 안에서 모은 경험치 (누적 값은 막대와 어긋나 보여 내역 창에만 둔다). 노트 · 프로젝트 · 자격이 쌓이면 다음 빌드에서 차오른다 */}
             <div className="hud-xp mt-1.5" role="progressbar" aria-label={`Lv.${ch.level} → Lv.${ch.level + 1} 경험치`} aria-valuemin={0} aria-valuemax={levelSpan} aria-valuenow={inLevel} aria-valuetext={`${xpPct}%, 다음 레벨까지 ${(ch.xpNextLevel - ch.xp).toLocaleString('ko-KR')} XP`}>
               <span style={{ width: `${xpPct}%` }} />
             </div>
             <p className="mt-1.5 flex justify-between text-[11.5px] text-[var(--fg-faint)]" aria-hidden>
               <span className="pixel">{xpPct}%</span>
-              <span>Lv.{ch.level + 1} 까지 <span className="tabular-nums">{(ch.xpNextLevel - ch.xp).toLocaleString('ko-KR')}</span> XP</span>
+              <span>Lv.{ch.level + 1} 까지 <span className="tabular-nums">{(ch.xpNextLevel - ch.xp).toLocaleString('ko-KR')}</span></span>
             </p>
           </div>
 
@@ -158,9 +159,10 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
               {ch.stats.length <= 8 && <StatRadar stats={ch.stats} />}
               <ul className="space-y-1.5">
                 {ch.stats.map(s => {
-                  const max = Math.max(...ch.stats.map(x => x.value), 1)
+                  // 가장 큰 값도 80% 까지만 — 끝에 닿으면 "다 찼다"로 읽힌다 (육각형과 같은 기준)
+                  const max = Math.max(...ch.stats.map(x => x.value), 1) / STAT_FILL
                   return (
-                    <li key={s.key}>
+                    <li key={s.key} style={{ '--c': DOMAIN_COLOR[s.key] } as React.CSSProperties}>
                       <details className="hud-stat">
                         <summary>
                           <span className="pixel hud-stat-label">{s.label}</span>
@@ -233,7 +235,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
             </ShowMore>
           </Section>
 
-          <Section id="skills" title="스킬" sub="기술 스택 · 괄호 안은 쓴 프로젝트 수">
+          <Section id="skills" title="스킬" sub="기술 스택">
             <SkillBoard groups={skillGroups} languages={ch.languages} routes={routeOf} />
           </Section>
 
