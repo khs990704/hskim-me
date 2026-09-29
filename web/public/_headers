@@ -12,10 +12,12 @@
 #   style-src 'unsafe-inline'  — Shiki 코드 색, KaTeX 수식 위치가 style 속성으로 들어간다.
 #   cdn.jsdelivr.net           — KaTeX 수식 CSS·폰트 (수식이 있는 문서만).
 #   blob:                      — mermaid 도표 렌더.
+#   cloudflareinsights.com     — 방문 통계 (Cloudflare Web Analytics, P7-6). Cloudflare 가 hskim.me 응답에
+#                                스크립트를 자동으로 끼워 넣는다(자동 설정). 쿠키 없음. 스크립트 · 보고 주소 두 곳만 연다.
 #
 # HSTS 의 preload 는 넣지 않는다. 한번 브라우저 목록에 오르면 되돌리기 어렵다.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: blob:; connect-src 'self' https://cloudflareinsights.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
