@@ -72,8 +72,14 @@ async function runEngine(name) {
       const errs = []
       page.on('pageerror', e => errs.push(e.message.slice(0, 120)))
       page.on('console', m => { if (m.type() === 'error' && !(pg.status404 && /404/.test(m.text()))) errs.push(m.text().slice(0, 120)) })
-      await page.goto(B + pg.path, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(e => errs.push('열기 실패 ' + e.message.slice(0, 60)))
+      // 세 엔진을 동시에 돌리면 가끔 열기가 시간 초과된다 (주로 Firefox, 혼자 돌리면 통과). 한 번만 다시 연다
+      await page.goto(B + pg.path, { waitUntil: 'domcontentloaded', timeout: 20000 })
+        .catch(() => page.goto(B + pg.path, { waitUntil: 'domcontentloaded', timeout: 30000 }))
+        .catch(e => errs.push('열기 실패 ' + e.message.split('\n')[0].slice(0, 80)))
       await page.waitForTimeout(pg.key === 'home' ? 4000 : 1500)
+      // 도표 · 그래프는 스크립트가 그린다. 세 엔진을 동시에 돌리면 느려지므로 나타날 때까지 기다린다
+      if (pg.expect?.diagram) await page.waitForSelector('.diagram-stage svg, .diagram-error', { timeout: 8000 }).catch(() => {})
+      if (pg.expect?.canvas) await page.waitForSelector('canvas', { timeout: 8000 }).catch(() => {})
       const i = await page.evaluate(() => ({
         hscroll: document.documentElement.scrollWidth > innerWidth + 1,
         canvas: !!document.querySelector('canvas'),
@@ -106,7 +112,7 @@ async function runEngine(name) {
     ctx.setDefaultTimeout(5000)
     const p = await ctx.newPage()
     const doc = PAGES.find(x => x.key === 'math')?.path ?? '/index-all'
-    await p.goto(B + doc, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(1200)
+    await p.goto(B + doc, { waitUntil: 'domcontentloaded', timeout: 30000 }); await p.waitForTimeout(1200)
     await p.keyboard.press('Tab')
     if (!(await p.evaluate(() => document.activeElement?.classList.contains('skip-link')))) fail('keyboard', '첫 Tab 이 본문 바로가기가 아님')
     await p.evaluate(() => document.querySelector('.skip-link')?.focus()); await p.keyboard.press('Enter'); await p.waitForTimeout(150)
@@ -128,7 +134,7 @@ async function runEngine(name) {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
     ctx.setDefaultTimeout(5000)
     const p = await ctx.newPage()
-    await p.goto(B + '/about', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(1200)
+    await p.goto(B + '/about', { waitUntil: 'domcontentloaded', timeout: 30000 }); await p.waitForTimeout(1200)
     if ((await p.evaluate(() => document.documentElement.dataset.theme)) !== 'dark') fail('about', '어두운 테마가 아님')
     if (await p.locator('button[aria-label$="테마로"]').count()) fail('about', '테마 단추가 보임')
     const badge = p.locator('#titles .hud-badge').first()
@@ -137,12 +143,18 @@ async function runEngine(name) {
     await p.keyboard.press('Escape'); await p.waitForTimeout(250)
     if (await p.evaluate(() => !!document.querySelector('dialog[open]'))) fail('about', 'Esc 로 상세 창이 닫히지 않음')
     else if (!(await p.evaluate(() => document.activeElement?.classList.contains('hud-badge')))) fail('about', '창을 닫은 뒤 배지로 초점이 돌아오지 않음')
-    const shown = await p.locator('#titles .hud-badge').count()
+    // 접힌 칭호도 페이지에는 있다 (높이 0 + inert). 펼치면 inert 가 풀리고 단추가 "펼쳐짐" 이 된다
     const more = p.locator('#titles .hud-more')
     if (await more.count()) {
-      await more.click(); await p.waitForTimeout(150)
-      if ((await p.locator('#titles .hud-badge').count()) <= shown) fail('about', '칭호 전체 보기가 펼쳐지지 않음')
+      const rest = p.locator('#titles .hud-collapse')
+      if (!(await rest.evaluate(el => el.inert))) fail('about', '접힌 칭호가 초점을 받을 수 있음 (inert 아님)')
+      // 높이 전환(0.35초)은 엔진을 동시에 돌리면 느려진다 — 고정 시간 대신 모양이 될 때까지 기다린다
+      const until = fn => p.waitForFunction(fn, null, { timeout: 3000 }).then(() => true, () => false)
       await more.click()
+      const opened = await until(() => { const el = document.querySelector('#titles .hud-collapse'); return !el.inert && el.getBoundingClientRect().height > 50 })
+      if (!opened || (await more.getAttribute('aria-expanded')) !== 'true') fail('about', '칭호 전체 보기가 펼쳐지지 않음')
+      await more.click()
+      if (!(await until(() => { const el = document.querySelector('#titles .hud-collapse'); return el.inert && el.getBoundingClientRect().height < 2 }))) fail('about', '접기가 되지 않음')
     }
     if (await p.evaluate(() => [...document.querySelectorAll('.hud-badge')].some(b => b.textContent.includes('???') && /새벽|바보|우주를/.test(b.getAttribute('aria-label') ?? '')))) fail('about', '숨김 칭호 이름이 드러남')
     await ctx.close()

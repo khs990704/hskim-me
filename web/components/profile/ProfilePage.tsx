@@ -6,7 +6,7 @@ import SkillBoard from './SkillBoard'
 import StatRadar from './StatRadar'
 import TitleCollection from './TitleCollection'
 import ShowMore from './ShowMore'
-import { LinkIcon } from './icons'
+import { LinkIcon, TraitIcon } from './icons'
 
 /**
  * /about — 캐릭터 스탯창 (기획 docs/01-planning/profile-and-life.md §3 · §4)
@@ -113,17 +113,23 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
                 <p className="mt-3 text-[12.5px] text-[var(--fg-dim)]">{ch.xpFormula}. Lv.{ch.level + 1} 까지 {(ch.xpNextLevel - ch.xp).toLocaleString('ko-KR')} 남음.</p>
               </Dialog>
             </div>
-            <div className="hud-xp mt-1.5" role="progressbar" aria-label={`Lv.${ch.level} 경험치`} aria-valuemin={0} aria-valuemax={levelSpan} aria-valuenow={inLevel} aria-valuetext={`${xpPct}%`}>
+            {/* 막대 = 이번 레벨 안에서 모은 경험치. 노트 · 프로젝트 · 자격이 쌓이면 다음 빌드에서 차오른다 */}
+            <div className="hud-xp mt-1.5" role="progressbar" aria-label={`Lv.${ch.level} → Lv.${ch.level + 1} 경험치`} aria-valuemin={0} aria-valuemax={levelSpan} aria-valuenow={inLevel} aria-valuetext={`${xpPct}%, 다음 레벨까지 ${(ch.xpNextLevel - ch.xp).toLocaleString('ko-KR')} XP`}>
               <span style={{ width: `${xpPct}%` }} />
             </div>
+            <p className="mt-1.5 flex justify-between text-[11.5px] text-[var(--fg-faint)]" aria-hidden>
+              <span className="pixel">{xpPct}%</span>
+              <span>Lv.{ch.level + 1} 까지 <span className="tabular-nums">{(ch.xpNextLevel - ch.xp).toLocaleString('ko-KR')}</span> XP</span>
+            </p>
           </div>
 
           <p className="mt-4 text-[13.5px] leading-6 text-[var(--fg)]">{profile.tagline}</p>
 
-          <ul className="mt-4 flex flex-wrap gap-1.5">
+          {/* 한 줄에 하나씩 — 링크가 늘면 아래로 쌓인다 */}
+          <ul className="mt-4 grid gap-1.5">
             {Object.entries(profile.links).map(([k, v]) => (
               <li key={k}>
-                <a href={hrefOf(k, v)} className="hud-chip" {...(k === 'email' ? {} : { rel: 'me noopener' })}>
+                <a href={hrefOf(k, v)} className="hud-chip hud-link-row" {...(k === 'email' ? {} : { rel: 'me noopener' })}>
                   <LinkIcon kind={k} /> <span>{LINK_LABEL[k] ?? k}</span>
                 </a>
               </li>
@@ -132,9 +138,9 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
 
           <dl className="hud-summary mt-5">
             <div><dt>칭호</dt><dd className="pixel"><a href="#titles" className="hud-link">{ch.summary.done}<span className="opacity-60">/{total}</span></a></dd></div>
-            <div><dt>퀘스트</dt><dd className="pixel">{ch.projects.length}</dd></div>
-            <div><dt>자격 · 수료</dt><dd className="pixel">{profile.certs.length}</dd></div>
-            <div><dt>언어</dt><dd className="pixel">{ch.languages.length}</dd></div>
+            <div><dt>퀘스트</dt><dd className="pixel"><a href="#featured" className="hud-link">{ch.projects.length}</a></dd></div>
+            <div><dt>자격 · 수료</dt><dd className="pixel"><a href="#licenses" className="hud-link">{profile.certs.length}</a></dd></div>
+            <div><dt>언어</dt><dd className="pixel"><a href="#skills" className="hud-link">{ch.languages.length}</a></dd></div>
           </dl>
         </aside>
 
@@ -147,8 +153,9 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
           )}
 
           <Section id="stats" title="능력치" sub="STATS · 그 분야 기술을 쓴 프로젝트 수">
-            <div className="grid items-center gap-6 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
-              <StatRadar stats={ch.stats} />
+            {/* 육각형은 한눈에 보는 보조 그림. 항목이 8개를 넘으면 칸이 좁아 읽기 어려워 막대만 둔다 */}
+            <div className={`grid items-center gap-6 ${ch.stats.length <= 8 ? 'md:grid-cols-[minmax(0,300px)_minmax(0,1fr)]' : ''}`}>
+              {ch.stats.length <= 8 && <StatRadar stats={ch.stats} />}
               <ul className="space-y-1.5">
                 {ch.stats.map(s => {
                   const max = Math.max(...ch.stats.map(x => x.value), 1)
@@ -173,7 +180,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
             </div>
           </Section>
 
-          <Section id="titles" title="칭호 도감" sub="ACHIEVEMENTS · 업적을 달성하면 칭호를 얻는다"
+          <Section id="titles" title="칭호 도감" sub="ACHIEVEMENTS · 하나씩 해낼 때마다 칭호가 쌓여요"
             right={<span className="pixel text-[13px] text-[var(--fg-dim)]">{ch.summary.done} / {total}</span>}>
             <TitleCollection items={ch.achievements} equipped={profile.title} />
           </Section>
@@ -231,18 +238,37 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
           </Section>
 
           {profile.traits.length > 0 && (
-            <Section id="traits" title="특성" sub="핵심 역량">
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {profile.traits.map(t => (
-                  <li key={t.name} className="hud-trait">
-                    <p className="pixel text-[14px] text-[var(--fg-strong)]">{t.name}</p>
-                    <p className="mt-1 text-[13px] leading-6 text-[var(--fg-dim)]">{t.desc}</p>
-                    <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12.5px]">
-                      {t.projects.map(p => <Link key={p.slug} href={'/' + p.route} className="hud-link">{p.title}</Link>)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+            <Section id="traits" title="특성" sub="핵심 역량 · 보여 준 프로젝트만큼 포인트가 찍혀요">
+              {(() => {
+                const PIPS = 5
+                return (
+                  <ul className="grid gap-3 sm:grid-cols-2">
+                    {profile.traits.map(t => {
+                      const n = t.projects.length
+                      return (
+                        <li key={t.name} className="hud-trait">
+                          <div className="flex items-center gap-3">
+                            <span className="hud-trait-node"><TraitIcon name={t.name} /></span>
+                            <div className="min-w-0 flex-1">
+                              <p className="pixel text-[14px] text-[var(--fg-strong)]">{t.name}</p>
+                              <p className="mt-1 flex items-center gap-2">
+                                <span className="hud-pips" role="img" aria-label={`포인트 ${n}, 이 역량을 보여 준 프로젝트 ${n}개`}>
+                                  {Array.from({ length: Math.max(PIPS, n) }, (_, i) => <span key={i} data-on={i < n || undefined} />)}
+                                </span>
+                                <span className="pixel text-[12px] text-[var(--accent)]">Lv.{n}</span>
+                              </p>
+                            </div>
+                          </div>
+                          <p className="mt-2 text-[13px] leading-6 text-[var(--fg-dim)]">{t.desc}</p>
+                          <p className="mt-2 flex flex-wrap gap-1.5 text-[12px]">
+                            {t.projects.map(p => <Link key={p.slug} href={'/' + p.route} className="hud-trait-src">{p.title}</Link>)}
+                          </p>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )
+              })()}
             </Section>
           )}
 

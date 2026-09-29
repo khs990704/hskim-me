@@ -33,3 +33,22 @@ export function LinkIcon({ kind }: { kind: string }) {
     </svg>
   )
 }
+
+// 특성(핵심 역량) 그림 — 이름의 낱말로 고른다. 맞는 게 없으면 번개
+const TRAIT: [RegExp, string][] = [
+  // 앞에서부터 맞춰 본다 — "백엔드·운영 도구 통합" 이 톱니(운영)가 되지 않게 백엔드를 먼저
+  [/백엔드|통합|API/, 'M4 5h16v5H4z M4 14h16v5H4z M8 7.5h.01 M8 16.5h.01'],                  // 서버
+  [/보안/, 'M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z M9.5 12l2 2 3.5-4'],            // 방패
+  [/프론트|라이브러리|화면/, 'M3 5h18v14H3z M3 9h18 M8 9v10'],                             // 화면 틀
+  [/분석|모델링/, 'M4 20V10 M10 20V4 M16 20v-7 M22 20H2'],                                   // 막대그래프
+  [/운영/, 'M12 8a4 4 0 1 0 .01 0 M12 2v3 M12 19v3 M4.2 4.2l2.1 2.1 M17.7 17.7l2.1 2.1 M2 12h3 M19 12h3 M4.2 19.8l2.1-2.1 M17.7 6.3l2.1-2.1'], // 톱니
+  [/AI/, 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z'], // 반짝임
+]
+export function TraitIcon({ name, size = 22 }: { name: string; size?: number }) {
+  const d = TRAIT.find(([re]) => re.test(name))?.[1] ?? P.skill
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d={d} />
+    </svg>
+  )
+}

@@ -32,6 +32,9 @@ export function DialogShell({ ref, title, children, onClose }: { ref: React.Ref<
       className="hud-dialog"
       aria-label={title}
       onClose={onClose}
+      // Esc 로 닫기 — 브라우저 기본 동작에 기대지 않고 직접 닫는다. 브라우저에 따라 사용자 동작 없이
+      // 열린 창은 첫 Esc 를 무시하기도 한다 (Chrome 의 CloseWatcher 규칙)
+      onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); e.currentTarget.close() } }}
       // 바깥(어두운 막)을 누르면 닫는다
       onClick={e => { if (e.target === e.currentTarget) (e.currentTarget as HTMLDialogElement).close() }}
     >
