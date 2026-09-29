@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description: '지식 노트와 프로젝트 기록을 연결해 공개하는 개인 사이트',
   // 페이지가 따로 정하지 않으면 사이트 카드를 쓴다
   ...social('_site', SITE, '지식 노트와 프로젝트 기록을 연결해 공개하는 개인 사이트', 'website'),
+  // 검색 엔진 소유 확인 (P7-5). 구글은 DNS 로 확인해 태그가 필요 없다. 네이버는 DNS 확인이 없어 태그로
+  verification: { other: { 'naver-site-verification': 'c8a532ffe3bed2f906fb32eb843358c6be2f029c' } },
   // 선언이 없으면 브라우저가 /favicon.ico 를 찾다가 404 를 낸다
   icons: { icon: '/icon.svg', apple: '/apple-icon.png' },
 }
