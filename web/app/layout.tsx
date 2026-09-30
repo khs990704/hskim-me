@@ -26,6 +26,15 @@ if(!t)t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
 if(location.pathname.replace(/\\/$/,'')==='/about')t='dark';
 document.documentElement.dataset.theme=t;}catch(e){}})();`
 
+// 방문 통계 (Cloudflare Web Analytics, P7-6). 쿠키 없음.
+// 처음에는 Cloudflare 가 응답에 끼워 넣게(자동 설정) 두었는데, 무료 요금제 zone 프록시가 한국 접속을
+// 유럽 거점으로 보내 첫 응답이 0.9초였다. 프록시를 끄면 자동 삽입도 멈추므로 직접 넣는다 (2026-09-30).
+// 정식 주소에서만 센다 — 같은 빌드가 테스트 주소(*.pages.dev)로도 나가기 때문. 토큰은 공개 값이다.
+// 허용 주소는 public/_headers 의 CSP (script-src static.cloudflareinsights.com, connect-src cloudflareinsights.com)
+const analyticsScript = `if(location.hostname==='hskim.me'){var s=document.createElement('script');s.type='module';
+s.src='https://static.cloudflareinsights.com/beacon.min.js';s.setAttribute('data-cf-beacon','{"token":"f9bbfb7bf46b44b49c087c84dfcb44a1"}');
+document.head.appendChild(s)}`
+
 // suppressHydrationWarning 이 붙는 이유
 //   html — 첫 페인트 전 themeScript 가 data-theme 을 바꿔 서버 값과 달라질 수 있다
 //   head — 브라우저 확장이 <head> 에 속성을 주입하는 경우가 있다 (개발용 확장 등)
@@ -34,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko" data-theme="dark" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: analyticsScript }} />
         {/*
           폰트는 우리가 들고 있다 (scripts/fetch-fonts.mjs).
           CDN 에 두었을 때는 렌더 차단 경로에 남의 서버가 끼어 300ms 를 먹었다.
