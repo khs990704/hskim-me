@@ -7,7 +7,8 @@ const OUT = path.join(process.cwd(), '..', 'pipeline', 'out')
 
 type RawPost = {
   id: string; slug: string; name: string; heading: string; description: string
-  date: string; category: string; place: string; map: [number, number] | null; tags: string[]
+  date: string; category: string; place: string; tags: string[]
+  address: string; mapLink: { provider: 'naver' | 'google'; label: string; url: string } | null
   until?: string; spot?: string; title?: string; venue?: string; sport?: string; record?: string
   photos: { src: string; alt: string }[]
   text: string[]

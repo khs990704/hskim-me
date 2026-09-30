@@ -23,7 +23,7 @@ const ALIAS = { 전시: '전시·공연', 공연: '전시·공연' }
 const canon = s => { const t = s.replace(/\s*[·,/ ]\s*/g, '·').trim(); return ALIAS[t] ?? t }
 // 분류마다 더 쓸 수 있는 칸 (모두 선택). 다른 분류의 칸을 쓰면 알려 준다 — 화면에 안 나와 헷갈리므로
 const EXTRA = { 여행: ['until'], 음식: ['spot'], 카페: ['spot'], '전시·공연': ['title', 'venue'], 운동: ['sport', 'record'], 일상: [] }
-const COMMON = ['publish', 'date', 'category', 'place', 'map', 'consent', 'tags', 'slug']
+const COMMON = ['publish', 'date', 'category', 'place', 'consent', 'tags', 'slug', 'address']
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const IMG = /\.(jpe?g|png|webp|avif|gif|tiff?|heic|heif)$/i
 
@@ -86,15 +86,6 @@ function readPost(file, rel) {
   if (!CATEGORIES.includes(category)) err(where, `category 는 ${CATEGORIES.join(' · ')} 중 하나여야 합니다 (지금: ${category || '비어 있음'})`)
   const place = data.place == null ? '' : String(data.place).trim()
 
-  let map = null
-  if (data.map != null) {
-    const ok = Array.isArray(data.map) && data.map.length === 2 && data.map.every(n => typeof n === 'number' && Number.isFinite(n))
-      && Math.abs(data.map[0]) <= 90 && Math.abs(data.map[1]) <= 180
-    if (!ok) err(where, `map 은 [위도, 경도] 숫자 두 개여야 합니다 — 예: [33.46, 126.93] (지금: ${JSON.stringify(data.map)})`)
-    // 동네 단위로 뭉갠다 — 소수 둘째 자리(약 1km). 더 정확한 좌표를 적어도 공개물에는 남기지 않는다
-    else map = data.map.map(n => Math.round(n * 100) / 100)
-  }
-
   // 태그 — `tags: [킹누, 콘서트]` 또는 `tags: 킹누, 콘서트`. # 은 떼고, 겹치면 하나로
   const rawTags = Array.isArray(data.tags) ? data.tags : data.tags == null ? [] : String(data.tags).split(/[,，]/)
   const tags = [...new Set(rawTags.map(x => String(x ?? '').replace(/^#/, '').trim()).filter(Boolean))]
@@ -144,10 +135,10 @@ function readPost(file, rel) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(s)) err(where, `slug 는 영문 소문자 · 숫자 · - 만 쓸 수 있습니다 (지금: ${data.slug})`)
     else slug = s
   }
-  // 제목 — 전시 · 공연 이름, 없으면 장소, 없으면 분류와 날짜
-  const heading = extra.title || place || `${category} · ${date.replace(/-/g, '.')}`
+  // 제목 — 전시 · 공연 이름, 가게 이름, 장소, 없으면 분류와 날짜
+  const heading = extra.title || extra.spot || place || `${category} · ${date.replace(/-/g, '.')}`
   // 설명 — 검색 결과 · 공유 카드에 나간다. 글의 첫 문장, 없으면 짧게 만든다
-  const plain = s => s.replace(/\n/g, ' ').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/(^|\s)[*_]([^*_]+)[*_](?=\s|$)/g, '$1$2')
+  const plain = s => s.replace(/\n/g, ' ').replace(/`([^`]+)`/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/(^|\s)[*_]([^*_]+)[*_](?=\s|$)/g, '$1$2')
   const first = plain(text[0] ?? '').match(/^.{8,}?(?:[다요음]\.|[.!?])(?=\s|$)/)?.[0] ?? plain(text[0] ?? '')
   // 첫 문장이 짧으면(30자 미만) 문단 전체를 쓴다 — "첫 콘서트 관람." 만으로는 검색 결과에서 뜻이 약하다
   const lead = first.length < 30 ? plain(text[0] ?? '') : first
@@ -159,7 +150,32 @@ function readPost(file, rel) {
     return end >= 40 ? cut.slice(0, end) : cut.slice(0, cut.lastIndexOf(' ') > 40 ? cut.lastIndexOf(' ') : 149) + '…'
   }
   const description = clip(lead.length >= 8 ? lead : [place, extra.spot || extra.venue, category].filter(Boolean).join(' · ') + ' — 일상 기록')
-  return { id, slug, name, heading, description, date, category, place, map, consent: data.consent === true, tags, ...extra, photos, text }
+  // 지도 링크 — address 에 넣은 것으로만 (2026-09-30 고객 결정).
+  //   지도 링크(네이버 · 카카오 · Google 공유 링크) → 그 링크로 바로
+  //   주소 글자 → 주소를 보여 주고 그 주소로 검색 (한글이면 네이버, 아니면 Google)
+  //   비움 → 링크 없음
+  // 링크는 지도 서비스 주소만 받는다. 오타 · 엉뚱한 링크가 공개 페이지에 걸리지 않게
+  const MAPS = [
+    [/^(map\.naver\.com|naver\.me|m\.map\.naver\.com)$/, 'naver', '네이버 지도에서 보기'],
+    [/^(map\.kakao\.com|place\.map\.kakao\.com|kko\.to|kakaomap\.)/, 'kakao', '카카오맵에서 보기'],
+    [/^(maps\.app\.goo\.gl|goo\.gl|(www\.)?google\.[a-z.]+|maps\.google\.[a-z.]+)$/, 'google', 'Google 지도에서 보기'],
+  ]
+  const rawAddr = data.address == null ? '' : String(data.address).trim()
+  let address = '', mapLink = null
+  if (/^https?:\/\//i.test(rawAddr)) {
+    let u = null
+    try { u = new URL(rawAddr) } catch {}
+    const hit = u && u.protocol === 'https:' && MAPS.find(([re]) => re.test(u.hostname))
+    if (!hit || (hit[1] === 'google' && /^(www\.)?google\./.test(u.hostname) && !u.pathname.startsWith('/maps')) || (u.hostname === 'goo.gl' && !u.pathname.startsWith('/maps')))
+      err(where, `address 링크는 네이버 지도 · 카카오맵 · Google 지도 주소만 받습니다 (지금: ${rawAddr})`)
+    else mapLink = { provider: hit[1], label: hit[2], url: u.href }
+  } else if (rawAddr) {
+    address = rawAddr
+    mapLink = /[\uac00-\ud7a3]/.test(rawAddr)
+      ? { provider: 'naver', label: '네이버 지도에서 보기', url: `https://map.naver.com/p/search/${encodeURIComponent(rawAddr)}` }
+      : { provider: 'google', label: 'Google 지도에서 보기', url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(rawAddr)}` }
+  }
+  return { id, slug, name, heading, description, address, mapLink, date, category, place, consent: data.consent === true, tags, ...extra, photos, text }
 }
 
 // ---------- 실행 ----------
