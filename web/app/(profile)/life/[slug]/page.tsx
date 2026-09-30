@@ -83,10 +83,19 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </ul>
       )}
 
+      {/* 목록(/life)과 같은 방향 — 왼쪽이 최신, 오른쪽으로 갈수록 이전 글 (분류와 관계없이 날짜 순) */}
       {(newer || older) && (
         <nav className="mt-10 grid grid-cols-2 gap-3 border-t border-[var(--line-soft)] pt-5 text-[13px]" aria-label="다른 기록">
-          <div>{older && <Link href={`/life/${older.slug}`} className="text-[var(--fg-dim)] hover:text-[var(--accent)]">← {older.heading}</Link>}</div>
-          <div className="text-right">{newer && <Link href={`/life/${newer.slug}`} className="text-[var(--fg-dim)] hover:text-[var(--accent)]">{newer.heading} →</Link>}</div>
+          <div>
+            {newer && (
+              <Link href={`/life/${newer.slug}`} className="text-[var(--fg-dim)] hover:text-[var(--accent)]">← {newer.heading}</Link>
+            )}
+          </div>
+          <div className="text-right">
+            {older && (
+              <Link href={`/life/${older.slug}`} className="text-[var(--fg-dim)] hover:text-[var(--accent)]">{older.heading} →</Link>
+            )}
+          </div>
         </nav>
       )}
     </article>
