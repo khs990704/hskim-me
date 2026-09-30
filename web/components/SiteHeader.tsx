@@ -21,6 +21,7 @@ export default function SiteHeader() {
             { href: '/about', label: '소개' },
             { href: '/index-all', label: '전체 목록' },
             { href: '/portfolio', label: '포트폴리오' },
+            { href: '/life', label: '일상' },
           ].map(l => (
             <IntentLink
               key={l.href}

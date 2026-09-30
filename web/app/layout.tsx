@@ -19,11 +19,9 @@ export const metadata: Metadata = {
 }
 
 // 첫 페인트 전에 테마를 결정한다. 없으면 화면이 번쩍인다.
-// 테마는 그리기 전에 정한다 (깜빡임 방지). /about 스탯창은 항상 어두운 우주라 저장된 테마와 관계없이 dark.
-// 페이지 사이를 오갈 때는 components/profile/ForceDark 가 맞춘다.
+// 테마는 그리기 전에 정한다 (깜빡임 방지). /about 스탯창의 어두운 우주는 .hud 안에서만 칠한다 (globals.css).
 const themeScript = `(function(){try{var t=localStorage.getItem('theme');
 if(!t)t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
-if(location.pathname.replace(/\\/$/,'')==='/about')t='dark';
 document.documentElement.dataset.theme=t;}catch(e){}})();`
 
 // 방문 통계 (Cloudflare Web Analytics, P7-6). 쿠키 없음.

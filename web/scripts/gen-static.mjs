@@ -97,6 +97,20 @@ const sortRec = n => {
 }
 sortRec(root)
 
+// 일상(사진 기록) — 분류별로 묶고 최신 글이 위로. 목록 · 순서는 파이프라인의 out/life.json 이 정한다
+const lifeFile = path.join(HERE, '..', '..', 'pipeline', 'out', 'life.json')
+if (fs.existsSync(lifeFile)) {
+  const { categories, posts } = JSON.parse(fs.readFileSync(lifeFile, 'utf8'))
+  if (posts.length) {
+    const branch = { n: 'Life', k: '06 Life', children: [{ n: '전체 보기', k: 'life', r: 'life', children: [] }] }
+    for (const c of categories) {
+      const list = posts.filter(p => p.category === c).sort((a, b) => b.date.localeCompare(a.date))
+      if (list.length) branch.children.push({ n: c, k: `life:${c}`, children: list.map(p => ({ n: p.heading, k: 'life/' + p.slug, r: 'life/' + p.slug, children: [] })) })
+    }
+    root.children.push(branch)
+  }
+}
+
 // 빈 children 배열은 지워 용량을 줄인다
 const prune = n => {
   if (!n.children.length) delete n.children

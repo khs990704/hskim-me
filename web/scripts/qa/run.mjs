@@ -46,8 +46,13 @@ const PAGES = [
   { key: 'index', path: '/index-all' },
   { key: '404', path: '/no-such-page', status404: true },
   { key: 'about', path: '/about', expect: { badges: true } },
+  // 페이지와 하위 페이지 폴더가 같이 있는 주소 (serve.mjs 가 404 를 내던 경우)
+  { key: 'portfolio', path: '/portfolio' },
+  { key: 'life', path: '/life' },
+  // 사진 기록 글 하나 (글이 없으면 건너뛴다)
+  { key: 'life-post', path: (() => { const d = path.join(OUT, 'life'); const f = fs.existsSync(d) && fs.readdirSync(d).find(x => x.endsWith('.html') && x !== '_.html'); return f ? '/life/' + f.replace(/\.html$/, '') : null })() },
 ].filter(p => p.path)
-const MOBILE = ['home', 'math', 'mermaid', 'about']
+const MOBILE = ['home', 'math', 'mermaid', 'about', 'life-post']
 
 const server = await serve(OUT, PORT)
 let failedTotal = 0
@@ -135,8 +140,9 @@ async function runEngine(name) {
     ctx.setDefaultTimeout(5000)
     const p = await ctx.newPage()
     await p.goto(B + '/about', { waitUntil: 'domcontentloaded', timeout: 30000 }); await p.waitForTimeout(1200)
-    if ((await p.evaluate(() => document.documentElement.dataset.theme)) !== 'dark') fail('about', '어두운 테마가 아님')
-    if (await p.locator('button[aria-label$="테마로"]').count()) fail('about', '테마 단추가 보임')
+    // 스탯창은 사이트 테마와 관계없이 .hud 안만 어둡다 (헤더는 사이트 테마를 따른다)
+    if ((await p.evaluate(() => getComputedStyle(document.querySelector('.hud')).getPropertyValue('--bg').trim())) !== '#0e1116') fail('about', '스탯창이 어둡지 않음')
+    if (!(await p.locator('button[aria-label$="테마로"]').count())) fail('about', '테마 단추가 없음 (헤더는 모든 페이지에서 같아야 한다)')
     const badge = p.locator('#titles .hud-badge').first()
     await badge.focus(); await p.keyboard.press('Enter'); await p.waitForTimeout(300)
     if (!(await p.evaluate(() => !!document.activeElement?.closest('dialog[open]')))) fail('about', '칭호 상세 창이 열리지 않거나 초점이 창 밖')

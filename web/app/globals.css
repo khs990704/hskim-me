@@ -53,7 +53,8 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+/* scrollbar-gutter — 긴 페이지(스크롤바 있음)와 짧은 페이지를 오갈 때 폭이 15px 바뀌어 헤더가 옆으로 움찔했다 (Windows) */
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; scrollbar-gutter: stable; }
 
 body {
   margin: 0;
@@ -386,9 +387,34 @@ main:focus { outline: none; }
 .skip-link:focus { top: 12px; }
 
 /* ── 프로필 스탯창 (/about) ─────────────────────────────────────────────
-   항상 어두운 우주 (ThemeToggle 숨김 · ForceDark). 게임 HUD 틀 + 픽셀 글꼴(제목 · 숫자만).
+   항상 어두운 우주 — 사이트 테마와 관계없이 .hud 안에서만 (헤더는 사이트 테마를 따른다). 게임 HUD 틀 + 픽셀 글꼴(제목 · 숫자만).
    희귀도는 테두리 색과 글자로 함께 나타낸다 — 색만으로 구분하지 않는다 (KWCAG 1.4.1). */
 .hud {
+  /* 사이트 테마와 관계없이 이 안만 어둡게 — 예전에는 페이지 전체(html)를 dark 로 바꿔서 헤더까지 바뀌고
+     테마 단추가 사라져 소개에서만 헤더가 달라 보였다 (2026-09-30). 기본(다크) 토큰을 여기 다시 둔다 */
+  --bg:        #0e1116;
+  --bg-soft:   #141922;
+  --surface:   #171d27;
+  --line:      #232b38;
+  --line-soft: #1c232e;
+  --fg:        #d9dee7;
+  --fg-strong: #f0f3f8;
+  --fg-dim:    #9aa5b8;   /* 7.6:1 */
+  --fg-faint:  #7f8aa1;   /* 5.5:1 — 이보다 흐리면 WCAG AA(4.5:1) 아래로 내려간다 */
+  --accent:    #7dd3fc;
+  --accent-dim:#38506322;
+  --mark:      #fbbf2433;
+  
+  /* 본문 의미별 색. 제목 계층과 강조가 색으로도 읽히게 한다.
+     색만으로 의미를 전달하지 않도록 크기·굵기·기호를 함께 쓴다. */
+  --h2:        #7dd3fc;   /* 시안  — 큰 단락 */
+  --h3:        #a78bfa;   /* 보라  — 하위 단락 */
+  --strong:    #f0c674;   /* 호박  — 굵은 강조 */
+  --em:        #86d0b4;   /* 청록  — 기울임 */
+  --code-fg:   #f2a0c0;   /* 분홍  — 인라인 코드 */
+  --quote-bar: #4a5568;
+  color-scheme: dark;
+  color: var(--fg);
   --r-common: #aab4c6;
   --r-rare: #7dd3fc;
   --r-epic: #c4a8ff;
@@ -645,3 +671,10 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 }
 @keyframes hud-fill { from { width: 0; } }
 @keyframes hud-grow { from { transform: scale(.2); opacity: 0; } }
+
+/* ── 사진 기록 (/life) ────────────────────────────────────────────────
+   사이트 테마를 따른다 (스탯창처럼 우주로 고정하지 않는다 — 사진이 주인공이라 바탕은 조용하게).
+   사진 넘기기 단추 (components/life/PhotoViewer) */
+.life-nav { position: absolute; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 38px; height: 38px; border-radius: 999px; background: rgba(0, 0, 0, .5); color: #fff; font-size: 24px; line-height: 1; }
+.life-nav:hover { background: rgba(0, 0, 0, .75); }
+.life-nav:disabled { opacity: .25; cursor: default; }

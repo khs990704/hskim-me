@@ -24,8 +24,11 @@ export function serve(root, port = 4599) {
   const H = headersFor(root)
   const server = http.createServer((q, r) => {
     let f = path.join(root, decodeURIComponent(q.url.split('?')[0]))
-    if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html')
-    else if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f += '.html'
+    // Cloudflare Pages 와 같게: 폴더면 그 안의 index.html, 없으면 같은 이름의 .html
+    // (/portfolio · /life 처럼 페이지와 하위 페이지 폴더가 같이 있는 경우 — 폴더만 보면 404 였다)
+    const dir = fs.existsSync(f) && fs.statSync(f).isDirectory()
+    if (dir && fs.existsSync(path.join(f, 'index.html'))) f = path.join(f, 'index.html')
+    else if ((dir || !fs.existsSync(f)) && fs.existsSync(f.replace(/\/$/, '') + '.html')) f = f.replace(/\/$/, '') + '.html'
     if (!fs.existsSync(f)) { r.writeHead(404, { ...H, 'Content-Type': TYPES['.html'] }); return fs.createReadStream(path.join(root, '404.html')).pipe(r) }
     r.writeHead(200, { ...H, 'Content-Type': TYPES[path.extname(f)] ?? 'application/octet-stream' })
     fs.createReadStream(f).pipe(r)

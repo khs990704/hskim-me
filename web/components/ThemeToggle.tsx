@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
 /** 항상 어두운 페이지 — 테마 단추를 두지 않는다 (눌러도 바뀌지 않으면 고장으로 보인다) */
-const ALWAYS_DARK = ['/about']
+const ALWAYS_DARK: string[] = []   // 소개도 헤더는 사이트 테마를 따른다 (스탯창 안만 어둡게, 2026-09-30)
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
