@@ -143,7 +143,7 @@ async function runEngine(name) {
     await p.keyboard.press('Escape'); await p.waitForTimeout(250)
     if (await p.evaluate(() => !!document.querySelector('dialog[open]'))) fail('about', 'Esc 로 상세 창이 닫히지 않음')
     else if (!(await p.evaluate(() => document.activeElement?.classList.contains('hud-badge')))) fail('about', '창을 닫은 뒤 배지로 초점이 돌아오지 않음')
-    // 접힌 칭호도 페이지에는 있다 (높이 0 + inert). 펼치면 inert 가 풀리고 단추가 "펼쳐짐" 이 된다
+    // 접힌 칭호 자리는 높이 0 + inert 로 있고, 배지는 처음 펼 때 그린다 (lazy). 펼치면 inert 가 풀리고 단추가 "펼쳐짐" 이 된다
     const more = p.locator('#titles .hud-more')
     if (await more.count()) {
       const rest = p.locator('#titles .hud-collapse')

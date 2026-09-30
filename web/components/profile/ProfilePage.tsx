@@ -76,6 +76,8 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
                 src={avatar.variants[Math.min(1, avatar.variants.length - 1)].url}
                 srcSet={avatar.variants.map(v => `${v.url} ${v.w}w`).join(', ')}
                 sizes="180px"
+                // 첫 화면의 가장 큰 요소(LCP). 우선순위를 올리지 않으면 글꼴 17개 뒤로 밀려 2.4초를 기다렸다 (2026-09-30)
+                fetchPriority="high"
                 width={180}
                 height={180}
                 alt={`${profile.name} 프로필 사진`}
