@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import Link from 'next/link'
+import IntentLink from './IntentLink'
 import { usePathname } from 'next/navigation'
 import { useModalFocus } from '../lib/use-modal-focus'
 
@@ -9,6 +9,8 @@ import { useModalFocus } from '../lib/use-modal-focus'
 export type Node = { n: string; k: string; r?: string; children?: Node[] }
 
 let cached: Node[] | null = null
+/** 받는 중인 요청 — 여러 곳에서 동시에 불러도 한 번만 받는다 */
+let loading: Promise<Node[]> | null = null
 
 /** 좁은 화면에서는 헤더에 들어가지 않는 진입 경로. 서랍 맨 위에 모은다 */
 const DRAWER_LINKS = [
@@ -48,10 +50,14 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
 
   useEffect(() => setMounted(true), [])
 
-  useEffect(() => {
-    if (cached) return
-    fetch('/tree.json').then(r => r.json()).then((t: Node[]) => { cached = t; setTree(t) }).catch(() => {})
+  // 넓은 화면의 고정 트리는 바로 받는다. 좁은 화면의 서랍은 열려고 할 때 받는다 —
+  // 소개처럼 트리가 없는 화면에서도 헤더의 서랍 때문에 14KB 를 먼저 받아 첫 화면이 늦었다 (2026-09-30).
+  const load = useCallback(() => {
+    if (cached) { setTree(cached); return }
+    loading ??= fetch('/tree.json').then(r => r.json()).then((t: Node[]) => { cached = t; return t })
+    loading.then(t => setTree(t)).catch(() => { loading = null })
   }, [])
+  useEffect(() => { if (mode === 'tree' || drawer) load() }, [mode, drawer, load])
 
   // 현재 문서까지의 경로를 펼친다.
   // 문서가 아닌 화면(전체 목록 등)으로 가면 전부 접는다 — 맥락이 없으므로.
@@ -148,7 +154,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
 
     if (!isFolder) {
       return (
-        <Link
+        <IntentLink
           href={'/' + node.r}
           data-active={active || undefined}
           className={`block truncate rounded py-[3px] pr-2 text-[13.5px] leading-6 transition-colors ${
@@ -160,7 +166,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
           title={node.n}
         >
           {node.n}
-        </Link>
+        </IntentLink>
       )
     }
 
@@ -238,14 +244,14 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
         {/* 항목을 누르면 닫는다. 같은 문서를 다시 눌러 경로가 안 바뀌는 경우도 포함 */}
         <div className="flex shrink-0 flex-wrap gap-1.5 border-b border-[var(--line-soft)] px-3 py-2.5 text-[12.5px]">
           {DRAWER_LINKS.map(l => (
-            <Link
+            <IntentLink
               key={l.href}
               href={l.href}
               onClick={() => setDrawer(false)}
               className="rounded-md border border-[var(--line)] px-2.5 py-1.5 text-[var(--fg-dim)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
               {l.label}
-            </Link>
+            </IntentLink>
           ))}
         </div>
 
@@ -263,6 +269,9 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
     <>
       <button
         ref={openerRef}
+        onPointerEnter={load}
+        onTouchStart={load}
+        onFocus={load}
         onClick={() => setDrawer(o => !o)}
         aria-label={drawer ? '문서 목록 닫기' : '문서 목록 열기'}
         aria-expanded={drawer}

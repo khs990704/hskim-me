@@ -112,7 +112,7 @@ export default function TitleCollection({ items, equipped }: { items: Achievemen
 
       <div ref={anchor}>
         <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6">{first.map(badge)}</ul>
-        {rest.length > 0 && <CollapseRest open={expanded} id={listId} className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6 hud-collapse-list">{rest.map(badge)}</CollapseRest>}
+        {rest.length > 0 && <CollapseRest lazy open={expanded} id={listId} className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 xl:grid-cols-6 hud-collapse-list">{rest.map(badge)}</CollapseRest>}
       </div>
       {shown.length === 0 && <p className="py-6 text-center text-[13px] text-[var(--fg-faint)]">이 조건에 맞는 칭호가 없습니다</p>}
       {shown.length > COLLAPSED && (

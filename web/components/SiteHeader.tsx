@@ -1,9 +1,10 @@
-import Link from 'next/link'
+import IntentLink from './IntentLink'
 import Sidebar from './Sidebar'
 import ThemeToggle from './ThemeToggle'
 import Search from './Search'
 
-/** 모든 문서 페이지 공통 머리 (본문 바로가기 + 헤더). 문서 틀 · 소개(스탯창) 틀이 같이 쓴다 */
+/** 모든 문서 페이지 공통 머리 (본문 바로가기 + 헤더). 문서 틀 · 소개(스탯창) 틀이 같이 쓴다.
+ *  링크는 누를 낌새가 보일 때만 미리 받는다 (IntentLink) — 모든 페이지에 있어 첫 화면 통신을 아낀다 */
 export default function SiteHeader() {
   return (
     <>
@@ -11,9 +12,9 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-[var(--line-soft)] bg-[var(--bg)]/85 backdrop-blur">
       <div className="flex h-14 items-center gap-2 px-3 sm:px-5">
         <Sidebar mode="trigger" />
-        <Link href="/" className="mr-auto text-[15px] font-semibold tracking-tight text-[var(--fg-strong)]">
+        <IntentLink href="/" className="mr-auto text-[15px] font-semibold tracking-tight text-[var(--fg-strong)]">
           hskim<span className="text-[var(--fg-faint)]">.me</span>
-        </Link>
+        </IntentLink>
         <nav className="flex items-center gap-1 text-[13px] text-[var(--fg-dim)]">
           <Search />
           {[
@@ -21,13 +22,13 @@ export default function SiteHeader() {
             { href: '/index-all', label: '전체 목록' },
             { href: '/portfolio', label: '포트폴리오' },
           ].map(l => (
-            <Link
+            <IntentLink
               key={l.href}
               href={l.href}
               className="hidden rounded px-2.5 py-1.5 hover:bg-[var(--bg-soft)] hover:text-[var(--fg)] sm:block"
             >
               {l.label}
-            </Link>
+            </IntentLink>
           ))}
           <ThemeToggle />
         </nav>

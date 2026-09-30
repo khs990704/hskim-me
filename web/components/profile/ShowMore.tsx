@@ -21,12 +21,18 @@ export function useCollapse() {
   return { open, toggle, anchor }
 }
 
-/** 접힌 동안 보이지 않는 나머지. 접혀 있으면 초점도 받지 않는다 (inert) */
-export function CollapseRest({ open, id, className, children }: { open: boolean; id: string; className?: string; children: ReactNode }) {
+/**
+ * 접힌 동안 보이지 않는 나머지. 접혀 있으면 초점도 받지 않는다 (inert).
+ * lazy 면 처음 펼 때 그린다 — 칭호 도감은 접힌 배지만 66개라 휴대폰에서 처음 준비하는 데 부담이 컸다 (2026-09-30).
+ * 한 번 그린 뒤에는 접어도 남겨 두어, 다시 펼 때도 부드럽게 열린다.
+ */
+export function CollapseRest({ open, id, className, lazy, children }: { open: boolean; id: string; className?: string; lazy?: boolean; children: ReactNode }) {
+  const [drawn, setDrawn] = useState(!lazy)
+  if (open && !drawn) setDrawn(true)
   return (
     <div className="hud-collapse" data-open={open} inert={!open}>
       <div className="hud-collapse-inner">
-        <ul id={id} className={className}>{children}</ul>
+        <ul id={id} className={className}>{drawn ? children : null}</ul>
       </div>
     </div>
   )
