@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { allDocs } from '../lib/content'
+import { getLife } from '../lib/life'
 
 // 정식 주소 (D-13). www 는 Cloudflare 규칙으로 여기로 301 된다
 const BASE = 'https://hskim.me'
@@ -10,6 +11,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE, priority: 1 },
     { url: `${BASE}/index-all`, priority: 0.8 },
+    { url: `${BASE}/life`, priority: 0.5 },
+    ...getLife().posts.map(p => ({ url: `${BASE}/life/${encodeURIComponent(p.slug)}`, lastModified: p.date, priority: 0.4 })),
     ...allDocs().map(d => ({
       url: `${BASE}/${d.route.split('/').map(encodeURIComponent).join('/')}`,
       priority: d.kind === 'note' ? 0.6 : 0.7,

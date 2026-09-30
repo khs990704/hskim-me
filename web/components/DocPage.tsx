@@ -20,7 +20,8 @@ export default function DocPage({ doc }: { doc: Doc }) {
   const trail = doc.category.map(strip)
 
   return (
-    <div className="flex items-start gap-8 px-5 py-8 sm:px-8 xl:px-10">
+    // 아래 여백 — 마지막 줄 · 백링크가 화면 끝에 붙어 답답했다 (2026-09-30)
+    <div className="flex items-start gap-8 px-5 pb-24 pt-8 sm:px-8 xl:px-10">
       <article className="min-w-0 flex-1">
         {doc.features.math && (
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />

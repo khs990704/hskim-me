@@ -17,6 +17,7 @@ const DRAWER_LINKS = [
   { href: '/about', label: '소개' },
   { href: '/index-all', label: '전체 목록' },
   { href: '/portfolio', label: '포트폴리오' },
+  { href: '/life', label: '일상' },
 ]
 
 /** 현재 항목이 이 구간 밖에 있을 때만 스크롤한다 (컨테이너 높이 비율) */

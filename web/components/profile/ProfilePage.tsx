@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { Character, MediaEntry, PixelFont, Profile } from '../../lib/profile'
 import { Dialog } from './Dialog'
-import ForceDark from './ForceDark'
 import SkillBoard from './SkillBoard'
 import { DOMAIN_COLOR } from '../../lib/domain-colors'
 import StatRadar, { STAT_FILL } from './StatRadar'
@@ -59,7 +58,6 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
 
   return (
     <div className="hud">
-      <ForceDark />
       {font && (
         <style>{Object.values(font.files).map(f =>
           `@font-face{font-family:'${font.family}';src:url('${f.url}') format('woff2');font-weight:${f.weight};font-display:swap}`).join('')}</style>
@@ -279,7 +277,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
           {profile.sections['사이드 퀘스트'] && (
             <Section id="side" title="사이드 퀘스트" sub="일 밖의 기록">
               <div className="prose hud-prose" dangerouslySetInnerHTML={{ __html: profile.sections['사이드 퀘스트'] }} />
-              <p className="mt-3"><span className="hud-chip opacity-70">일상 기록 · 준비 중</span></p>
+              <p className="mt-3"><Link href="/life" className="hud-chip">일상 기록 보러 가기 →</Link></p>
             </Section>
           )}
         </div>

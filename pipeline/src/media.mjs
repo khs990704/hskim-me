@@ -1,7 +1,7 @@
 // 이미지 — Vault 의 첨부 이미지를 공개용으로 만든다 → web/public/media/ · out/media.json
 // (기획 docs/01-planning/profile-and-life.md §6.3)
 //
-// 지금은 프로필 이미지(Profile.md 의 avatar)만 처리한다. 사진 기록(/life)도 같은 함수를 쓴다.
+// 프로필 이미지(Profile.md 의 avatar)와 사진 기록(out/life.json 의 사진)을 같은 함수로 처리한다.
 //
 //   1. 공개할 수 있는 곳의 파일인지 — Vault 의 05 Attachments 아래만
 //   2. 방향 바로잡기 — 폰 사진은 픽셀은 눕혀 두고 "돌려서 보라" 는 표시만 붙인다.
@@ -24,6 +24,9 @@ export const PRESETS = {
   avatar: { widths: [160, 320, 640], square: true, quality: 82 },
   photo: { widths: [480, 960, 1600], square: false, quality: 80 },
   thumb: { widths: [240, 480], square: true, quality: 76 },
+  // 링크 미리보기 카드 (사진 기록 글의 첫 사진). 1200×630 으로 자르고 JPEG — 미리보기를 그리는 쪽(메신저 등)이
+  // WebP 를 못 읽는 경우가 있다. 원본이 작아도 이 크기로 맞춘다 (카드 비율이 정해져 있다)
+  og: { widths: [1200], box: [1200, 630], format: 'jpeg', quality: 82 },
 }
 
 export class MediaError extends Error {}
@@ -74,15 +77,18 @@ export async function processImage(rel, preset, { vault = VAULT, outDir, urlBase
 
   fs.mkdirSync(outDir, { recursive: true })
   const variants = []
-  const widths = [...new Set(P.widths.map(w => Math.min(w, P.square ? side : W)))]
+  const widths = P.box ? [P.box[0]] : [...new Set(P.widths.map(w => Math.min(w, P.square ? side : W)))]
+  const ext = P.format === 'jpeg' ? 'jpg' : 'webp'
   for (const w of widths) {
-    const h = P.square ? w : Math.round((H / W) * w)
-    const name = `${hash}-${w}.webp`
+    const h = P.box ? P.box[1] : P.square ? w : Math.round((H / W) * w)
+    const name = `${hash}-${w}.${ext}`
     const file = path.join(outDir, name)
     if (!fs.existsSync(file)) {
       let img = sharp(input, { failOn: 'error' }).rotate()
-      img = P.square ? img.resize(w, w, { fit: 'cover', position: 'attention' }) : img.resize(w)
-      await img.webp({ quality: P.quality, effort: 5 }).toFile(file)   // withMetadata 를 부르지 않는다
+      img = P.box ? img.resize(w, h, { fit: 'cover', position: 'attention' })
+        : P.square ? img.resize(w, w, { fit: 'cover', position: 'attention' }) : img.resize(w)
+      img = P.format === 'jpeg' ? img.jpeg({ quality: P.quality, mozjpeg: true }) : img.webp({ quality: P.quality, effort: 5 })
+      await img.toFile(file)   // withMetadata 를 부르지 않는다
     }
     await assertClean(file)
     variants.push({ w, h, url: `${urlBase}/${name}`, bytes: fs.statSync(file).size })
@@ -101,6 +107,23 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (fs.existsSync(profilePath)) {
     const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'))
     if (profile.avatar) jobs.push({ key: 'avatar', rel: profile.avatar, preset: 'avatar' })
+  }
+
+  // 사진 기록 — 사진마다 크게 보기용(photo), 글의 첫 사진은 목록 격자용 정사각(thumb)도
+  const lifePath = path.join(OUT, 'life.json')
+  if (fs.existsSync(lifePath)) {
+    const { posts } = JSON.parse(fs.readFileSync(lifePath, 'utf8'))
+    const seen = new Set()
+    for (const p of posts) {
+      p.photos.forEach((ph, i) => {
+        if (!seen.has(ph.src)) { seen.add(ph.src); jobs.push({ key: `life:${ph.src}`, rel: ph.src, preset: 'photo' }) }
+        if (i === 0 && !seen.has('thumb:' + ph.src)) {
+          seen.add('thumb:' + ph.src)
+          jobs.push({ key: `life-thumb:${ph.src}`, rel: ph.src, preset: 'thumb' })
+          jobs.push({ key: `life-og:${ph.src}`, rel: ph.src, preset: 'og' })
+        }
+      })
+    }
   }
 
   const manifest = {}
@@ -123,7 +146,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   let removed = 0
   if (fs.existsSync(MEDIA_DIR)) {
     for (const f of fs.readdirSync(MEDIA_DIR)) {
-      if (f.endsWith('.webp') && !keep.has(f)) { fs.rmSync(path.join(MEDIA_DIR, f)); removed++ }
+      if (/\.(webp|jpg)$/.test(f) && !keep.has(f)) { fs.rmSync(path.join(MEDIA_DIR, f)); removed++ }
     }
   }
   fs.writeFileSync(path.join(OUT, 'media.json'), JSON.stringify(manifest, null, 2))

@@ -27,3 +27,21 @@ export function social(
     twitter: { card: 'summary_large_image', title, description, images: [url] },
   }
 }
+
+/** 사진 한 장을 카드로 쓰는 페이지 (사진 기록 글). 파이프라인이 만든 1200×630 JPEG 를 그대로 쓴다 */
+export function socialPhoto(
+  image: { url: string; w: number; h: number } | null,
+  title: string,
+  description: string,
+): Pick<Metadata, 'openGraph' | 'twitter'> {
+  if (!image) return social('_site', title, description)
+  return {
+    openGraph: {
+      title, description, type: 'article',
+      siteName: 'hskim.me',
+      locale: 'ko_KR',
+      images: [{ url: image.url, width: image.w, height: image.h, alt: title }],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: [image.url] },
+  }
+}
