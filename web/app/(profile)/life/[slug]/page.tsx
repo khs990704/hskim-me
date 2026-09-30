@@ -39,7 +39,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { posts } = getLife()
   const i = posts.findIndex(x => x.slug === p.slug)
   const newer = posts[i - 1], older = posts[i + 1]
-  const extras = [p.venue, p.spot, p.sport, p.record].filter(Boolean)
+  // 제목 밑 한 줄 — 제목으로 쓰지 않은 장소 · 가게 · 공연장 · 기록
+  const sub = [p.place, p.venue, p.spot, p.sport, p.record].filter(x => x && x !== p.heading)
 
   return (
     <article className="mx-auto max-w-[880px] px-4 pb-24 pt-6 sm:px-8 sm:pt-8">
@@ -52,8 +53,17 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           <time dateTime={p.date} className="tabular-nums">{when(p)}</time>
         </p>
         <h1 className="mt-2.5 text-[22px] font-semibold tracking-tight text-[var(--fg-strong)]">{p.heading}</h1>
-        {(p.title && p.place || extras.length > 0) && (
-          <p className="mt-1 text-[14px] text-[var(--fg-dim)]">{[p.title ? p.place : '', ...extras].filter(Boolean).join(' · ')}</p>
+        {sub.length > 0 && <p className="mt-1 text-[14px] text-[var(--fg-dim)]">{sub.join(' · ')}</p>}
+        {(p.address || p.mapLink) && (
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--fg-faint)]">
+            {p.address && <span>{p.address}</span>}
+            {p.mapLink && (
+              // 바깥 지도로 보내는 링크 — 사이트 안에 지도를 넣지 않아 보안 헤더 · 속도에 영향이 없다
+              <a href={p.mapLink.url} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">
+                {p.mapLink.label} →<span className="sr-only"> (새 창)</span>
+              </a>
+            )}
+          </p>
         )}
       </header>
 
