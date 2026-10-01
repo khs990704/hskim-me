@@ -68,11 +68,9 @@ if (portfolio.length) {
   // URL 에는 분류를 넣지 않지만(D-14) 화면에서는 나눠서 보여준다.
   const branch = { n: 'Portfolio', k: '03 Portfolio', children: [] }
 
-  // 상위 페이지 먼저
-  for (const route of ['about', 'portfolio']) {
-    const d = portfolio.find(x => x.route === route)
-    if (d) branch.children.push({ n: d.title, k: d.route, r: d.route, children: [] })
-  }
+  // 포트폴리오 첫 화면을 맨 위에. 소개(about)는 문서 목록이 아니라 트리에서 뺀다 — 헤더 · 모바일 서랍 바로가기에 있다 (2026-10-01)
+  const top = portfolio.find(x => x.route === 'portfolio')
+  if (top) branch.children.push({ n: top.title, k: top.route, r: top.route, children: [] })
 
   // 그다음 분류별 묶음. 원본 문서의 등장 순서를 유지한다
   for (const d of portfolio) {

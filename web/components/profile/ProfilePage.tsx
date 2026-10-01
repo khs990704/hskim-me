@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Character, MediaEntry, PixelFont, Profile } from '../../lib/profile'
 import { Dialog } from './Dialog'
 import SkillBoard from './SkillBoard'
+import SmoothDetails from './SmoothDetails'
 import { DOMAIN_COLOR } from '../../lib/domain-colors'
 import StatRadar, { STAT_FILL } from './StatRadar'
 import TitleCollection from './TitleCollection'
@@ -154,10 +155,11 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
           )}
 
           <Section id="stats" title="능력치" sub="STATS · 그 분야 기술을 쓴 프로젝트 수">
-            {/* 육각형은 한눈에 보는 보조 그림. 항목이 8개를 넘으면 칸이 좁아 읽기 어려워 막대만 둔다 */}
-            <div className={`grid items-center gap-6 ${ch.stats.length <= 8 ? 'md:grid-cols-[minmax(0,300px)_minmax(0,1fr)]' : ''}`}>
+            {/* 육각형은 한눈에 보는 보조 그림. 항목이 8개를 넘으면 칸이 좁아 읽기 어려워 막대만 둔다.
+                위쪽에 맞춰 고정 — 가운데 정렬이면 막대를 펼칠 때마다 육각형이 같이 미끄러졌다 */}
+            <div className={`grid items-start gap-6 ${ch.stats.length <= 8 ? 'md:grid-cols-[minmax(0,300px)_minmax(0,1fr)]' : ''}`}>
               {ch.stats.length <= 8 && <StatRadar stats={ch.stats} />}
-              <ul className="space-y-1.5">
+              <ul id="stat-list" className="space-y-1.5">
                 {ch.stats.map(s => {
                   // 가장 큰 값도 80% 까지만 — 끝에 닿으면 "다 찼다"로 읽힌다 (육각형과 같은 기준)
                   const max = Math.max(...ch.stats.map(x => x.value), 1) / STAT_FILL
@@ -180,6 +182,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
                 })}
               </ul>
             </div>
+            <SmoothDetails within="#stat-list" selector="details.hud-stat" />
           </Section>
 
           <Section id="titles" title="칭호 도감" sub="ACHIEVEMENTS · 하나씩 해낼 때마다 칭호가 쌓여요"
