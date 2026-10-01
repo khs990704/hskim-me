@@ -764,3 +764,19 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 .to-top:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (min-width: 640px) { .to-top { right: 24px; bottom: 24px; width: 44px; height: 44px; } }
 @media (prefers-reduced-motion: reduce) { .to-top, .to-top[data-show] { transition: none; transform: none; } }
+
+/* ── 사이드 트리 (components/Sidebar) ─────────────────────────────────
+   폴더 · 문서 · 맨 위 구역 모두 같은 글씨 크기와 색. 구분은 화살표와 들여쓰기로만 한다.
+   폴더를 펼치면 그 안의 모든 것(폴더 · 문서)이 한 칸(16px) 들어가고, 화살표 가운데에 세로 기준선을 긋는다.
+   문서 글머리는 같은 단계 폴더 이름과 맞춘다 (화살표 칸 22px 만큼 들임). 트리 폭은 1440px 이상에서만 20rem — 그보다 좁으면 본문 폭을 지키려고 16rem (app/(docs)/layout.tsx) */
+.sb-folder, .sb-doc { font-size: 13.5px; line-height: 1.5rem; color: var(--fg-dim); border-radius: 4px; }
+.sb-folder { display: flex; align-items: flex-start; width: 100%; padding: 3px 8px 3px 0; text-align: left; }
+.sb-folder:hover, .sb-doc:hover { background: var(--bg-soft); color: var(--fg-strong); }
+.sb-folder:hover .sb-caret { color: var(--accent); }
+.sb-caret { display: grid; place-items: center; flex: none; width: 22px; height: 1.5rem; color: var(--fg-faint); }
+.sb-dot { flex: none; width: 7px; height: 7px; margin: 9px 7px 0 0; border-radius: 50%; }
+.sb-trail { color: var(--fg-strong); font-weight: 600; }
+.sb-kids { margin-left: 10.5px; padding-left: 5.5px; border-left: 1px solid var(--line-soft); }
+.sb-trail + .sb-kids { border-left-color: var(--line); }
+.sb-doc { display: block; margin: 1px 0; padding: 3px 8px 3px 22px; transition: color .15s, background-color .15s; }
+.sb-doc.sb-active { background: var(--accent-dim); color: var(--accent); font-weight: 500; box-shadow: inset 2px 0 0 var(--accent); }

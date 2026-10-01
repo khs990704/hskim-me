@@ -97,6 +97,31 @@ const sortRec = n => {
 }
 sortRec(root)
 
+// 폴더 노트를 그 폴더의 맨 위로 올린다 — 폴더를 펼치면 개요(MOC · 같은 이름 노트)가 먼저 보이게 (2026-10-01).
+// 폴더 이름 자체를 링크로 만들어 보니 여닫기가 화살표로만 되어 불편했다 — 합치지 않고 순서만 바꾼다.
+// 일반 개념 노트가 잘못 올라가지 않도록 셋 중 하나일 때만:
+//   제목이 "… MOC" · 폴더와 이름이 같다 (KMS ↔ kms) · 프로젝트 문서이고 하위 케이스 목록을 가진 묶음 노트 ("… Projects", "## 하위 …")
+const byRoute = new Map(docs.map(d => [d.route, d]))
+const norm = s => s.toLowerCase().replace(/[^a-z0-9가-힣]/g, '')
+const folderNote = n => {
+  const score = c => {
+    const d = byRoute.get(c.r)
+    if (!d) return 0
+    if (/ MOC$/.test(d.title)) return 3
+    if (norm(c.n) === norm(n.n)) return 2
+    if (d.kind === 'project' && (/ Projects$/.test(d.title) || d.toc.some(t => t.depth === 2 && /^(하위|프로젝트 사례)/.test(t.text)))) return 1
+    return 0
+  }
+  return n.children.filter(c => !c.children.length && c.r).map(c => [c, score(c)]).filter(([, s]) => s).sort((a, b) => b[1] - a[1])[0]?.[0]
+}
+const hoistNotes = n => {
+  n.children.forEach(hoistNotes)
+  if (!n.children.length || n.k === '03 Portfolio') return
+  const note = folderNote(n)
+  if (note) n.children = [note, ...n.children.filter(c => c !== note)]
+}
+root.children.forEach(hoistNotes)
+
 // 일상(사진 기록) — 분류별로 묶고 최신 글이 위로. 목록 · 순서는 파이프라인의 out/life.json 이 정한다
 const lifeFile = path.join(HERE, '..', '..', 'pipeline', 'out', 'life.json')
 if (fs.existsSync(lifeFile)) {
