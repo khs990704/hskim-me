@@ -68,7 +68,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       </header>
 
       {p.text.length > 0 && (
-        <div className="prose mt-4">
+        <div className="prose life-text mt-4">
           {p.text.map((t, k) => <p key={k}><RichText text={t} /></p>)}
         </div>
       )}

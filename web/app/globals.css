@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 /* ── 토큰 ──────────────────────────────────────────────────────────────
-   노트 화면은 메인(성운)과 의도적으로 대비시킨다. 조용하고 읽기 좋게.
+   노트 화면은 메인(성운)보다 조용하고 읽기 좋게. 다크는 메인과 같은 남색 계열로 이어 준다.
    기본은 다크 — 메인에서 넘어올 때 눈의 연속성을 지키기 위함이다.        */
 :root {
-  --bg:        #0e1116;
-  --bg-soft:   #141922;
-  --surface:   #171d27;
-  --line:      #232b38;
-  --line-soft: #1c232e;
+  /* 메인(#03040a 우주)에서 이어지도록 회색이 아닌 짙은 남색 쪽으로 (2026-10-01) */
+  --bg:        #0c101a;
+  --bg-soft:   #121826;
+  --surface:   #161d2c;
+  --line:      #222b3d;
+  --line-soft: #1a2232;
   --fg:        #d9dee7;
   --fg-strong: #f0f3f8;
   --fg-dim:    #9aa5b8;   /* 7.6:1 */
@@ -82,6 +83,8 @@ a { color: inherit; text-decoration: none; }
    파이프라인이 만든 HTML 을 그대로 주입하므로 Tailwind 유틸리티가 닿지 않는다.
    Obsidian 에서 보던 것과 인지적으로 같은 형태를 목표로 한다 (요구사항 6).   */
 .prose { max-width: 72ch; }
+/* 일상 글은 좌우 탭이 없어 사진 · 태그 너비에 맞춘다 */
+.prose.life-text { max-width: none; }
 
 .prose > *:first-child { margin-top: 0; }
 
@@ -390,30 +393,8 @@ main:focus { outline: none; }
    항상 어두운 우주 — 사이트 테마와 관계없이 .hud 안에서만 (헤더는 사이트 테마를 따른다). 게임 HUD 틀 + 픽셀 글꼴(제목 · 숫자만).
    희귀도는 테두리 색과 글자로 함께 나타낸다 — 색만으로 구분하지 않는다 (KWCAG 1.4.1). */
 .hud {
-  /* 사이트 테마와 관계없이 이 안만 어둡게 — 예전에는 페이지 전체(html)를 dark 로 바꿔서 헤더까지 바뀌고
-     테마 단추가 사라져 소개에서만 헤더가 달라 보였다 (2026-09-30). 기본(다크) 토큰을 여기 다시 둔다 */
-  --bg:        #0e1116;
-  --bg-soft:   #141922;
-  --surface:   #171d27;
-  --line:      #232b38;
-  --line-soft: #1c232e;
-  --fg:        #d9dee7;
-  --fg-strong: #f0f3f8;
-  --fg-dim:    #9aa5b8;   /* 7.6:1 */
-  --fg-faint:  #7f8aa1;   /* 5.5:1 — 이보다 흐리면 WCAG AA(4.5:1) 아래로 내려간다 */
-  --accent:    #7dd3fc;
-  --accent-dim:#38506322;
-  --mark:      #fbbf2433;
-  
-  /* 본문 의미별 색. 제목 계층과 강조가 색으로도 읽히게 한다.
-     색만으로 의미를 전달하지 않도록 크기·굵기·기호를 함께 쓴다. */
-  --h2:        #7dd3fc;   /* 시안  — 큰 단락 */
-  --h3:        #a78bfa;   /* 보라  — 하위 단락 */
-  --strong:    #f0c674;   /* 호박  — 굵은 강조 */
-  --em:        #86d0b4;   /* 청록  — 기울임 */
-  --code-fg:   #f2a0c0;   /* 분홍  — 인라인 코드 */
-  --quote-bar: #4a5568;
-  color-scheme: dark;
+  /* 사이트 테마를 따른다 — 다크는 우주, 라이트는 밝은 바탕에 같은 HUD 틀 (2026-10-01).
+     HUD 전용 바탕색은 아래 변수로 모으고 라이트에서 다시 정한다 */
   color: var(--fg);
   --r-common: #aab4c6;
   --r-rare: #7dd3fc;
@@ -421,10 +402,17 @@ main:focus { outline: none; }
   --r-legendary: #f0c674;
   --hud-line: #2a3650;
   --hud-panel: rgba(12, 17, 28, .72);
+  --hud-bg: #070a12;          /* 우주 바탕 · 이름표 · 연표 마름모 */
+  --hud-card: var(--hud-card); /* 패널 안 칸 */
+  --hud-chip: var(--hud-chip);  /* 칩 · 스킬 */
+  --hud-well: var(--hud-well);        /* 막대 · 보석 칸의 빈 부분 */
+  --hud-gem: var(--hud-gem);
+  --hud-dialog: #0d1320;
+  --hud-shadow: var(--hud-shadow);
   position: relative;
   isolation: isolate; /* 아래 ::before(z -1) 가 헤더 위로 올라가지 않고 이 안의 맨 뒤에 깔리게 */
   min-height: 100%;
-  background: #070a12;
+  background: var(--hud-bg);
 }
 /* 별 — 크기가 서로 다른(서로소) 무늬 네 겹을 겹친다. 한 겹의 반복은 눈에 띄어도
    네 겹이 함께 같은 모양으로 돌아오는 거리는 아주 멀어 흩뿌린 듯 보인다 (그림 파일 없이).
@@ -493,7 +481,7 @@ main:focus { outline: none; }
   border: 1px solid var(--hud-line);
   border-radius: 6px;
   backdrop-filter: blur(6px);
-  box-shadow: 0 0 0 1px rgba(125, 211, 252, .03), 0 10px 40px -20px rgba(0, 0, 0, .8);
+  box-shadow: 0 0 0 1px rgba(125, 211, 252, .03), 0 10px 40px -20px var(--hud-shadow);
 }
 .hud-frame::before, .hud-frame::after {
   content: ''; position: absolute; width: 14px; height: 14px; pointer-events: none;
@@ -512,7 +500,7 @@ main:focus { outline: none; }
    (층 밖 CSS 가 우선) 여기서 직접 준다 */
 /* top = 헤더 높이(57px) + 위 여백(32px). 처음 자리와 같아야 스크롤할 때 카드가 움찔하지 않는다 */
 @media (min-width: 1024px) { .hud-card { position: sticky; top: 89px; } }
-.hud-tag { position: absolute; top: -9px; left: 16px; padding: 0 6px; font-size: 11px; color: var(--accent); background: #070a12; letter-spacing: .08em; }
+.hud-tag { position: absolute; top: -9px; left: 16px; padding: 0 6px; font-size: 11px; color: var(--accent); background: var(--hud-bg); letter-spacing: .08em; }
 .hud-avatar { margin: 6px auto 0; width: 180px; height: 180px; border-radius: 50%; overflow: hidden;
   box-shadow: 0 0 0 2px var(--hud-line), 0 0 0 6px rgba(125, 211, 252, .08), 0 0 40px rgba(125, 211, 252, .18); }
 .hud-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -522,7 +510,7 @@ main:focus { outline: none; }
 .hud-k { font-size: 11px; color: var(--accent); margin-right: 4px; }
 .hud-level { font-size: 26px; color: var(--fg-strong); }
 .hud-card .flex.justify-between { text-align: left; }
-.hud-xp, .hud-meter { display: block; height: 10px; border: 1px solid var(--hud-line); background: #0a0f1a; border-radius: 2px; overflow: hidden; }
+.hud-xp, .hud-meter { display: block; height: 10px; border: 1px solid var(--hud-line); background: var(--hud-well); border-radius: 2px; overflow: hidden; }
 .hud-meter { height: 8px; }
 .hud-xp > span, .hud-meter > span { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--c, var(--accent)) 0 6px, color-mix(in srgb, var(--c, var(--accent)) 75%, #000) 6px 8px); }
 .hud-stat .hud-stat-value { color: var(--c, var(--fg-strong)); }
@@ -532,11 +520,11 @@ main:focus { outline: none; }
 
 .hud-chip {
   display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--hud-line); border-radius: 4px;
-  font-size: 12.5px; color: var(--fg); background: rgba(15, 22, 36, .8);
+  font-size: 12.5px; color: var(--fg); background: var(--hud-chip);
 }
 a.hud-chip:hover, button.hud-chip:hover { border-color: var(--accent); color: var(--accent); }
 button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #06121c; background: var(--accent); }
-.hud-select { background: #0f1624; border: 1px solid var(--hud-line); border-radius: 4px; padding: 4px 8px; color: var(--fg); font-size: 12.5px; }
+.hud-select { background: var(--hud-chip); border: 1px solid var(--hud-line); border-radius: 4px; padding: 4px 8px; color: var(--fg); font-size: 12.5px; }
 .hud-link { color: var(--accent); border-bottom: 1px dotted color-mix(in srgb, var(--accent) 50%, transparent); }
 .hud-link:hover { border-bottom-style: solid; }
 .hud-prose { max-width: none; }
@@ -547,7 +535,7 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
   display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; height: 100%;
   padding: 12px 6px 10px; text-align: center; border-radius: 6px;
   border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 10%, transparent), rgba(10, 14, 24, .6));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 10%, transparent), var(--hud-card));
   transition: transform .15s, border-color .15s;
 }
 .hud-badge:hover { transform: translateY(-2px); border-color: var(--c); }
@@ -557,15 +545,15 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 .hud-badge-gem {
   display: grid; place-items: center; width: 42px; height: 42px; color: var(--c);
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-  background: color-mix(in srgb, var(--c) 18%, #0b1020);
+  background: color-mix(in srgb, var(--c) 18%, var(--hud-gem));
 }
 .hud-badge-name { font-size: 12px; line-height: 1.35; min-height: 2.7em; display: flex; align-items: center; color: var(--fg-strong); word-break: keep-all; }
 .hud-badge-meta { font-size: 10.5px; color: var(--c); }
-.hud-badge-bar { display: block; width: 80%; height: 4px; background: #0a0f1a; border-radius: 2px; overflow: hidden; }
+.hud-badge-bar { display: block; width: 80%; height: 4px; background: var(--hud-well); border-radius: 2px; overflow: hidden; }
 .hud-badge-bar > span { display: block; height: 100%; background: var(--c); }
 .hud-badge-bar[data-empty] { visibility: hidden; }
 /* 못 얻은 칭호 — 흐리게. 글자 대비는 4.5:1 을 지킨다 (이름 색은 유지, 보석만 흐림) */
-.hud-badge:not([data-state="done"]) { border-style: dashed; background: rgba(10, 14, 24, .55); }
+.hud-badge:not([data-state="done"]) { border-style: dashed; background: var(--hud-card); }
 .hud-badge:not([data-state="done"]) .hud-badge-gem { filter: grayscale(.9) brightness(.7); }
 .hud-badge:not([data-state="done"]) .hud-badge-name { color: var(--fg-dim); }
 .hud-rarity { font-weight: 600; }
@@ -577,7 +565,7 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 /* 상세 창 */
 .hud-dialog { margin: auto; width: min(460px, calc(100vw - 32px)); padding: 0; border: 0; background: transparent; color: var(--fg); }
 .hud-dialog::backdrop { background: rgba(2, 4, 10, .72); backdrop-filter: blur(2px); }
-.hud-dialog .hud-frame { background: #0d1320; }
+.hud-dialog .hud-frame { background: var(--hud-dialog); }
 .hud-dialog .hud-frame:focus { outline: none; }
 .hud-dl { display: grid; gap: 10px; font-size: 14px; }
 .hud-dl > div { display: grid; grid-template-columns: 64px 1fr; gap: 10px; }
@@ -590,7 +578,7 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 
 /* 능력치 */
 .hud-radar-ring { fill: none; stroke: var(--hud-line); stroke-width: 1; }
-.hud-radar-shape { fill: rgba(125, 211, 252, .18); stroke: var(--accent); stroke-width: 2; }
+.hud-radar-shape { fill: color-mix(in srgb, var(--accent) 18%, transparent); stroke: var(--accent); stroke-width: 2; }
 .hud-radar-dot { fill: var(--accent); }
 .hud-radar-label { font-size: 12px; fill: var(--fg); }
 .hud-stat summary { display: grid; grid-template-columns: 88px 1fr 34px; align-items: center; gap: 10px; cursor: pointer; padding: 6px 4px; border-radius: 4px; list-style: none; }
@@ -601,7 +589,7 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 .hud-stat-projects { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 6px 4px 10px 102px; font-size: 12.5px; color: var(--fg-dim); }
 
 /* 자격 · 수료 */
-.hud-cert { position: relative; padding: 12px 14px 12px 14px; border: 1px solid var(--hud-line); border-left: 3px solid var(--r-rare); border-radius: 5px; background: rgba(10, 14, 24, .55); }
+.hud-cert { position: relative; padding: 12px 14px 12px 14px; border: 1px solid var(--hud-line); border-left: 3px solid var(--r-rare); border-radius: 5px; background: var(--hud-card); }
 .hud-cert[data-kind="license"] { border-left-color: var(--r-legendary); }
 .hud-cert-kind { font-size: 10.5px; color: var(--r-rare); }
 .hud-cert[data-kind="license"] .hud-cert-kind { color: var(--r-legendary); }
@@ -610,38 +598,38 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 .hud-timeline { position: relative; display: grid; gap: 16px; padding-left: 22px; }
 .hud-timeline::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: var(--hud-line); }
 .hud-timeline li { position: relative; }
-.hud-timeline li::before { content: ''; position: absolute; left: -21px; top: 5px; width: 12px; height: 12px; transform: rotate(45deg); background: #070a12; border: 2px solid var(--accent); }
+.hud-timeline li::before { content: ''; position: absolute; left: -21px; top: 5px; width: 12px; height: 12px; transform: rotate(45deg); background: var(--hud-bg); border: 2px solid var(--accent); }
 .hud-timeline-kind { font-size: 11px; color: var(--accent); }
 
 /* 주요 퀘스트 · 특성 · 스킬 */
-.hud-quest { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 14px 16px; border: 1px solid var(--hud-line); border-radius: 6px; background: rgba(10, 14, 24, .55); transition: border-color .15s, transform .15s; }
+.hud-quest { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 14px 16px; border: 1px solid var(--hud-line); border-radius: 6px; background: var(--hud-card); transition: border-color .15s, transform .15s; }
 .hud-quest:hover { border-color: var(--accent); transform: translateY(-2px); }
 .hud-quest-cat { font-size: 11px; color: var(--r-epic); }
 .hud-quest-title { font-size: 16px; color: var(--fg-strong); }
-.hud-trait { padding: 14px 16px; border: 1px solid var(--hud-line); border-radius: 6px; background: rgba(10, 14, 24, .45); }
+.hud-trait { padding: 14px 16px; border: 1px solid var(--hud-line); border-radius: 6px; background: var(--hud-card); }
 .hud-trait-node {
   display: grid; place-items: center; flex: none; width: 44px; height: 44px; color: var(--accent);
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-  background: color-mix(in srgb, var(--accent) 16%, #0b1020);
+  background: color-mix(in srgb, var(--accent) 16%, var(--hud-gem));
 }
 .hud-pips { display: inline-flex; gap: 3px; }
-.hud-pips > span { width: 10px; height: 10px; transform: rotate(45deg); border: 1px solid var(--hud-line); background: #0a0f1a; }
+.hud-pips > span { width: 10px; height: 10px; transform: rotate(45deg); border: 1px solid var(--hud-line); background: var(--hud-well); }
 .hud-pips > span[data-on] { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 6px -1px var(--accent); }
-.hud-trait-src { padding: 2px 8px; border-radius: 3px; border: 1px solid var(--hud-line); color: var(--fg); background: rgba(15, 22, 36, .8); }
+.hud-trait-src { padding: 2px 8px; border-radius: 3px; border: 1px solid var(--hud-line); color: var(--fg); background: var(--hud-chip); }
 .hud-trait-src:hover { border-color: var(--accent); color: var(--accent); }
 .hud-link-row { width: 100%; justify-content: flex-start; }
 .hud-skill-row { display: grid; gap: 8px; }
 @media (min-width: 640px) { .hud-skill-row { grid-template-columns: 96px 1fr; align-items: start; } }
 .hud-skill-label { font-size: 13px; color: var(--fg-dim); padding-top: 5px; }
-.hud-skill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid var(--hud-line); border-radius: 4px; font-size: 13px; color: var(--fg); background: rgba(15, 22, 36, .8); }
+.hud-skill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid var(--hud-line); border-radius: 4px; font-size: 13px; color: var(--fg); background: var(--hud-chip); }
 /* 분야 색(--c, lib/domain-colors.ts) — 숫자는 모든 단계에서 그 색으로 또렷하게 두고,
    많이 쓴 정도는 칸을 채우는 진하기로 나타낸다. 숫자가 함께 있어 색만으로 전하지 않는다 (KWCAG 1.4.1).
    4단계는 배경이 진해 숫자를 밝은 글자로 바꾼다 (대비 4.5:1) */
 .hud-skill-count { font-size: 11px; color: var(--c, var(--accent)); }
 .hud-skill-label { color: var(--c, var(--fg-dim)); }
-.hud-skill[data-tier="2"] { border-color: color-mix(in srgb, var(--c, var(--accent)) 35%, var(--hud-line)); background: color-mix(in srgb, var(--c, var(--accent)) 8%, rgba(15, 22, 36, .8)); }
-.hud-skill[data-tier="3"] { border-color: color-mix(in srgb, var(--c, var(--accent)) 60%, var(--hud-line)); background: color-mix(in srgb, var(--c, var(--accent)) 16%, rgba(15, 22, 36, .8)); }
-.hud-skill[data-tier="4"] { border-color: var(--c, var(--accent)); background: color-mix(in srgb, var(--c, var(--accent)) 26%, rgba(15, 22, 36, .8)); color: var(--fg-strong); }
+.hud-skill[data-tier="2"] { border-color: color-mix(in srgb, var(--c, var(--accent)) 35%, var(--hud-line)); background: color-mix(in srgb, var(--c, var(--accent)) 8%, var(--hud-chip)); }
+.hud-skill[data-tier="3"] { border-color: color-mix(in srgb, var(--c, var(--accent)) 60%, var(--hud-line)); background: color-mix(in srgb, var(--c, var(--accent)) 16%, var(--hud-chip)); }
+.hud-skill[data-tier="4"] { border-color: var(--c, var(--accent)); background: color-mix(in srgb, var(--c, var(--accent)) 26%, var(--hud-chip)); color: var(--fg-strong); }
 .hud-skill[data-tier="4"] .hud-skill-count { color: var(--fg-strong); font-weight: 700; }
 .hud-skill:hover { border-color: var(--c, var(--accent)); color: var(--c, var(--accent)); box-shadow: 0 0 10px -2px var(--c, var(--accent)); }
 .hud-skill[data-tier="4"]:hover .hud-skill-count { color: var(--c, var(--accent)); }
@@ -659,7 +647,7 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 /* 전체 보기 · 접기 */
 .hud-more {
   display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 4px;
-  border: 1px dashed var(--hud-line); font-size: 13px; color: var(--fg-dim); background: rgba(10, 14, 24, .5);
+  border: 1px dashed var(--hud-line); font-size: 13px; color: var(--fg-dim); background: var(--hud-card);
 }
 .hud-more:hover { border-color: var(--accent); border-style: solid; color: var(--accent); }
 .hud-more .pixel { font-size: 10px; }
@@ -671,6 +659,33 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 }
 @keyframes hud-fill { from { width: 0; } }
 @keyframes hud-grow { from { transform: scale(.2); opacity: 0; } }
+
+/* 라이트 — 같은 HUD 틀을 밝은 바탕에. 밝은 분야 색(--c)은 흰 바탕에서 흐려 글자에 쓸 때만 어둡게 섞는다 (대비 4.5:1).
+   별은 끈다 — 색을 뒤집어 옅게 깔아 보니 화면에 무언가 묻은 것처럼 보였다 (2026-10-01) */
+:root[data-theme="light"] .hud {
+  --r-common: #5b6578;
+  --r-rare: #0b6bcb;
+  --r-epic: #6d4ac9;
+  --r-legendary: #9a6508;
+  --hud-line: #d3d9e4;
+  --hud-panel: rgba(255, 255, 255, .85);
+  --hud-bg: #f3f5fa;
+  --hud-card: rgba(255, 255, 255, .7);
+  --hud-chip: rgba(255, 255, 255, .92);
+  --hud-well: #e6e9f0;
+  --hud-gem: #eef1f7;
+  --hud-dialog: #ffffff;
+  --hud-shadow: rgba(30, 40, 70, .18);
+}
+:root[data-theme="light"] .hud::before { display: none; }
+:root[data-theme="light"] .hud::after { opacity: .45; }
+:root[data-theme="light"] .hud button.hud-chip[aria-pressed="true"] { color: #fff; }
+:root[data-theme="light"] .hud .hud-skill-count,
+:root[data-theme="light"] .hud .hud-skill-label,
+:root[data-theme="light"] .hud .hud-skill:hover { color: color-mix(in srgb, var(--c, var(--accent)) 55%, #000); }
+:root[data-theme="light"] .hud .hud-stat-value { color: color-mix(in srgb, var(--c, var(--fg-strong)) 55%, #000); }
+:root[data-theme="light"] .hud .hud-skill[data-tier="4"] .hud-skill-count { color: var(--fg-strong); }
+:root[data-theme="light"] .hud .hud-dialog::backdrop { background: rgba(20, 28, 48, .4); }
 
 /* ── 사진 기록 (/life) ────────────────────────────────────────────────
    사이트 테마를 따른다 (스탯창처럼 우주로 고정하지 않는다 — 사진이 주인공이라 바탕은 조용하게).
