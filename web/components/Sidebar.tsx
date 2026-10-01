@@ -4,8 +4,10 @@ import { createPortal } from 'react-dom'
 import IntentLink from './IntentLink'
 import { usePathname } from 'next/navigation'
 import { useModalFocus } from '../lib/use-modal-focus'
+import { GROUP_COLORS } from '../lib/graph-colors'
 
-/** tree.json 의 노드. 키를 짧게 쓴 이유는 477개 × 반복이라 용량 차이가 크기 때문. */
+/** tree.json 의 노드. 키를 짧게 쓴 이유는 477개 × 반복이라 용량 차이가 크기 때문.
+ *  폴더 노트(MOC · 같은 이름 노트)는 gen-static 이 그 폴더의 맨 위로 올려 둔다 */
 export type Node = { n: string; k: string; r?: string; children?: Node[] }
 
 let cached: Node[] | null = null
@@ -41,6 +43,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
 
   const [tree, setTree] = useState<Node[] | null>(cached)
   const [open, setOpen] = useState<Set<string>>(new Set())
+  const [trail, setTrail] = useState<Set<string>>(new Set())   // 지금 문서를 담은 폴더들 — 이름을 조금 진하게
   const [drawer, setDrawer] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -80,6 +83,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
     }
     const found = dig(tree, [])
     setOpen(found ? prev => new Set([...prev, ...trailKeys]) : new Set())
+    setTrail(new Set(trailKeys))
     setDrawer(false)
   }, [tree, current])
 
@@ -147,8 +151,16 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
     }
   }, [mode, drawer])
 
-  const Item = ({ node, trail, depth }: { node: Node; trail: string[]; depth: number }) => {
-    const key = [...trail, node.k].join('/')
+  /**
+   * 위계를 눈에 보이게 (2026-10-01)
+   *   폴더 · 문서 모두 같은 글씨 — 구분은 화살표와 들여쓰기로 (Knowledge DB 바로 밑 분야는 메인 그래프와 같은 색 점)
+   *   폴더 안의 모든 것이 한 칸 들어가고 세로 기준선, 긴 제목은 잘라 내지 않고 두 줄까지
+   *   지금 문서 — 왼쪽 강조 막대 + 강조색, 그 문서를 담은 폴더 이름은 조금 진하게
+   */
+  const toggle = (key: string) => setOpen(p => { const s = new Set(p); s.has(key) ? s.delete(key) : s.add(key); return s })
+
+  const Item = ({ node, trail: path, depth }: { node: Node; trail: string[]; depth: number }) => {
+    const key = [...path, node.k].join('/')
     const isFolder = !!node.children?.length
     const expanded = open.has(key)
     const active = node.r === current
@@ -158,36 +170,39 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
         <IntentLink
           href={'/' + node.r}
           data-active={active || undefined}
-          className={`block truncate rounded py-[3px] pr-2 text-[13.5px] leading-6 transition-colors ${
-            active
-              ? 'bg-[var(--accent-dim)] font-medium text-[var(--accent)]'
-              : 'text-[var(--fg-dim)] hover:bg-[var(--bg-soft)] hover:text-[var(--fg)]'
-          }`}
-          style={{ paddingLeft: `${depth * 12 + 8}px` }}
+          className={`sb-doc ${active ? 'sb-active' : ''}`}
           title={node.n}
         >
-          {node.n}
+          <span className="line-clamp-2">{node.n}</span>
         </IntentLink>
       )
     }
 
+    const color = path.length === 1 && path[0] === '01 Knowledge DB' ? GROUP_COLORS[node.n] : undefined
+    const caret = (
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden
+           className={`shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}>
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    )
+    const label = (
+      <>
+        {color && <span className="sb-dot" style={{ background: color }} aria-hidden />}
+        <span className="min-w-0 break-words">{node.n}</span>
+      </>
+    )
     return (
       <div>
-        <button
-          onClick={() => setOpen(p => { const s = new Set(p); s.has(key) ? s.delete(key) : s.add(key); return s })}
-          aria-expanded={expanded}
-          className="flex w-full items-center gap-1 truncate rounded py-[3px] pr-2 text-left text-[13.5px] leading-6 text-[var(--fg)] hover:bg-[var(--bg-soft)]"
-          style={{ paddingLeft: `${depth * 12 + 2}px` }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"
-               className={`shrink-0 text-[var(--fg-faint)] transition-transform ${expanded ? 'rotate-90' : ''}`}>
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-          <span className="truncate">{node.n}</span>
+        {/* 줄 전체가 여닫기 (화살표만 누르게 하니 불편했다) */}
+        <button onClick={() => toggle(key)} aria-expanded={expanded}
+          className={`sb-folder ${trail.has(key) ? 'sb-trail' : ''}`}>
+          <span className="sb-caret" aria-hidden>{caret}</span>{label}
         </button>
-        {expanded && node.children!.map(c => (
-          <Item key={c.k} node={c} trail={[...trail, node.k]} depth={depth + 1} />
-        ))}
+        {expanded && (
+          <div className="sb-kids">
+            {node.children!.map(c => <Item key={c.k} node={c} trail={[...path, node.k]} depth={depth + 1} />)}
+          </div>
+        )}
       </div>
     )
   }
@@ -225,7 +240,7 @@ export default function Sidebar({ mode = 'tree' }: { mode?: 'tree' | 'trigger' }
         role="dialog"
         aria-modal="true"
         aria-label="문서 목록"
-        className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-[var(--line)] bg-[var(--bg)] shadow-2xl transition-transform duration-200 ease-out ${
+        className={`absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border-r border-[var(--line)] bg-[var(--bg)] shadow-2xl transition-transform duration-200 ease-out ${
           drawer ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
