@@ -63,7 +63,7 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
           `@font-face{font-family:'${font.family}';src:url('${f.url}') format('woff2');font-weight:${f.weight};font-display:swap}`).join('')}</style>
       )}
 
-      <div className="mx-auto grid max-w-[1180px] gap-6 px-4 py-8 sm:px-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
+      <div className="mx-auto grid max-w-[1180px] gap-6 px-4 pb-24 pt-8 sm:px-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
         {/* ── 캐릭터 카드 ───────────────────────────────────────── */}
         <aside className="hud-frame hud-card" aria-label="캐릭터">
           <div className="pixel hud-tag">CHARACTER</div>

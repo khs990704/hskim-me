@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default function Page() {
   const { categories, posts } = getLife()
   return (
-    <div className="mx-auto max-w-[960px] px-4 py-8 sm:px-8">
+    <div className="mx-auto max-w-[960px] px-4 pb-24 pt-8 sm:px-8">
       <h1 className="text-[26px] font-semibold tracking-tight text-[var(--fg-strong)]">일상</h1>
       <p className="mb-6 mt-1.5 text-[14px] text-[var(--fg-dim)]">{DESCRIPTION}</p>
       {/* 목록에는 격자에 필요한 것만 넘긴다 — 사진 전부 · 글을 넘기면 페이지 데이터가 불어난다 */}

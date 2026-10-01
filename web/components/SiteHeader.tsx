@@ -2,6 +2,7 @@ import IntentLink from './IntentLink'
 import Sidebar from './Sidebar'
 import ThemeToggle from './ThemeToggle'
 import Search from './Search'
+import ToTop from './ToTop'
 
 /** 모든 문서 페이지 공통 머리 (본문 바로가기 + 헤더). 문서 틀 · 소개(스탯창) 틀이 같이 쓴다.
  *  링크는 누를 낌새가 보일 때만 미리 받는다 (IntentLink) — 모든 페이지에 있어 첫 화면 통신을 아낀다 */
@@ -35,6 +36,7 @@ export default function SiteHeader() {
         </nav>
       </div>
     </header>
+    <ToTop />
     </>
   )
 }

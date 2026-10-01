@@ -72,7 +72,7 @@ export default function Page() {
   const list = [...fields.values()]
 
   return (
-    <div className="px-5 py-8 sm:px-8 xl:px-10">
+    <div className="px-5 pb-24 pt-8 sm:px-8 xl:px-10">
       <header className="mb-6 max-w-[72ch]">
         <h1 className="text-[2rem] font-bold leading-tight tracking-tight text-[var(--fg-strong)]">전체 목록</h1>
         <p className="mt-3 text-[var(--fg-dim)]">
