@@ -192,6 +192,13 @@ async function runEngine(name) {
     if (!/^[1-9]\d*편$/.test(hits ?? '')) fail('index', `찾기 결과 수가 이상함 (${hits})`)
     if (Math.abs((await top()) - before) > 1) fail('index', `찾는 중 찾기 칸이 움직임 (${before} → ${await top()})`)
     await p.locator('.idx-bar input').fill(''); await p.waitForTimeout(200)
+    // 맨 위로 — 내려간 상태에서 보이고, 누르면 맨 위 + 초점이 본문 시작으로
+    await p.evaluate(() => window.scrollTo({ top: 3000, behavior: 'instant' })); await p.waitForTimeout(400)
+    if ((await p.evaluate(() => getComputedStyle(document.querySelector('.to-top')).visibility)) !== 'visible') fail('index', '맨 위로 단추가 나타나지 않음')
+    else {
+      await p.click('.to-top')
+      if (!(await p.waitForFunction(() => scrollY < 2 && document.activeElement?.id === 'main', null, { timeout: 3000 }).then(() => true, () => false))) fail('index', '맨 위로 단추가 맨 위로 가지 않거나 초점이 본문으로 가지 않음')
+    }
     if (await p.evaluate(() => document.querySelectorAll('#index-list [hidden]').length)) fail('index', '찾기를 지워도 숨긴 항목이 남음')
     await ctx.close()
   } catch (e) { fail('index', `시험 중단 — ${e.message.split('\n')[0]}`) }
