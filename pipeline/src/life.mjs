@@ -22,8 +22,8 @@ export const CATEGORIES = ['여행', '음식', '카페', '일상', '전시·공�
 const ALIAS = { 전시: '전시·공연', 공연: '전시·공연' }
 const canon = s => { const t = s.replace(/\s*[·,/ ]\s*/g, '·').trim(); return ALIAS[t] ?? t }
 // 분류마다 더 쓸 수 있는 칸 (모두 선택). 다른 분류의 칸을 쓰면 알려 준다 — 화면에 안 나와 헷갈리므로
-const EXTRA = { 여행: ['until'], 음식: ['spot'], 카페: ['spot'], '전시·공연': ['title', 'venue'], 운동: ['sport', 'record'], 일상: [] }
-const COMMON = ['publish', 'date', 'category', 'place', 'consent', 'tags', 'slug', 'address']
+const EXTRA = { 여행: ['until'], 음식: ['spot'], 카페: ['spot'], '전시·공연': ['venue'], 운동: ['sport', 'record'], 일상: [] }
+const COMMON = ['publish', 'date', 'category', 'place', 'consent', 'tags', 'slug', 'address', 'title']
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const IMG = /\.(jpe?g|png|webp|avif|gif|tiff?|heic|heif)$/i
 
@@ -96,7 +96,7 @@ function readPost(file, rel) {
   for (const [k, v] of Object.entries(data)) {
     // 비워 둔 칸(템플릿의 `spot:` 등)은 없는 칸으로 — 그대로 두면 화면에 null 이 찍힌다
     if (v == null || String(v).trim() === '') continue
-    if (allowed.has(k)) { if (!COMMON.includes(k)) extra[k] = k === 'until' ? asDate(v) : String(v).trim() }
+    if (allowed.has(k)) { if (!COMMON.includes(k) || k === 'title') extra[k] = k === 'until' ? asDate(v) : String(v).trim() }
     else if (Object.values(EXTRA).flat().includes(k)) warns.push(`${where} — '${k}' 는 ${category} 글에서 쓰지 않는 칸이라 화면에 나오지 않습니다`)
     else warns.push(`${where} — 모르는 칸 '${k}' (무시)`)
   }
@@ -135,7 +135,7 @@ function readPost(file, rel) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(s)) err(where, `slug 는 영문 소문자 · 숫자 · - 만 쓸 수 있습니다 (지금: ${data.slug})`)
     else slug = s
   }
-  // 제목 — 전시 · 공연 이름, 가게 이름, 장소, 없으면 분류와 날짜
+  // 제목 — title(모든 분류, 2026-10-01), 가게 이름, 장소, 없으면 분류와 날짜
   const heading = extra.title || extra.spot || place || `${category} · ${date.replace(/-/g, '.')}`
   // 설명 — 검색 결과 · 공유 카드에 나간다. 글의 첫 문장, 없으면 짧게 만든다
   const plain = s => s.replace(/\n/g, ' ').replace(/`([^`]+)`/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/(^|\s)[*_]([^*_]+)[*_](?=\s|$)/g, '$1$2')
