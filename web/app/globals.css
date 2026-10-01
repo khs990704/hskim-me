@@ -693,3 +693,58 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 .life-nav { position: absolute; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 38px; height: 38px; border-radius: 999px; background: rgba(0, 0, 0, .5); color: #fff; font-size: 24px; line-height: 1; }
 .life-nav:hover { background: rgba(0, 0, 0, .75); }
 .life-nav:disabled { opacity: .25; cursor: default; }
+
+/* ── 전체 목록 (/index-all) ───────────────────────────────────────────
+   분야(색 점 · 큰 제목) → 하위 분류(접기) → 문서(제목 + 설명 한 줄). 분야 색은 메인 그래프와 같다(--c).
+   찾기 칸 · 분야 칩 줄은 헤더(3.5rem) 밑에 붙는다 */
+.idx-bar { position: sticky; top: 3.5rem; z-index: 20; margin: 0 -8px; padding: 10px 8px; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line-soft); }
+.idx-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 12.5px; color: var(--fg-dim); }
+.idx-chip:hover { border-color: var(--c); color: var(--fg-strong); }
+.idx-dot { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.idx-field { scroll-margin-top: 10rem; }
+/* 넓은 화면은 칩 줄이 펼쳐진 채라 찾기 칸이 더 높다 */
+@media (min-width: 640px) { .idx-field { scroll-margin-top: 13rem; } }
+.idx-field-h { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 600; color: var(--fg-strong); }
+.idx-field-h .idx-dot { width: 10px; height: 10px; box-shadow: 0 0 10px -1px var(--c); }
+.idx-sub > summary { display: flex; align-items: center; gap: 10px; padding: 9px 4px; cursor: pointer; list-style: none; font-size: 14.5px; }
+.idx-sub > summary::-webkit-details-marker { display: none; }
+.idx-sub > summary:hover { background: var(--bg-soft); }
+.idx-sub > summary:hover .idx-caret { color: var(--c); }
+.idx-caret { display: inline-block; width: 12px; font-size: 11px; color: var(--fg-faint); transition: transform .15s; }
+.idx-sub[open] > summary .idx-caret { transform: rotate(90deg); color: var(--c); }
+.idx-n { margin-left: auto; font-size: 12.5px; }
+@media (prefers-reduced-motion: reduce) { .idx-caret { transition: none; } }
+/* 카드 — 포트폴리오 페이지의 카드와 같은 틀. 케이스 카드는 아래에 같은 케이스의 다른 문서 링크 줄 */
+.idx-card { display: flex; flex-direction: column; border: 1px solid var(--line-soft); border-radius: 8px; transition: border-color .15s; }
+.idx-card:hover { border-color: color-mix(in srgb, var(--c, var(--accent)) 60%, var(--line)); }
+.idx-card-main { display: block; padding: 10px 14px; }
+.idx-card-main:hover .idx-card-t { color: var(--accent); }
+.idx-card-t { display: block; font-size: 14px; line-height: 1.5; font-weight: 500; color: var(--fg-strong); }
+.idx-card-d { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 4px; font-size: 12.5px; line-height: 1.6; color: var(--fg-dim); }
+.idx-card-tags { display: block; margin-top: 2px; font-size: 11.5px; color: var(--fg-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idx-card-links { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: -2px 0 0; padding: 8px 14px 10px; border-top: 1px dashed var(--line-soft); font-size: 12.5px; line-height: 1.5; }
+.idx-card-links a { padding: 1px 7px; border-radius: 4px; background: var(--bg-soft); color: var(--fg-dim); }
+.idx-card-links a:hover { color: var(--accent); }
+/* 큰 케이스(안에 폴더가 있는 것) — 대표 문서를 머리로, 안쪽 폴더 카드를 들여 묶는다 */
+.idx-case { padding: 8px; border: 1px solid var(--line-soft); border-radius: 10px; background: color-mix(in srgb, var(--bg-soft) 55%, transparent); }
+.idx-case-h { padding: 0 4px 10px; }
+.idx-case-h a:hover .idx-card-t { color: var(--accent); }
+/* 찾는 중 — 케이스 카드 안에서 맞은 문서 링크를 강조 */
+[data-searching] .idx-card-links a[data-hit] { color: var(--accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
+@media (min-width: 640px) { .idx-case { padding: 12px; } }
+/* 접는 동안에도 화살표는 바로 닫힌 쪽으로 */
+.idx-sub.idx-closing > summary .idx-caret { transform: none; color: var(--fg-faint); }
+/* 스크롤 고정(scroll anchoring) 끄기 — 찾기를 시작하면 분야 칩 줄이 사라져 찾기 칸이 낮아지는데,
+   브라우저가 그만큼 스크롤을 거꾸로 옮겨 칸이 헤더 밑에서 떨어졌다. 위치는 IndexFilter 가 직접 맞춘다.
+   또 입력할 때 브라우저가 글자 칸을 보이게 하려고 html 의 scroll-padding-top(5rem)만큼 스크롤을 몇 px 당겨서, 이 페이지는 0 으로 둔다
+   (분야 칩으로 이동할 때 여백은 .idx-field 의 scroll-margin-top 이 맡는다) */
+:root:has(#index-list) { overflow-anchor: none; scroll-padding-top: 0; }
+/* 분야 칩 줄 — 넓은 화면은 늘 펼침, 모바일은 "분야" 단추로 높이 0 ↔ 전체를 부드럽게 (grid 행 높이 전환).
+   접힌 동안은 visibility 로 칩에 초점이 가지 않게 한다 (접히는 움직임이 끝난 뒤에 감춘다) */
+.idx-chips { display: grid; grid-template-rows: 1fr; }
+.idx-chips > div { min-height: 0; overflow: hidden; }
+@media (max-width: 639.98px) {
+  .idx-chips { grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows .26s cubic-bezier(.2, .8, .2, 1), visibility 0s .26s; }
+  .idx-chips[data-open] { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows .26s cubic-bezier(.2, .8, .2, 1); }
+}
+@media (prefers-reduced-motion: reduce) { .idx-chips, .idx-chips[data-open] { transition: none; } }

@@ -171,10 +171,35 @@ async function runEngine(name) {
     await ctx.close()
   } catch (e) { fail('about', `시험 중단 — ${e.message.split('\n')[0]}`) }
 
+  // ── 전체 목록 찾기 · 접기 ──
+  try {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+    ctx.setDefaultTimeout(5000)
+    const p = await ctx.newPage()
+    await p.goto(B + '/index-all', { waitUntil: 'domcontentloaded', timeout: 30000 }); await p.waitForTimeout(800)
+    if (await p.evaluate(() => document.querySelectorAll('details.idx-sub[open]').length)) fail('index', '하위 분류가 처음부터 펼쳐져 있음')
+    // 크롤러 진입점 (D-09) — 접혀 있어도 모든 문서 링크가 HTML 에 있어야 한다
+    if ((await p.evaluate(() => document.querySelectorAll('#index-list a[href]').length)) < 100) fail('index', '목록 링크가 너무 적음 (접힌 묶음 안 링크 누락?)')
+    const sum = p.locator('details.idx-sub > summary').nth(1)
+    await sum.click()
+    if (!(await p.waitForFunction(() => document.querySelectorAll('details.idx-sub')[1].open, null, { timeout: 3000 }).then(() => true, () => false))) fail('index', '묶음이 펼쳐지지 않음')
+    // 스크롤을 내린 상태에서 찾기 — 찾기 칸이 헤더 밑에 붙은 채 움직이지 않아야 한다
+    await p.evaluate(() => window.scrollTo({ top: 1500, behavior: 'instant' })); await p.waitForTimeout(150)
+    const top = () => p.evaluate(() => Math.round(document.querySelector('.idx-bar input').getBoundingClientRect().top))
+    const before = await top()
+    await p.locator('.idx-bar input').pressSequentially('react', { delay: 60 }); await p.waitForTimeout(300)
+    const hits = await p.locator('#idx-hits').textContent()
+    if (!/^[1-9]\d*편$/.test(hits ?? '')) fail('index', `찾기 결과 수가 이상함 (${hits})`)
+    if (Math.abs((await top()) - before) > 1) fail('index', `찾는 중 찾기 칸이 움직임 (${before} → ${await top()})`)
+    await p.locator('.idx-bar input').fill(''); await p.waitForTimeout(200)
+    if (await p.evaluate(() => document.querySelectorAll('#index-list [hidden]').length)) fail('index', '찾기를 지워도 숨긴 항목이 남음')
+    await ctx.close()
+  } catch (e) { fail('index', `시험 중단 — ${e.message.split('\n')[0]}`) }
+
   await browser.close()
   const lines = fails.length
     ? [`  ✗ ${name} — ${fails.length}건`, ...fails.map(f => `      ${f}`)]
-    : [`  ✓ ${name} — ${pages}쪽 · 키보드 · 스탯창 통과`]
+    : [`  ✓ ${name} — ${pages}쪽 · 키보드 · 스탯창 · 전체 목록 통과`]
   return { name, lines, failed: fails.length }
 }
 
