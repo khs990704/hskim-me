@@ -524,7 +524,10 @@ main:focus { outline: none; }
 }
 a.hud-chip:hover, button.hud-chip:hover { border-color: var(--accent); color: var(--accent); }
 button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #06121c; background: var(--accent); }
-.hud-select { background: var(--hud-chip); border: 1px solid var(--hud-line); border-radius: 4px; padding: 4px 8px; color: var(--fg); font-size: 12.5px; }
+.hud-select { background: var(--hud-dialog); border: 1px solid var(--hud-line); border-radius: 4px; padding: 4px 8px; color: var(--fg); font-size: 12.5px; color-scheme: dark; }
+/* 펼친 목록은 운영체제가 그린다 — 반투명 바탕을 물려받으면 흰 바탕에 밝은 글씨가 되어 보이지 않았다. 바탕 · 글씨를 직접 준다 */
+.hud-select option { background: var(--hud-dialog); color: var(--fg); }
+:root[data-theme="light"] .hud-select { color-scheme: light; }
 .hud-link { color: var(--accent); border-bottom: 1px dotted color-mix(in srgb, var(--accent) 50%, transparent); }
 .hud-link:hover { border-bottom-style: solid; }
 .hud-prose { max-width: none; }
@@ -733,7 +736,7 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 [data-searching] .idx-card-links a[data-hit] { color: var(--accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
 @media (min-width: 640px) { .idx-case { padding: 12px; } }
 /* 접는 동안에도 화살표는 바로 닫힌 쪽으로 */
-.idx-sub.idx-closing > summary .idx-caret { transform: none; color: var(--fg-faint); }
+.idx-sub[data-closing] > summary .idx-caret { transform: none; color: var(--fg-faint); }
 /* 스크롤 고정(scroll anchoring) 끄기 — 찾기를 시작하면 분야 칩 줄이 사라져 찾기 칸이 낮아지는데,
    브라우저가 그만큼 스크롤을 거꾸로 옮겨 칸이 헤더 밑에서 떨어졌다. 위치는 IndexFilter 가 직접 맞춘다.
    또 입력할 때 브라우저가 글자 칸을 보이게 하려고 html 의 scroll-padding-top(5rem)만큼 스크롤을 몇 px 당겨서, 이 페이지는 0 으로 둔다

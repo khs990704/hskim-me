@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { smoothDetails } from '../lib/smooth-details'
 
 /**
  * 전체 목록(/index-all) 위에 붙는 찾기 칸 + 분야 칩 줄.
@@ -79,34 +80,10 @@ export default function IndexFilter({ children }: { children: React.ReactNode })
     if (pin.current !== null && Math.abs(window.scrollY - pin.current) > 0.5) window.scrollTo({ top: pin.current, behavior: 'instant' })
   })
 
-  // 하위 분류 펼치기 · 접기를 부드럽게 — <details> 는 높이 전환을 지원하지 않는 브라우저가 많아 직접 움직인다.
-  // 움직임 줄이기 설정이면 바로 열고 닫는다
+  // 하위 분류 펼치기 · 접기를 부드럽게 (lib/smooth-details)
   useEffect(() => {
     const root = document.getElementById('index-list')
-    if (!root) return
-    const onClick = (e: MouseEvent) => {
-      const sum = (e.target as HTMLElement).closest('details.idx-sub > summary')
-      if (!sum || matchMedia('(prefers-reduced-motion: reduce)').matches) return
-      const d = sum.parentElement as HTMLDetailsElement
-      const body = d.querySelector<HTMLElement>(':scope > div')
-      if (!body || d.dataset.moving) return
-      e.preventDefault()
-      d.dataset.moving = ''
-      const opts = { duration: 260, easing: 'cubic-bezier(.2, .8, .2, 1)' }
-      body.style.overflow = 'hidden'
-      const done = () => { body.style.overflow = ''; delete d.dataset.moving }
-      if (!d.open) {
-        d.open = true
-        const h = body.scrollHeight
-        body.animate([{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }], opts).onfinish = done
-      } else {
-        const h = body.scrollHeight
-        d.classList.add('idx-closing')
-        body.animate([{ height: h + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], opts).onfinish = () => { d.open = false; d.classList.remove('idx-closing'); done() }
-      }
-    }
-    root.addEventListener('click', onClick)
-    return () => root.removeEventListener('click', onClick)
+    return root ? smoothDetails(root, 'details.idx-sub') : undefined
   }, [])
 
   // 찾기를 지우면 묶음 수를 원래 값으로 — 서버가 그린 값을 처음에 받아 둔다
