@@ -54,3 +54,7 @@ https://:sub.hskim-me.pages.dev/*
 # 하루만 캐시한다.
 /og/*
   Cache-Control: public, max-age=86400
+
+# RSS — 확장자(.xml)만 보면 application/xml 로 나간다. 피드 읽는 쪽이 RSS 로 알아보게 형식을 밝힌다
+/rss.xml
+  Content-Type: application/rss+xml; charset=utf-8

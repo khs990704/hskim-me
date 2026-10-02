@@ -106,3 +106,12 @@ export function graph() {
     links: { source: string; target: string }[]
   }
 }
+
+let datesCache: Record<string, [string, string]> | null = null
+/** 문서 원본 경로 → [처음 만든 날, 마지막으로 고친 날] (pipeline/src/dates.mjs, Vault git 이력). 없으면 빈 표 */
+export function docDates(): Record<string, [string, string]> {
+  if (datesCache) return datesCache
+  const f = path.join(OUT, 'dates.json')
+  datesCache = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {}
+  return datesCache!
+}

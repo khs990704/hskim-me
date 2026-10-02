@@ -7,7 +7,7 @@
   "scripts": {
     "stage": "node src/stage.mjs",
     "guard": "node src/guard.mjs",
-    "build": "node src/stage.mjs && node src/guard.mjs && node src/build.mjs && node src/profile.mjs && node src/life.mjs && node src/character.mjs && node src/media.mjs && node src/layout.mjs && node src/search-index.mjs",
+    "build": "node src/stage.mjs && node src/guard.mjs && node src/build.mjs && node src/profile.mjs && node src/life.mjs && node src/dates.mjs && node src/character.mjs && node src/media.mjs && node src/layout.mjs && node src/search-index.mjs",
     "preview": "node src/preview.mjs",
     "test:media": "node test/media.mjs",
     "report": "node src/classify-broken.mjs",
