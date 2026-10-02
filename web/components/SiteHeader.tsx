@@ -11,10 +11,15 @@ export default function SiteHeader() {
     <>
     <a href="#main" className="skip-link">본문 바로가기</a>
     <header className="sticky top-0 z-40 border-b border-[var(--line-soft)] bg-[var(--bg)]/85 backdrop-blur">
-      <div className="flex h-14 items-center gap-2 px-3 sm:px-5">
+      {/* 본문 틀(최대 1400px)과 같은 폭에 맞춘다 — 넓은 화면에서 이름만 화면 왼쪽 끝에 쏠려 보였다 (2026-10-02) */}
+      <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-2 px-3 sm:px-5">
         <Sidebar mode="trigger" />
-        <IntentLink href="/" className="mr-auto text-[15px] font-semibold tracking-tight text-[var(--fg-strong)]">
-          hskim<span className="text-[var(--fg-faint)]">.me</span>
+        {/* 이름 — 메인의 별을 닮은 작은 빛 표시 + 조금 크게. 메인으로 돌아가는 길이라 눈에 띄어야 한다 */}
+        <IntentLink href="/" className="site-logo mr-auto" aria-label="hskim.me 메인으로">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden className="site-logo-star">
+            <path d="M12 1.5c.6 5.6 4.9 9.9 10.5 10.5-5.6.6-9.9 4.9-10.5 10.5C11.4 16.9 7.1 12.6 1.5 12 7.1 11.4 11.4 7.1 12 1.5z" fill="currentColor" />
+          </svg>
+          <span>hskim<span className="text-[var(--fg-faint)]">.me</span></span>
         </IntentLink>
         <nav className="flex items-center gap-1 text-[13px] text-[var(--fg-dim)]">
           <Search />

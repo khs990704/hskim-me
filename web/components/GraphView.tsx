@@ -74,6 +74,12 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
   const pointerOut = useRef(false)
   const flyingUntil = useRef(0)
   const pickRef = useRef<(k: string | null) => void>(() => {})
+  /** 별 스프라이트 · 본래 크기 — 반짝임(크기를 아주 조금 오르내림)에 쓴다 */
+  const sprites = useRef(new Map<string, { s: any; base: number; tw: number; ph: number }>())
+  /** 별자리 성운 빛 — 별자리를 고르면 그 빛만 밝힌다 */
+  const glows = useRef(new Map<string, any>())
+  /** 처음 구도(별 무리가 화면을 채우는 거리) — 처음 들어올 때 · 전체 보기 · 허공 더블클릭이 같은 곳으로 */
+  const homeRef = useRef<(ms: number) => void>(() => {})
   /** 이용자가 회전 멈춤 단추로 멈췄는지. 멈췄으면 조작 뒤에도 다시 돌지 않는다 */
   const userPaused = useRef(false)
   const [supported, setSupported] = useState<boolean | null>(null)
@@ -191,7 +197,14 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
       const t0 = performance.now()
       const still = matchMedia('(prefers-reduced-motion: reduce)').matches
       const tick = () => {
-        mat.uniforms.uTime.value = still ? 0 : (performance.now() - t0) / 1000
+        const t = (performance.now() - t0) / 1000
+        mat.uniforms.uTime.value = still ? 0 : t
+        // 반짝임 — 크기를 ±14% 안에서 천천히. 움직임 줄이기면 하지 않는다
+        if (!still) for (const v of sprites.current.values()) {
+          if (!v.tw) continue
+          const k = 1 + 0.14 * Math.sin(t * v.tw + v.ph)
+          v.s.scale.set(v.base * k, v.base * k, 1)
+        }
         raf = requestAnimationFrame(tick)
       }
       tick()
@@ -224,14 +237,41 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     controls.minDistance = 40
     controls.maxDistance = 1700
 
-    // 처음 들어왔을 때 그래프 전체가 화면에 들어오게 맞춘다
-    const fit = setTimeout(() => fgRef.current?.zoomToFit?.(800, 70), 120)
+    // 처음 구도 — 가장자리 별까지 다 넣으면(zoomToFit) 무리가 화면 가운데 30% 에 작게 뭉쳤다.
+    // 별의 90% 가 드는 반지름이 화면 좁은 쪽의 70% 를 채우는 거리로 다가간다 (2026-10-02).
+    // 70% 반지름을 화면 끝에 맞췄더니 너무 가까워 별이 큼직하게 번지고 무리가 화면 밖으로 넘쳤다
+    const nodes = graph.nodes
+    const cx = nodes.reduce((a, n) => a + (n.x ?? 0), 0) / nodes.length
+    const cy = nodes.reduce((a, n) => a + (n.y ?? 0), 0) / nodes.length
+    const cz = nodes.reduce((a, n) => a + (n.z ?? 0), 0) / nodes.length
+    const rs = nodes.map(n => Math.hypot((n.x ?? 0) - cx, (n.y ?? 0) - cy, (n.z ?? 0) - cz)).sort((a, b) => a - b)
+    const r90 = rs[Math.floor(rs.length * 0.9)] ?? 400
+    const homeDist = () => {
+      const cam = fgRef.current?.camera?.()
+      const v = ((cam?.fov ?? 40) * Math.PI) / 360
+      const aspect = innerWidth / innerHeight
+      const half = Math.min(v, Math.atan(Math.tan(v) * aspect))   // 세로 · 가로 중 좁은 쪽
+      return r90 / (Math.tan(half) * 0.7)
+    }
+    homeRef.current = (ms: number) => {
+      const d = homeDist()
+      fgRef.current?.cameraPosition({ x: cx + d * 0.42, y: cy + d * 0.18, z: cz + d * 0.89 }, { x: cx, y: cy, z: cz }, ms)
+    }
+    // 들어오는 연출 — 멀리서 시작해 2.2초 동안 다가간다. 움직임 줄이기면 바로 처음 구도
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    const fit = setTimeout(() => {
+      if (reduce) { homeRef.current(0); return }
+      const d = homeDist() * 2.8
+      fgRef.current?.cameraPosition({ x: cx + d * 0.42, y: cy + d * 0.18, z: cz + d * 0.89 }, { x: cx, y: cy, z: cz }, 0)
+      flyingUntil.current = performance.now() + 2400
+      requestAnimationFrame(() => homeRef.current(2200))
+    }, 60)
 
     // 허공을 더블클릭하면 처음 배치로 돌아온다.
     // (노드는 한 번 클릭하면 이동하므로 더블클릭이 겹치지 않는다)
     const canvas = fgRef.current.renderer?.().domElement as HTMLElement | undefined
     // 별자리를 골라 둔 상태도 함께 푼다
-    const reset = () => { if (focusRef.current) pickRef.current(null); else fgRef.current?.zoomToFit?.(700, 70) }
+    const reset = () => { if (focusRef.current) pickRef.current(null); else homeRef.current(700) }
     canvas?.addEventListener('dblclick', reset)
     const out = () => { pointerOut.current = true; if (!matchMedia('(pointer: coarse)').matches) setHover(null) }
     const back = () => { pointerOut.current = false }
@@ -381,6 +421,10 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     const radius = 0.9 + Math.sqrt(n.degree) * 0.62
     const star = createStar(colorOf(n.group, n.kind), radius * 1.35)
     materials.current.set(n.id, star.material)
+    // 셋 중 하나쯤만, 저마다 다른 빠르기 · 때로 반짝인다 (주소로 정해 새로고침해도 같은 별이 반짝인다)
+    let h = 0
+    for (const ch of n.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+    sprites.current.set(n.id, { s: star, base: star.scale.x, tw: h % 3 === 0 ? 0.6 + (h % 7) * 0.15 : 0, ph: (h % 628) / 100 })
     return star
   }, [])
 
@@ -411,7 +455,7 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     flyingUntil.current = performance.now() + ms + 150
     const c = constellations.find(x => x.key === next)
     const hub = c?.hub
-    if (!c || !hub) { fg.zoomToFit?.(ms || 1, 70); return }
+    if (!c || !hub) { homeRef.current(ms); return }
     const H = [hub.x ?? 0, hub.y ?? 0, hub.z ?? 0]
     const pts = graph.nodes.filter(n => c.members.has(n.id)).map(n => [n.x ?? 0, n.y ?? 0, n.z ?? 0])
     const C = [0, 1, 2].map(i => pts.reduce((a, p) => a + p[i], 0) / pts.length)
@@ -437,6 +481,53 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     } else fly(H, 340)
   }, [focus, constellations, graph])
   pickRef.current = pick
+
+  /**
+   * 별자리 성운 빛 — 별자리마다 별들의 가운데에 그 분야 색의 아주 옅고 큰 빛 구름을 깐다.
+   * 별자리가 은하 속 색 영역처럼 보이게 한다. 가산 혼합 · 깊이 쓰기 없음이라 별을 가리지 않는다
+   */
+  useEffect(() => {
+    if (!graph || !fgReady || !constellations.length) return
+    const scene = fgRef.current?.scene?.()
+    if (!scene) return
+    let alive = true
+    const added: any[] = []
+    ;(async () => {
+      const THREE = await import('three')
+      if (!alive) return
+      const S = 256, cv = document.createElement('canvas')
+      cv.width = cv.height = S
+      const ctx = cv.getContext('2d')!
+      const g = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2)
+      // 가운데만 은은하게, 가장자리는 빨리 사라지게 — 넓게 퍼지니 연기를 뿌린 것처럼 보였다
+      g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,255,255,0.35)')
+      g.addColorStop(0.55, 'rgba(255,255,255,0.06)'); g.addColorStop(1, 'rgba(255,255,255,0)')
+      ctx.fillStyle = g; ctx.fillRect(0, 0, S, S)
+      const tex = new THREE.CanvasTexture(cv)
+      for (const c of constellations) {
+        const pts = graph.nodes.filter(n => c.members.has(n.id))
+        const C = [0, 1, 2].map(i => pts.reduce((a, n) => a + ([n.x, n.y, n.z][i] ?? 0), 0) / pts.length)
+        const ds = pts.map(n => Math.hypot((n.x ?? 0) - C[0], (n.y ?? 0) - C[1], (n.z ?? 0) - C[2])).sort((a, b) => a - b)
+        const spread = ds[Math.floor(ds.length * 0.75)] ?? 80
+        const m = new THREE.SpriteMaterial({ map: tex, color: new THREE.Color(c.color), transparent: true, opacity: 0.035, depthWrite: false, blending: THREE.AdditiveBlending })
+        const sp = new THREE.Sprite(m)
+        sp.position.set(C[0], C[1], C[2])
+        sp.scale.set(spread * 2.4, spread * 2.4, 1)
+        sp.renderOrder = -1
+        scene.add(sp); added.push(sp); glows.current.set(c.key, m)
+      }
+    })()
+    return () => {
+      alive = false
+      for (const sp of added) { scene.remove(sp); sp.material.dispose() }
+      glows.current.clear()
+    }
+  }, [graph, fgReady, constellations])
+
+  // 별자리를 고르면 그 성운 빛만 밝히고 나머지는 거의 끈다
+  useEffect(() => {
+    for (const [k, m] of glows.current) m.opacity = !focus ? 0.035 : k === focus ? 0.07 : 0.01
+  }, [focus, constellations])
 
   /**
    * 핵심 별 이름표 — 별 바로 위에 별자리 이름을 늘 띄운다. 카메라가 계속 도니 매 프레임 화면 좌표로 옮긴다.
@@ -514,8 +605,9 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         // 허브(MOC) 링크는 분류 안의 거의 모든 문서를 향해 뻗어 나가 화면을 덮는다.
         // 평소에는 감추고, 그 노드에 마우스를 올렸을 때만 보여 준다.
         // 별자리를 고르면 그 핵심 별에서 별자리 안 별들로 옅은 선을 긋는다 (별자리 선)
+        // 평소에는 선을 모두 감춘다 — 4천여 개가 희미하게 겹쳐 별 사이가 회색 그물처럼 탁해졌다 (2026-10-02).
+        // 별에 마우스를 올리면 그 별의 선, 별자리를 고르면 별자리 안의 선(핵심 별에서 뻗는 별자리 선 포함)만 그린다
         linkVisibility={(l: any) => {
-          if (!l.hub) return true
           const s = idOf(l.source), t = idOf(l.target)
           if (hover) return s === hover.id || t === hover.id
           // 별자리 안의 모든 핵심 별(MOC)에서 — Open Source 는 gstack MOC 가 실제 무리를 잇는다
