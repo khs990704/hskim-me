@@ -23,6 +23,11 @@ const prompt = fs.readFileSync(SRC, 'utf8')
   .replace(/\n{3,}/g, '\n\n')
   .trim()
 
+// 메모 상자가 짝이 안 맞으면 메모가 설정에 섞인다 — 메모 안에 %% 를 글자로 쓴 적이 있다 (2026-10-02)
+if (prompt.includes('%%')) {
+  console.error('\n  ✗ Nero 설정에 %% 가 남았습니다 — 메모 상자(%% … %%)의 짝이 맞지 않습니다. 04 Operations/Nero.md 를 확인해 주세요.\n')
+  process.exit(1)
+}
 if (prompt.length > LIMIT) {
   console.error(`\n  ✗ Nero 설정이 너무 깁니다 — ${prompt.length}자 (상한 ${LIMIT}자). 04 Operations/Nero.md 를 줄여 주세요.\n`)
   process.exit(1)

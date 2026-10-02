@@ -148,11 +148,14 @@ fs.writeFileSync(path.join(PUBLIC, 'tree.json'), JSON.stringify(root.children))
 const treeSize = fs.statSync(path.join(PUBLIC, 'tree.json')).size
 console.log(`  tree.json   문서 ${docs.length}개 · ${(treeSize / 1024).toFixed(0)}KB`)
 
-// Nero 설정 (P8) — 파이프라인이 Vault Nero.md 로 만든 프롬프트를 서버(Pages Functions)가 묶어 갈 자리로 옮긴다
+// Nero 설정 (P8) — 파이프라인이 Vault Nero.md 로 만든 프롬프트를 서버(Pages Functions)가 묶어 갈 자리로 옮긴다.
+// JSON 이 아니라 TS 모듈로 쓴다 — JSON 을 가져오려면 `with { type: 'json' }` 이 필요한데, wrangler 의 빌드 도구가 이 문법을 몰라 배포가 멈췄다 (2026-10-02)
 const neroSrc = path.join(HERE, '..', '..', 'pipeline', 'out', 'nero.json')
-const neroDst = path.join(HERE, '..', 'functions', '_lib', 'prompt.json')
+const neroDst = path.join(HERE, '..', 'functions', '_lib', 'prompt.ts')
+const neroCfg = fs.existsSync(neroSrc) ? JSON.parse(fs.readFileSync(neroSrc, 'utf8')) : { prompt: '', hash: '' }
 fs.mkdirSync(path.dirname(neroDst), { recursive: true })
-fs.writeFileSync(neroDst, fs.existsSync(neroSrc) ? fs.readFileSync(neroSrc) : JSON.stringify({ prompt: '', hash: '' }))
+fs.writeFileSync(neroDst, `// 만든 파일 — scripts/gen-static.mjs. 고치지 말 것 (원본: Vault 04 Operations/Nero.md)\nexport default ${JSON.stringify(neroCfg)} as { prompt: string; hash: string }\n`)
+fs.rmSync(path.join(path.dirname(neroDst), 'prompt.json'), { force: true })
 
 // 메인 그래프 별 카드의 설명 한두 줄 (주소 → 설명). graph.json 과 따로 둬서 그래프가 뜬 뒤에 받는다 (2026-10-02)
 const clip = (s, n = 110) => (s.length > n ? s.slice(0, n).replace(/\s+\S*$/, '') + '…' : s)

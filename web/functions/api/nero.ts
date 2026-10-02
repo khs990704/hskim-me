@@ -1,6 +1,6 @@
 // POST /api/nero — Nero 에게 묻기 (P8, docs/01-planning/ai-nero.md §3 · §6).
 // 같은 주소에서만 부른다 (CORS 를 열지 않는다). 순서: 끄는 스위치 → 모양 · 출처 → 봇 확인 → 한도 → 근거 → 답 → 출력 검사.
-import neroConfig from '../_lib/prompt.json' with { type: 'json' }
+import neroConfig from '../_lib/prompt.ts'
 import { LIMITS, SITE, parseRequest, retrieve, buildMessages, generate, sanitize, today, visitorKey, isExtraction, SECRET_ANSWER, type Bindings } from '../_lib/nero.ts'
 
 type KV = { get(k: string): Promise<string | null>; put(k: string, v: string, o?: { expirationTtl?: number }): Promise<void> }
