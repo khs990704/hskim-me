@@ -148,6 +148,12 @@ fs.writeFileSync(path.join(PUBLIC, 'tree.json'), JSON.stringify(root.children))
 const treeSize = fs.statSync(path.join(PUBLIC, 'tree.json')).size
 console.log(`  tree.json   문서 ${docs.length}개 · ${(treeSize / 1024).toFixed(0)}KB`)
 
+// 메인 그래프 별 카드의 설명 한두 줄 (주소 → 설명). graph.json 과 따로 둬서 그래프가 뜬 뒤에 받는다 (2026-10-02)
+const clip = (s, n = 110) => (s.length > n ? s.slice(0, n).replace(/\s+\S*$/, '') + '…' : s)
+const info = Object.fromEntries(docs.filter(d => d.description).map(d => [d.route, clip(d.description)]))
+fs.writeFileSync(path.join(PUBLIC, 'graph-info.json'), JSON.stringify(info))
+console.log(`  graph-info.json  설명 ${Object.keys(info).length}개 · ${(fs.statSync(path.join(PUBLIC, 'graph-info.json')).size / 1024).toFixed(0)}KB`)
+
 // 그래프는 메인 화면에서만 쓴다. 페이지에 박지 않고 따로 받아 캐시되게 한다.
 const GRAPH_SRC = path.join(HERE, '..', '..', 'pipeline', 'out', 'graph.json')
 const g = JSON.parse(fs.readFileSync(GRAPH_SRC, 'utf8'))

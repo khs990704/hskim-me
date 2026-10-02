@@ -24,6 +24,22 @@ type GNode = {
 type GLink = { source: string; target: string; hub?: boolean }
 type Graph = { nodes: GNode[]; links: GLink[] }
 
+/**
+ * 별자리 — 분야(Knowledge DB 의 8 분야)와 프로젝트 케이스. 핵심 별은 그 분야의 MOC (2026-10-02).
+ * 이름은 사이드 탭 · 전체 목록과 같은 영어 이름을 쓴다 — 같은 무리임이 바로 이어지게.
+ */
+type Constellation = { key: string; color: string; hub: GNode | null; members: Set<string> }
+const constellationOf = (n: GNode): string | null => {
+  if (n.kind === 'project') return 'Project Cases'
+  const [top, field] = n.group.split('/')
+  return n.kind === 'note' && top === 'Knowledge DB' && field && !field.endsWith('.md') ? field : null
+}
+const rgba = (hex: string, a: number) => {
+  const v = parseInt(hex.slice(1), 16)
+  return `rgba(${(v >> 16) & 255},${(v >> 8) & 255},${v & 255},${a})`
+}
+const idOf = (x: any): string => (typeof x === 'string' ? x : x.id)
+
 const hasWebGL = () => {
   try {
     const c = document.createElement('canvas')
@@ -45,6 +61,19 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
   const [graph, setGraph] = useState<Graph | null>(null)
   const [size, setSize] = useState({ w: 0, h: 0 })
   const [hover, setHover] = useState<GNode | null>(null)
+  /** 안내판에서 고른 별자리 — 그 별들만 밝히고 핵심 별에서 별자리 선을 긋는다 */
+  const [focus, setFocus] = useState<string | null>(null)
+  /** 별 카드의 설명 (주소 → 한두 줄). 그래프가 뜬 뒤에 따로 받는다 */
+  const [info, setInfo] = useState<Record<string, string>>({})
+  /** 모바일 안내판 펼침 */
+  const [panel, setPanel] = useState(false)
+  const labelRefs = useRef(new Map<string, HTMLButtonElement>())
+  const focusRef = useRef<string | null>(null)
+  /** 커서가 그래프 밖(안내판 · 이름표 위)에 있는지, 카메라가 날아가는 중인지 — 그동안은 별을 고르지 않는다.
+   *  그래프는 마지막 커서 위치를 기억해서, 안내판을 누른 뒤 카메라가 움직이면 그 자리를 지나는 별이 골라져 카드가 따라다녔다 */
+  const pointerOut = useRef(false)
+  const flyingUntil = useRef(0)
+  const pickRef = useRef<(k: string | null) => void>(() => {})
   /** 이용자가 회전 멈춤 단추로 멈췄는지. 멈췄으면 조작 뒤에도 다시 돌지 않는다 */
   const userPaused = useRef(false)
   const [supported, setSupported] = useState<boolean | null>(null)
@@ -105,6 +134,12 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         setGraph({ nodes: [], links: [] })
       })
   }, [supported, onReady])
+
+  // 별 카드 설명 — 첫 화면(그래프)이 뜬 뒤에 받는다. 없어도 카드는 제목만으로 나온다
+  useEffect(() => {
+    if (!graph) return
+    fetch('/graph-info.json').then(r => r.json()).then(setInfo).catch(() => {})
+  }, [graph])
 
   // 인스턴스가 붙을 때까지 기다린다.
   // 이 라이브러리는 콜백 ref 를 받지 않아 다음 프레임부터 확인한다.
@@ -195,10 +230,22 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     // 허공을 더블클릭하면 처음 배치로 돌아온다.
     // (노드는 한 번 클릭하면 이동하므로 더블클릭이 겹치지 않는다)
     const canvas = fgRef.current.renderer?.().domElement as HTMLElement | undefined
-    const reset = () => fgRef.current?.zoomToFit?.(700, 70)
+    // 별자리를 골라 둔 상태도 함께 푼다
+    const reset = () => { if (focusRef.current) pickRef.current(null); else fgRef.current?.zoomToFit?.(700, 70) }
     canvas?.addEventListener('dblclick', reset)
+    const out = () => { pointerOut.current = true; if (!matchMedia('(pointer: coarse)').matches) setHover(null) }
+    const back = () => { pointerOut.current = false }
+    canvas?.addEventListener('pointerleave', out)
+    canvas?.addEventListener('pointerenter', back)
+    const detach = () => {
+      clearTimeout(fit)
+      canvas?.removeEventListener('dblclick', reset)
+      canvas?.removeEventListener('pointerleave', out)
+      canvas?.removeEventListener('pointerenter', back)
+    }
 
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    // 움직임 줄이기면 자동 회전은 없지만, 위의 듣기는 그대로 떼어 낸다
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return detach
     controls.autoRotate = true
     controls.autoRotateSpeed = 0.28      // 1회전 약 90초 (기획 §7 절제 원칙)
 
@@ -233,9 +280,8 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     el?.addEventListener('wheel', pause, { passive: true })
     return () => {
       clearTimeout(idle)
-      clearTimeout(fit)
+      detach()
       removeEventListener('graph-rotate', onToggle)
-      canvas?.removeEventListener('dblclick', reset)
       el?.removeEventListener('pointerdown', pause)
       el?.removeEventListener('pointerup', pause)
       el?.removeEventListener('pointermove', onMove)
@@ -300,6 +346,27 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     return m
   }, [graph])
 
+  const constellations = useMemo(() => {
+    const m = new Map<string, Constellation>()
+    if (!graph) return [] as Constellation[]
+    for (const n of graph.nodes) {
+      const key = constellationOf(n)
+      if (!key) continue
+      if (!m.has(key)) m.set(key, { key, color: colorOf(n.group, n.kind), hub: null, members: new Set() })
+      const c = m.get(key)!
+      c.members.add(n.id)
+      if (n.hub && n.title === `${key} MOC`) c.hub = n
+    }
+    return [...m.values()].filter(c => c.hub)
+  }, [graph])
+  const conOf = useMemo(() => {
+    const m = new Map<string, Constellation>()
+    for (const c of constellations) for (const id of c.members) m.set(id, c)
+    return m
+  }, [constellations])
+  const focused = constellations.find(c => c.key === focus) ?? null
+  focusRef.current = focus
+
   /**
    * 노드 생성기.
    *
@@ -318,13 +385,89 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
   }, [])
 
   // 호버 시 이웃만 남기고 나머지를 어둡게 한다 (재질을 직접 갱신)
+  // 별자리를 고른 동안은 그 별자리 밖을 더 어둡게 (호버가 있으면 호버가 먼저)
   useEffect(() => {
     for (const [id, mat] of materials.current) {
-      const isDim = hover && hover.id !== id && !neighbors.get(hover.id)?.has(id)
-      mat.opacity = isDim ? 0.18 : 1
+      const isDim = hover ? hover.id !== id && !neighbors.get(hover.id)?.has(id) : false
+      const outside = !hover && focused && !focused.members.has(id)
+      mat.opacity = isDim ? 0.18 : outside ? 0.1 : 1
       mat.needsUpdate = true
     }
-  }, [hover, neighbors])
+  }, [hover, neighbors, focused])
+
+  /**
+   * 별자리 고르기 — 핵심 별로 날아간다. 같은 것을 다시 고르거나 null 이면 전체로.
+   * 핵심 별(MOC)이 무리에서 유난히 멀면(무리 크기의 2.5배 넘게 — 지금은 Open Source 하나, 3.7배) 핵심 별만 화면에 남아
+   * 별자리가 안 보였다. 그때만 핵심 별과 무리 가운데의 중간을 보며 둘 다 들어오게 구도를 돌린다
+   */
+  const pick = useCallback((key: string | null) => {
+    const next = key === focus ? null : key
+    setFocus(next)
+    setPanel(false)
+    setHover(null)
+    const fg = fgRef.current
+    if (!fg || !graph) return
+    const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1100
+    flyingUntil.current = performance.now() + ms + 150
+    const c = constellations.find(x => x.key === next)
+    const hub = c?.hub
+    if (!c || !hub) { fg.zoomToFit?.(ms || 1, 70); return }
+    const H = [hub.x ?? 0, hub.y ?? 0, hub.z ?? 0]
+    const pts = graph.nodes.filter(n => c.members.has(n.id)).map(n => [n.x ?? 0, n.y ?? 0, n.z ?? 0])
+    const C = [0, 1, 2].map(i => pts.reduce((a, p) => a + p[i], 0) / pts.length)
+    const ds = pts.map(p => Math.hypot(p[0] - C[0], p[1] - C[1], p[2] - C[2])).sort((a, b) => a - b)
+    const spread = ds[Math.floor(ds.length * 0.9)] ?? 60
+    const far = Math.hypot(H[0] - C[0], H[1] - C[1], H[2] - C[2])
+    const fly = (look: number[], dist: number) => {
+      const r = Math.hypot(look[0], look[1], look[2]) || 1
+      fg.cameraPosition({ x: look[0] * (1 + dist / r), y: look[1] * (1 + dist / r), z: look[2] * (1 + dist / r) }, { x: look[0], y: look[1], z: look[2] }, ms)
+    }
+    if (far > spread * 2.5) {
+      // 핵심 별 → 무리 방향(u)과 직각인 쪽에서 본다 — 둘이 화면에 나란히 놓인다. 바깥쪽(원점 반대)에 가까운 직각 방향을 고른다
+      const M = [0, 1, 2].map(i => (H[i] + C[i]) / 2)
+      const u = [0, 1, 2].map(i => (C[i] - H[i]) / far)
+      const mr = Math.hypot(M[0], M[1], M[2]) || 1
+      const out = M.map(x => x / mr)
+      const d = out[0] * u[0] + out[1] * u[1] + out[2] * u[2]
+      let w = out.map((x, i) => x - d * u[i])
+      const wl = Math.hypot(w[0], w[1], w[2])
+      w = wl > 1e-3 ? w.map(x => x / wl) : [u[1], -u[0], 0]
+      const dist = Math.max(220, (far / 2 + spread) * 2.2)
+      fg.cameraPosition({ x: M[0] + w[0] * dist, y: M[1] + w[1] * dist, z: M[2] + w[2] * dist }, { x: M[0], y: M[1], z: M[2] }, ms)
+    } else fly(H, 340)
+  }, [focus, constellations, graph])
+  pickRef.current = pick
+
+  /**
+   * 핵심 별 이름표 — 별 바로 위에 별자리 이름을 늘 띄운다. 카메라가 계속 도니 매 프레임 화면 좌표로 옮긴다.
+   * 카메라 뒤쪽으로 넘어간 별은 감춘다 (투영이 뒤집혀 엉뚱한 곳에 그려진다). React 상태를 거치지 않고 DOM 을 직접 옮긴다
+   */
+  useEffect(() => {
+    if (!fgReady || !fgRef.current || !constellations.length) return
+    let raf = 0, alive = true
+    ;(async () => {
+      const THREE = await import('three')
+      const v = new THREE.Vector3()
+      const loop = () => {
+        if (!alive) return
+        const cam = fgRef.current?.camera?.()
+        if (cam) {
+          // 이름표는 늘 자기 핵심 별 바로 위에 고정한다 — 겹침을 피하려고 비켜 놓았더니 이름표가 계속 움직여 보였다
+          for (const c of constellations) {
+            const el = labelRefs.current.get(c.key)
+            if (!el || !c.hub) continue
+            v.set(c.hub.x ?? 0, c.hub.y ?? 0, c.hub.z ?? 0).project(cam)
+            const back = v.z > 1
+            el.style.visibility = back ? 'hidden' : 'visible'
+            if (!back) el.style.transform = `translate(${((v.x + 1) / 2) * innerWidth}px, ${((1 - v.y) / 2) * innerHeight}px) translate(-50%, -150%)`
+          }
+        }
+        raf = requestAnimationFrame(loop)
+      }
+      loop()
+    })()
+    return () => { alive = false; cancelAnimationFrame(raf) }
+  }, [fgReady, constellations])
 
   /** 노드 열기 — 카메라가 다가간 뒤 이동한다 */
   const openNode = useCallback((n: GNode) => {
@@ -370,12 +513,14 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         nodeLabel={() => ''}
         // 허브(MOC) 링크는 분류 안의 거의 모든 문서를 향해 뻗어 나가 화면을 덮는다.
         // 평소에는 감추고, 그 노드에 마우스를 올렸을 때만 보여 준다.
+        // 별자리를 고르면 그 핵심 별에서 별자리 안 별들로 옅은 선을 긋는다 (별자리 선)
         linkVisibility={(l: any) => {
           if (!l.hub) return true
-          if (!hover) return false
-          const s = typeof l.source === 'string' ? l.source : l.source.id
-          const t = typeof l.target === 'string' ? l.target : l.target.id
-          return s === hover.id || t === hover.id
+          const s = idOf(l.source), t = idOf(l.target)
+          if (hover) return s === hover.id || t === hover.id
+          // 별자리 안의 모든 핵심 별(MOC)에서 — Open Source 는 gstack MOC 가 실제 무리를 잇는다
+          if (focused) return focused.members.has(s) && focused.members.has(t)
+          return false
         }}
         // 선은 평소에 거의 보이지 않아야 한다.
         // 3288개가 동시에 눈에 들어오면 별이 묻힌다. 구조는 '있다는 것'만 암시하고,
@@ -385,7 +530,12 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
           const s = typeof l.source === 'string' ? l.source : l.source.id
           const t = typeof l.target === 'string' ? l.target : l.target.id
           if (hover && (s === hover.id || t === hover.id)) return 'rgba(126,192,228,0.5)'
-          return hover ? 'rgba(74,94,122,0.04)' : 'rgba(92,122,164,0.13)'
+          if (hover) return 'rgba(74,94,122,0.04)'
+          if (focused) {
+            if (l.hub) return rgba(focused.color, 0.32)
+            return focused.members.has(s) && focused.members.has(t) ? rgba(focused.color, 0.2) : 'rgba(74,94,122,0.03)'
+          }
+          return 'rgba(92,122,164,0.13)'
         }}
         linkWidth={(l: any) => {
           const s = typeof l.source === 'string' ? l.source : l.source.id
@@ -414,6 +564,8 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         onNodeHover={(n: any) => {
           // 터치에서는 호버 이벤트가 오지 않는다. 탭으로 고른 상태를 지우지 않는다.
           if (coarse) return
+          // 커서가 안내판 · 이름표 위에 있거나 카메라가 날아가는 중이면 무시 (멈춰 있는 커서 밑을 별이 지나갈 뿐이다)
+          if (n && (pointerOut.current || performance.now() < flyingUntil.current)) return
           setHover(n ?? null)
         }}
         // 빈 곳을 누르면 선택 해제
@@ -437,14 +589,13 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
       {/* 마우스 — 노드 옆에 붙는다 */}
       {hover && !leaving && coarse === false && anchor && (
         <div
-          className="pointer-events-none fixed z-20 max-w-[18rem] rounded-lg border border-[#2a3344] bg-[#0a0d14]/92 px-3 py-1.5 text-[12.5px] leading-snug text-[#e8edf5] backdrop-blur"
+          className="pointer-events-none fixed z-20 w-[18rem] rounded-lg border border-[#2a3344] bg-[#0a0d14]/92 px-3 py-2 text-[12.5px] leading-snug text-[#e8edf5] backdrop-blur"
           style={{
             left: Math.min(anchor.x + 16, innerWidth - 300),
             top: Math.max(8, anchor.y - 14),
           }}
         >
-          <div className="line-clamp-2">{hover.title}</div>
-          <div className="mt-0.5 text-[11px] text-[#6b7688]">클릭해서 열기</div>
+          <StarCard node={hover} con={conOf.get(hover.id)} info={info[hover.id]} links={neighbors.get(hover.id)?.size ?? 0} action="클릭해서 열기" />
         </div>
       )}
 
@@ -454,11 +605,50 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
         <button
           type="button"
           onClick={() => openNode(hover)}
-          className="tap-open fixed bottom-20 left-1/2 z-20 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 rounded-xl border border-[#2a3344] bg-[#0a0d14]/92 px-5 py-2 text-center text-[13px] text-[#e8edf5] backdrop-blur"
+          className="tap-open fixed bottom-20 left-1/2 z-20 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 rounded-xl border border-[#2a3344] bg-[#0a0d14]/92 px-4 py-2.5 text-left text-[13px] text-[#e8edf5] backdrop-blur"
         >
-          <span className="line-clamp-2 leading-snug">{hover.title}</span>
-          <span className="mt-0.5 block text-[11.5px] text-[#6b7688]">눌러서 열기</span>
+          <StarCard node={hover} con={conOf.get(hover.id)} info={info[hover.id]} links={neighbors.get(hover.id)?.size ?? 0} action="눌러서 열기" />
         </button>
+      )}
+
+      {/* B. 핵심 별 이름표 — 누르면 그 별자리를 고른다 (C 와 같은 동작) */}
+      {!leaving && constellations.map(c => (
+        <button
+          key={c.key}
+          ref={el => { if (el) labelRefs.current.set(c.key, el); else labelRefs.current.delete(c.key) }}
+          type="button"
+          onClick={() => pick(c.key)}
+          tabIndex={-1}
+          aria-hidden
+          className={`con-label ${focus && focus !== c.key ? 'opacity-30' : ''}`}
+          style={{ color: c.color }}
+        >
+          {c.key}
+        </button>
+      ))}
+
+      {/* C. 별자리 안내판 — 넓은 화면은 왼쪽에 늘 펼침, 좁은 화면은 단추로 펼친다 */}
+      {!leaving && constellations.length > 0 && (
+        <div className="con-panel">
+          <button type="button" onClick={() => setPanel(o => !o)} aria-expanded={panel} aria-controls="con-list" className="con-toggle sm:hidden">
+            별자리 {panel ? '▴' : '▾'}
+          </button>
+          <div id="con-list" className="con-list" data-open={panel || undefined}>
+            <p className="con-title">별자리</p>
+            <ul>
+              {constellations.map(c => (
+                <li key={c.key}>
+                  <button type="button" onClick={() => pick(c.key)} aria-pressed={focus === c.key} className="con-item">
+                    <span className="con-dot" style={{ background: c.color, boxShadow: `0 0 8px ${c.color}` }} aria-hidden />
+                    <span className="min-w-0 flex-1 truncate">{c.key}</span>
+                    <span className="tabular-nums text-[#6b7688]">{c.members.size}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {focus && <button type="button" onClick={() => pick(null)} className="con-all">전체 보기</button>}
+          </div>
+        </div>
       )}
 
       {/* 전환 중 화면을 완전히 덮는다. 덜 덮으면 페이지가 바뀌는 순간이 그대로 보인다 */}
@@ -467,6 +657,29 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
           leaving ? 'opacity-100' : 'opacity-0'
         }`}
       />
+    </>
+  )
+}
+
+/**
+ * A. 별 카드 — 어느 별자리의 별인지(색 점), 제목, 설명 두 줄, 이웃 별 수.
+ * 핵심 별(MOC)이면 "핵심 별 · 별 N개" — 별자리 소개 카드가 된다
+ */
+function StarCard({ node, con, info, links, action }: { node: GNode; con?: Constellation; info?: string; links: number; action: string }) {
+  const core = !!con && con.hub?.id === node.id
+  return (
+    <>
+      {con && (
+        <span className="flex items-center gap-1.5 text-[11px] tracking-wide" style={{ color: con.color }}>
+          <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: con.color }} aria-hidden />
+          {con.key} 별자리{core && ' · 핵심 별'}
+        </span>
+      )}
+      <span className="mt-0.5 line-clamp-2 block text-[13.5px] font-medium leading-snug">{node.title}</span>
+      {info && <span className="mt-1 line-clamp-2 block text-[12px] leading-snug text-[#9aa5b8]">{info}</span>}
+      <span className="mt-1 block text-[11px] text-[#6b7688]">
+        {core ? `별 ${con!.members.size}개` : `이웃 별 ${links}`} · {action}
+      </span>
     </>
   )
 }
