@@ -38,7 +38,7 @@ hskim.me                       ← 4단계
    | `gitattributes` | `.gitattributes` |
    | `notify-site.yml` | `.github/workflows/notify-site.yml` |
 
-   `.gitignore` 는 **허용 목록 방식**이다. 기본적으로 전부 제외하고 `01 Knowledge DB`, `02 Project Cases`, `03 Portfolio`, `05 Attachments` 만 다시 넣는다. 제외 목록 방식이면 나중에 새 폴더를 만들었을 때 자동으로 올라가 버린다. 그 반대가 안전하다.
+   `.gitignore` 는 **허용 목록 방식**이다. 기본적으로 전부 제외하고 `01 Knowledge DB`, `02 Project Cases`, `03 Portfolio`, `05 Attachments`, `06 Life`, 그리고 `04 Operations/Nero.md` 한 파일(P8)만 다시 넣는다. 제외 목록 방식이면 나중에 새 폴더를 만들었을 때 자동으로 올라가 버린다. 그 반대가 안전하다.
 
 4. 첫 커밋 전에 **무엇이 올라가는지 반드시 확인한다.**
 
@@ -344,8 +344,8 @@ npx wrangler pages deployment list --project-name=hskim-me   # 배포본 확인
 
 Obsidian → 설정 → 커뮤니티 플러그인 → `Obsidian Git` 설치.
 
-**자동 커밋 주기는 끈다(`0`).** "커밋 = 게시 의사 표시"가 원칙이다(D-03).
-자동으로 두면 작성 중인 초안이 그대로 공개된다. 게시할 준비가 되면 직접 커밋한다.
+처음엔 자동 커밋을 껐다(`0`, "커밋 = 게시 의사 표시", D-03). **2026-09-27 부터는 편집을 멈추고 30분 뒤 자동 커밋 · 푸시**로 쓴다 — 공개 여부는 커밋이 아니라 파이프라인의 공개 승인 · 가드가 정한다.
+푸시마다 사이트가 다시 빌드되므로 간격을 너무 짧게 하면 무료 한도(Pages 월 500회, Actions 월 2,000분)에 걸린다. 설정을 바꾸면 플러그인을 껐다 켜야 적용된다.
 
 ---
 
@@ -363,10 +363,15 @@ Obsidian → 설정 → 커뮤니티 플러그인 → `Obsidian Git` 설치.
 기획: `docs/01-planning/ai-nero.md`. 서버는 `web/functions/api/nero.ts` (Pages Functions, `/api/nero`).
 
 1. **Vectorize 색인** `nero` (1024 차원 · cosine) — API 로 만들었다 (2026-10-02). 대시보드에는 만들기 단추가 없다
-2. **토큰** — Workers AI 읽기 + Vectorize 편집. GitHub 비밀 `NERO_INDEX_TOKEN` (배포 때 색인 갱신)
+2. **토큰** — Workers AI 읽기 + Vectorize 편집. GitHub 비밀 `NERO_INDEX_TOKEN` (배포 때 색인 갱신).
+   로컬 공격 시험(`npm run qa:nero`)용은 따로 — Workers AI 읽기 + Vectorize **읽기**, `~/.config/hskim-ai.env` (chmod 600)
 3. **KV** — Storage & databases → KV → Create: `nero-limits` (한도 계산. 저장하는 건 날짜별 횟수와 IP 해시뿐)
 4. **Turnstile** — Application security → Turnstile → Add widget: 이름 `Nero`, 호스트 `hskim.me` · `localhost`, 모드 Managed. 사이트 키(공개)와 비밀 키를 받는다
 5. **Pages 프로젝트 `hskim-me` → Settings**
    - Bindings: Workers AI `AI` · Vectorize `VECTORIZE` → `nero` · KV namespace `NERO_KV` → `nero-limits`
    - Variables and Secrets: `TURNSTILE_SECRET` (Secret) · `NERO_ENABLED` = `off` (Text)
-6. 켜기 · 끄기 — `NERO_ENABLED` 를 `on` / `off` 로 바꾸고 다시 배포 (끄는 스위치, ai-nero.md §6.5)
+6. 켜기 · 끄기 — `NERO_ENABLED` 를 `on` / `off` 로 바꾸고 다시 배포 (끄는 스위치, ai-nero.md §6.5). 변수는 다시 배포해야 적용된다
+7. **설정 글** — Vault `04 Operations/Nero.md` 가 Vault 저장소에 올라가 있어야 한다 (`.gitignore` 허용 목록). 없으면 배포 기록에 `Nero 설정이 없습니다` 가 찍히고 Nero 는 "정비 중"만 답한다
+8. 설정 · 모델 · 서버 코드를 고치면 `npm --prefix web run qa:nero` (공격 시험 20개)
+
+손으로 한 설정 전체를 한곳에 모은 정리: Vault `00 Inbox/Raw Import/Personal Study/hskim.me/Site Operations Setup.md`
