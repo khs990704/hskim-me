@@ -10,6 +10,7 @@
 #   비밀  VAULT_DEPLOY_KEY      Vault 저장소 배포 키의 개인키
 #   비밀  CLOUDFLARE_API_TOKEN
 #   비밀  CLOUDFLARE_ACCOUNT_ID
+#   비밀  NERO_INDEX_TOKEN      (P8) Vectorize 편집 + Workers AI 읽기만. 없으면 Nero 색인을 건너뛴다
 name: build & deploy
 
 on:
@@ -62,6 +63,13 @@ jobs:
         run: |
           npm --prefix pipeline run build
           npm --prefix pipeline run verify
+
+      # Nero 색인 (P8) — 바뀐 조각만 임베딩해 Vectorize 에 올린다. 토큰이 없으면 건너뛰고 배포는 계속한다
+      - name: Nero 색인
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NERO_INDEX_TOKEN: ${{ secrets.NERO_INDEX_TOKEN }}
+        run: node pipeline/src/nero-index.mjs
 
       - name: 사이트 빌드
         run: npm --prefix web run build

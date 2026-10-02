@@ -19,6 +19,7 @@ web/public/og/
 web/public/tree.json
 web/public/graph.json
 web/public/graph-info.json
+web/public/nero-manifest.json
 web/public/search-index.json
 
 # 환경 변수·자격 증명
