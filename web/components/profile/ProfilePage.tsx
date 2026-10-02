@@ -3,6 +3,8 @@ import type { Character, MediaEntry, PixelFont, Profile } from '../../lib/profil
 import { Dialog } from './Dialog'
 import SkillBoard from './SkillBoard'
 import SmoothDetails from './SmoothDetails'
+import { when } from '../../lib/life-format'
+import type { LifePost } from '../../lib/life'
 import { DOMAIN_COLOR } from '../../lib/domain-colors'
 import StatRadar, { STAT_FILL } from './StatRadar'
 import TitleCollection from './TitleCollection'
@@ -20,7 +22,7 @@ const DOMAIN_LABEL: Record<string, string> = {
   backend: '백엔드', frontend: '프론트엔드', ai: 'AI · ML', data: '데이터', infra: '인프라', security: '보안',
 }
 const ym = (d: string | null) => (d ? d.slice(0, 7).replace('-', '.') : '현재')
-const LINK_LABEL: Record<string, string> = { email: '이메일', github: 'GitHub', linkedin: 'LinkedIn' }
+const LINK_LABEL: Record<string, string> = { email: '이메일', github: 'GitHub', linkedin: 'LinkedIn', instagram: 'Instagram' }
 const hrefOf = (k: string, v: string) => (k === 'email' ? `mailto:${v}` : v)
 
 function Section({ id, title, sub, right, children }: { id: string; title: string; sub: string; right?: React.ReactNode; children: React.ReactNode }) {
@@ -38,11 +40,15 @@ function Section({ id, title, sub, right, children }: { id: string; title: strin
   )
 }
 
-export default function ProfilePage({ profile, character: ch, media, font }: {
+/** 사이드 퀘스트에 보이는 최근 일상 한 편 */
+export type LifeTeaser = Pick<LifePost, 'slug' | 'heading' | 'category' | 'date' | 'until' | 'thumb'>
+
+export default function ProfilePage({ profile, character: ch, media, font, life = [] }: {
   profile: Profile
   character: Character
   media: Record<string, MediaEntry>
   font: PixelFont | null
+  life?: LifeTeaser[]
 }) {
   const routeOf = Object.fromEntries(ch.projects.map(p => [p.name, p.route]))
   const inLevel = ch.xp - ch.xpLevelStart
@@ -280,7 +286,26 @@ export default function ProfilePage({ profile, character: ch, media, font }: {
           {profile.sections['사이드 퀘스트'] && (
             <Section id="side" title="사이드 퀘스트" sub="일 밖의 기록">
               <div className="prose hud-prose" dangerouslySetInnerHTML={{ __html: profile.sections['사이드 퀘스트'] }} />
-              <p className="mt-3"><Link href="/life" className="hud-chip">일상 기록 보러 가기 →</Link></p>
+              {/* 최근 일상 넷 — 일상(/life) 목록과 같은 정사각 사진, 아래에 분류 · 날짜 · 제목 */}
+              {life.length > 0 && (
+                <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="최근 일상 기록">
+                  {life.map(p => (
+                    <li key={p.slug}>
+                      <Link href={'/life/' + p.slug} className="hud-life group">
+                        <span className="hud-life-img">
+                          {p.thumb && (
+                            <img src={p.thumb[0].url} srcSet={p.thumb.map(x => `${x.url} ${x.w}w`).join(', ')}
+                              sizes="(min-width: 640px) 180px, 45vw" alt="" loading="lazy" decoding="async" />
+                          )}
+                        </span>
+                        <span className="hud-life-meta">{p.category} · <time dateTime={p.date}>{when(p)}</time></span>
+                        <span className="hud-life-title">{p.heading}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-4"><Link href="/life" className="hud-chip">일상 기록 보러 가기 →</Link></p>
             </Section>
           )}
         </div>
