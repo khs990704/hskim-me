@@ -79,4 +79,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy web/out --project-name=hskim-me --branch=main
+          # web/ 에서 배포해야 web/functions(서버 — /api/nero, P8)가 함께 올라간다.
+          # 바인딩(AI · VECTORIZE · NERO_KV)과 비밀(TURNSTILE_SECRET) · 스위치(NERO_ENABLED)는 Pages 설정에 둔다
+          workingDirectory: web
+          command: pages deploy out --project-name=hskim-me --branch=main
