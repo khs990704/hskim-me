@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { search, PAGE_SIZE, type Hit, type SearchDoc } from '../lib/search'
 import Highlight from './Highlight'
 import { useModalFocus } from '../lib/use-modal-focus'
+import { openNero } from '../lib/nero-store'
 
 /** 색인은 한 번만 받아 세션 내내 재사용한다 */
 let cachedIndex: SearchDoc[] | null = null
@@ -174,6 +175,14 @@ export default function Search() {
           open ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
         }`}
       >
+        {/* 검색 · Nero 두 갈래 — 키보드로 쓰는 사람도 Ctrl+K 에서 바로 Nero 에게 갈 수 있게 (P8 §4). 적던 말은 그대로 넘긴다 */}
+        <div className="flex gap-1 border-b border-[var(--line-soft)] px-3 pt-2 text-[12.5px]">
+          <span aria-current="true" className="border-b-2 border-[var(--accent)] px-2 pb-1.5 font-medium text-[var(--fg-strong)]">검색</span>
+          <button type="button" onClick={() => { setOpen(false); openNero(q.trim()) }}
+            className="border-b-2 border-transparent px-2 pb-1.5 text-[var(--fg-dim)] transition-colors hover:text-[var(--accent)]">
+            Nero 에게 묻기
+          </button>
+        </div>
         <div className="flex items-center gap-2.5 border-b border-[var(--line-soft)] px-4">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
                className="shrink-0 text-[var(--fg-faint)]">
