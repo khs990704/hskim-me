@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "qa": "node scripts/qa/run.mjs",
     "qa:html": "node scripts/qa/html.mjs",
+    "qa:nero": "node scripts/qa/nero.mjs",
     "dev": "node scripts/gen-static.mjs && node scripts/gen-pixel-font.mjs && next dev",
     "start": "next start"
   },
