@@ -1,7 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import GraphView from './GraphView'
+import dynamic from 'next/dynamic'
+
+// three.js(압축 100KB)는 그래프를 그릴 때만 받는다. 정적으로 가져오면 메인 페이지 묶음에 들어가는데,
+// Next 가 그 묶음을 일상 목록 · 404 HTML 에도 함께 싣는 일이 있어 그 페이지들까지 무거워졌다 (2026-10-02 측정)
+const GraphView = dynamic(() => import('./GraphView'), { ssr: false })
 
 const hasWebGL = () => {
   try {
