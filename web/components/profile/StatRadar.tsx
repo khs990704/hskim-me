@@ -29,7 +29,7 @@ export default function StatRadar({ stats }: { stats: Stat[] }) {
       {stats.map((s, i) => {
         const [x, y] = pt(i, R + 22)
         return (
-          <text key={s.key} x={x} y={y} textAnchor="middle" dominantBaseline="middle" className="pixel hud-radar-label" style={{ fill: DOMAIN_COLOR[s.key] }}>
+          <text key={s.key} x={x} y={y} textAnchor="middle" dominantBaseline="middle" className="pixel hud-radar-label" style={{ '--c': DOMAIN_COLOR[s.key] } as React.CSSProperties}>
             {s.label}
           </text>
         )
