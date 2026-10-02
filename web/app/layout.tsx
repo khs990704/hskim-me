@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { social } from '../lib/og'
+import NeroRoot from '../components/nero/NeroRoot'
 import './globals.css'
 
 const SITE = 'hskim.me'
@@ -64,7 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* RSS — 페이지마다 metadata.alternates 가 canonical 로 덮어써서 여기에 직접 둔다 */}
         <link rel="alternate" type="application/rss+xml" title="hskim.me" href="/rss.xml" />
       </head>
-      <body>{children}</body>
+      <body>{children}<NeroRoot /></body>
     </html>
   )
 }

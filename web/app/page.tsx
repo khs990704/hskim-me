@@ -5,6 +5,7 @@ import { allDocs, graph } from '../lib/content'
 import GraphStage from '../components/GraphStage'
 import Search from '../components/Search'
 import RotateToggle from '../components/RotateToggle'
+import NeroFlight from '../components/nero/NeroFlight'
 
 export const metadata: Metadata = {
   title: 'hskim.me',
@@ -33,6 +34,7 @@ export default function Home() {
   return (
     <main className="stage relative h-[100svh] overflow-hidden bg-[#03040a] text-[#e8edf5]">
       <GraphStage />
+      <NeroFlight />
 
       {/* 좌상단 — 이름과 한 줄 */}
       <div className="pointer-events-none absolute left-5 top-5 z-10 max-w-[52vw] sm:left-8 sm:top-8 sm:max-w-xs">

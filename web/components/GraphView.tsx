@@ -73,6 +73,8 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
    *  그래프는 마지막 커서 위치를 기억해서, 안내판을 누른 뒤 카메라가 움직이면 그 자리를 지나는 별이 골라져 카드가 따라다녔다 */
   const pointerOut = useRef(false)
   const flyingUntil = useRef(0)
+  /** 그린 뒤마다 부를 일 (반짝임 · 이름표). 각자 requestAnimationFrame 을 돌리면 그리지 않는 프레임에도 일한다 */
+  const onFrame = useRef(new Set<() => void>())
   const pickRef = useRef<(k: string | null) => void>(() => {})
   /** 별 스프라이트 · 본래 크기 — 반짝임(크기를 아주 조금 오르내림)에 쓴다 */
   const sprites = useRef(new Map<string, { s: any; base: number; tw: number; ph: number }>())
@@ -160,6 +162,45 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
     return () => cancelAnimationFrame(raf)
   }, [graph, fgReady])
 
+  /**
+   * 그리기 속도 (2026-10-02) — 3D 화면이라 매 프레임 새로 그린다. 그대로 두면 모니터 주사율(144Hz 면 1초 144장)에
+   * 화면 배율만큼(라이브러리 상한 2배) 그려 GPU 가 많이 돌았다. 보는 사람의 배터리 · 발열을 아끼려고
+   *   배율 상한 1.5 — 차이는 거의 안 보이고 칠할 픽셀은 2배 배율 대비 56%
+   *   1초 60장 상한 — 조작 중(누름 · 끌기 · 휠 · 가리킴) · 카메라 이동 중
+   *   1초 30장 — 아무도 만지지 않고 자동 회전만 할 때. 회전이 1회전 90초라 30장이면 충분히 부드럽다
+   * 라이브러리의 그리기 고리를 멈추고, 이 고리가 정한 때에만 한 장씩 그린다 (resume → 한 장 → pause).
+   * 회전 · 카메라 이동은 시간 기준이라 장 수가 줄어도 빨라지거나 느려지지 않는다
+   */
+  useEffect(() => {
+    if (!fgReady || !fgRef.current) return
+    const fg = fgRef.current
+    const ratio = Math.min(1.5, devicePixelRatio || 1)
+    fg.renderer?.().setPixelRatio(ratio)
+    fg.postProcessingComposer?.()?.setPixelRatio?.(ratio)
+
+    let activeUntil = performance.now() + 3000, last = 0, raf = 0
+    const poke = () => { activeUntil = performance.now() + 1500 }
+    const el = fg.renderer?.().domElement as HTMLElement | undefined
+    const evs = ['pointerdown', 'pointermove', 'wheel', 'touchstart'] as const
+    evs.forEach(e => el?.addEventListener(e, poke, { passive: true }))
+
+    fg.pauseAnimation()
+    const loop = (t: number) => {
+      raf = requestAnimationFrame(loop)
+      const fast = t < activeUntil || t < flyingUntil.current
+      if (t - last < (fast ? 1000 / 60 : 1000 / 30) - 2) return
+      last = t
+      fg.resumeAnimation(); fg.pauseAnimation()
+      for (const f of onFrame.current) f()
+    }
+    raf = requestAnimationFrame(loop)
+    return () => {
+      cancelAnimationFrame(raf)
+      evs.forEach(e => el?.removeEventListener(e, poke))
+      fg.resumeAnimation()
+    }
+  }, [fgReady])
+
   // 성운 배경 · 별먼지 · bloom 후처리
   useEffect(() => {
     if (!graph || !fgReady || !fgRef.current) return
@@ -193,7 +234,6 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
 
       // 성운을 아주 느리게 흘린다
       const mat = nebula.material as any
-      let raf = 0
       const t0 = performance.now()
       const still = matchMedia('(prefers-reduced-motion: reduce)').matches
       const tick = () => {
@@ -205,12 +245,11 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
           const k = 1 + 0.14 * Math.sin(t * v.tw + v.ph)
           v.s.scale.set(v.base * k, v.base * k, 1)
         }
-        raf = requestAnimationFrame(tick)
       }
-      tick()
+      onFrame.current.add(tick)
 
       cleanups.push(() => {
-        cancelAnimationFrame(raf)
+        onFrame.current.delete(tick)
         scene.remove(nebula, stars)
         nebula.geometry.dispose(); (nebula.material as any).dispose()
         stars.geometry.dispose(); (stars.material as any).dispose()
@@ -535,12 +574,12 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
    */
   useEffect(() => {
     if (!fgReady || !fgRef.current || !constellations.length) return
-    let raf = 0, alive = true
+    let alive = true, loop: (() => void) | null = null
     ;(async () => {
       const THREE = await import('three')
+      if (!alive) return
       const v = new THREE.Vector3()
-      const loop = () => {
-        if (!alive) return
+      loop = () => {
         const cam = fgRef.current?.camera?.()
         if (cam) {
           // 이름표는 늘 자기 핵심 별 바로 위에 고정한다 — 겹침을 피하려고 비켜 놓았더니 이름표가 계속 움직여 보였다
@@ -553,11 +592,11 @@ export default function GraphView({ onReady }: { onReady?: (n: number) => void }
             if (!back) el.style.transform = `translate(${((v.x + 1) / 2) * innerWidth}px, ${((1 - v.y) / 2) * innerHeight}px) translate(-50%, -150%)`
           }
         }
-        raf = requestAnimationFrame(loop)
       }
+      onFrame.current.add(loop)
       loop()
     })()
-    return () => { alive = false; cancelAnimationFrame(raf) }
+    return () => { alive = false; if (loop) onFrame.current.delete(loop) }
   }, [fgReady, constellations])
 
   /** 노드 열기 — 카메라가 다가간 뒤 이동한다 */
