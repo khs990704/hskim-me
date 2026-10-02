@@ -363,7 +363,7 @@ Obsidian → 설정 → 커뮤니티 플러그인 → `Obsidian Git` 설치.
 기획: `docs/01-planning/ai-nero.md`. 서버는 `web/functions/api/nero.ts` (Pages Functions, `/api/nero`).
 
 1. **Vectorize 색인** `nero` (1024 차원 · cosine) — API 로 만들었다 (2026-10-02). 대시보드에는 만들기 단추가 없다
-2. **토큰** — Workers AI 읽기 + Vectorize 편집. GitHub 비밀 `NERO_INDEX_TOKEN` (배포 때 색인 갱신).
+2. **토큰** — Workers AI 읽기 + Vectorize 편집, **CI 전용으로 따로 만든다** (`hskim-me nero-index`). GitHub 비밀 `NERO_INDEX_TOKEN` (배포 때 색인 갱신). 로컬 시험 토큰과 같은 것을 쓰면 한쪽 권한을 줄일 때 다른 쪽이 깨진다 (2026-10-02). 색인이 실패해도 사이트 배포는 계속되고 Actions 에 `Nero 색인 실패` 경고가 남는다 — 못 올린 조각은 다음 배포에서 다시 시도
    로컬 공격 시험(`npm run qa:nero`)용은 따로 — Workers AI 읽기 + Vectorize **읽기**, `~/.config/hskim-ai.env` (chmod 600)
 3. **KV** — Storage & databases → KV → Create: `nero-limits` (한도 계산. 저장하는 건 날짜별 횟수와 IP 해시뿐)
 4. **Turnstile** — Application security → Turnstile → Add widget: 이름 `Nero`, 호스트 `hskim.me` · `localhost`, 모드 Managed. 사이트 키(공개)와 비밀 키를 받는다

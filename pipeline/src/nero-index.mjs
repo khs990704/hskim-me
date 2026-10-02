@@ -8,7 +8,7 @@
 //   CLOUDFLARE_ACCOUNT_ID
 //   NERO_INDEX_TOKEN   Vectorize 편집 + Workers AI 읽기 권한만 가진 토큰. 배포 토큰과 따로 둔다 (§6.7)
 //   NERO_INDEX         색인 이름 (기본 nero)
-// 토큰이 없으면 건너뛴다 — 사이트 배포는 막지 않고, 지난 목록을 그대로 다시 싣는다.
+// 토큰이 없으면 건너뛴다 — 사이트 배포는 막지 않고, 지난 목록을 그대로 다시 싣는다. 올리다 실패해도 경고만 남기고 배포는 계속한다.
 import fs from 'node:fs'
 import path from 'node:path'
 import { ROOT } from '../config.mjs'
@@ -47,8 +47,10 @@ const call = async (url, init) => {
   }
 }
 
+// 지금까지 올린 것 — 실패해도 여기까지는 목록에 남긴다. 바뀐 조각의 옛 해시 · 못 지운 id 는 그대로 두어 다음 배포에서 다시 시도된다
 const done = { ...Object.fromEntries(Object.entries(old).filter(([id]) => id in now)) }
-let sent = 0
+let sent = 0, deleted = 0
+try {
 for (let i = 0; i < todo.length; i += 50) {
   const batch = todo.slice(i, i + 50)
   const emb = await call(`${API}/ai/run/${MODEL}`, { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify({ text: batch.map(c => c.embed) }) })
@@ -65,6 +67,14 @@ for (let i = 0; i < todo.length; i += 50) {
 for (let i = 0; i < gone.length; i += 100) {
   await call(`${API}/vectorize/v2/indexes/${INDEX}/delete_by_ids`, { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: gone.slice(i, i + 100) }) })
   for (const id of gone.slice(i, i + 100)) delete done[id]
+  deleted += Math.min(100, gone.length - i)
+}
+} catch (e) {
+  // 색인이 실패해도 사이트 배포는 막지 않는다 — 노트 공개와 Nero 색인은 따로 간다. Nero 는 그동안 예전 색인으로 답한다.
+  // GitHub Actions 요약 화면에 경고로 크게 남긴다 (::warning::)
+  write({ model: MODEL, index: INDEX, ids: done })
+  console.log(`::warning title=Nero 색인 실패::${e.message} — 올림 ${sent}/${todo.length} · 지움 ${deleted}/${gone.length}. 나머지는 다음 배포에서 다시 시도합니다. 토큰(NERO_INDEX_TOKEN) 권한이 Workers AI 읽기 + Vectorize 편집인지 확인하세요`)
+  process.exit(0)
 }
 
 write({ model: MODEL, index: INDEX, ids: done })
