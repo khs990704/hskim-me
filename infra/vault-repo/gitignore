@@ -4,8 +4,8 @@
 # 허용 목록 방식이다. 기본적으로 전부 제외하고, 사이트가 쓰는 폴더만 다시 넣는다.
 # 제외 목록 방식이면 새 폴더가 생겼을 때 자동으로 올라간다. 그 반대가 안전하다.
 #
-# 올라가는 것: 01 Knowledge DB / 02 Project Cases / 03 Portfolio / 05 Attachments
-# 올라가지 않는 것: 00 Inbox, 04 Operations, Clippings, Relay,
+# 올라가는 것: 01 Knowledge DB / 02 Project Cases / 03 Portfolio / 05 Attachments / 06 Life (사진 기록, 2026-09-30)
+# 올라가지 않는 것: 00 Inbox, 04 Operations(Nero.md 만 예외), Clippings, Relay,
 #                   obsidian-vault, .obsidian, .trash, 루트의 개별 파일
 #
 # 05 Attachments 는 현재 비어 있지만 미리 넣어 둔다.
@@ -21,6 +21,13 @@
 !/02 Project Cases
 !/03 Portfolio
 !/05 Attachments
+!/06 Life
+
+# 04 Operations 는 Nero 설정(Nero.md) 한 파일만 — 사이트 AI 가 배포 때 읽는다 (P8, 2026-10-02).
+# 같은 폴더의 원본 persona.md 등 운영 문서는 올리지 않는다. 폴더를 열고 안을 다시 전부 닫은 뒤 한 파일만 연다
+!/04 Operations
+/04 Operations/*
+!/04 Operations/Nero.md
 
 # 허용된 폴더 안에서도 제외할 것
 .DS_Store
