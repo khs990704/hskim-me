@@ -115,6 +115,12 @@ export const SECRET_ANSWER = '그건 비밀이에요ㅋㅋ'
 
 // ── 출력 검사 (§6.4) ─────────────────────────────────────────────────────
 const squash = (s: string) => s.replace(/\s+/g, '')
+/**
+ * 겹침 검사에 쓰는 설정 조각 — 따옴표 안의 예시 대답("그건 제가 정할 수 있는 게 아니라서요…")은 뺀다.
+ * Nero 가 그대로 말하라고 적어 둔 문장이라, 넣어 두면 정상 답을 유출로 오판해 "비밀" 한마디로 바꿔 버린다 (2026-10-02 공격 시험)
+ */
+export const instructionPieces = (persona: string) =>
+  persona.split(/"[^"\n]*"|“[^”\n]*”/).map(squash).filter(p => p.length >= 25)
 const SECRET = /(AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{30,}|xox[abp]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)/g
 const PHONE = /(?<![\d.])01[016789][- .]?\d{3,4}[- .]?\d{4}(?![\d.])/g
 const RRN = /(?<!\d)\d{6}-[1-4]\d{6}(?!\d)/g
@@ -131,9 +137,9 @@ const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g
 export function sanitize(answer: string, persona: string, matches: Match[]): { answer: string; sources: { title: string; url: string; kind: string }[]; blocked: string[] } {
   const blocked: string[] = []
   let a = answer.trim()
-  // 설정 유출 — 공백을 뺀 40자 창으로 겹침을 찾는다
-  const p = squash(persona), q = squash(a)
-  for (let i = 0; i + 40 <= p.length; i += 20) {
+  // 설정 유출 — 공백을 뺀 40자 창으로 겹침을 찾는다 (예시 대답 문장은 빼고)
+  const q = squash(a)
+  for (const p of instructionPieces(persona)) for (let i = 0; i + 40 <= p.length; i += 20) {
     if (q.includes(p.slice(i, i + 40))) { blocked.push('설정 유출'); return { answer: SECRET_ANSWER, sources: [], blocked } }
   }
   a = a.replace(/<\/?[a-zA-Z][^>]*>/g, () => { blocked.push('HTML'); return '' })
