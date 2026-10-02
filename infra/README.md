@@ -355,3 +355,18 @@ Obsidian → 설정 → 커뮤니티 플러그인 → `Obsidian Git` 설치.
 - **회사 케이스는 Vault 저장소에는 들어가고, 사이트에는 나가지 않는다.** 저장소는 private 이고, 공개 여부는 `publish: true` 옵트인으로 정한다(D-08). 나중에 검수를 통과한 케이스를 공개하려면 원본이 저장소에 있어야 하므로 이 구조가 필요하다.
 - **Vault 저장소는 백업이 아니다.** `01`, `02`, `03` 만 올라간다. `00 Inbox`, `04 Operations`, `Relay`, `.obsidian` 설정은 이 저장소에 없으므로 **별도로 백업해야 한다.** 이력·롤백도 되지 않는다.
 - **첨부 폴더는 저장소에 포함돼 있지만, 파이프라인은 아직 이미지를 다루지 않는다.** `05 Attachments` 를 허용 목록에 미리 넣어 두었으므로 이미지를 추가하면 저장소에는 올라간다. 다만 사이트에 표시하려면 P3 에서 이미지 경로 변환·최적화 작업이 필요하다. 실제로 이미지를 붙이기 시작하면 알려달라 (기획 문서 열린 항목 #4).
+
+---
+
+## P8 — Nero (사이트 AI) 설정
+
+기획: `docs/01-planning/ai-nero.md`. 서버는 `web/functions/api/nero.ts` (Pages Functions, `/api/nero`).
+
+1. **Vectorize 색인** `nero` (1024 차원 · cosine) — API 로 만들었다 (2026-10-02). 대시보드에는 만들기 단추가 없다
+2. **토큰** — Workers AI 읽기 + Vectorize 편집. GitHub 비밀 `NERO_INDEX_TOKEN` (배포 때 색인 갱신)
+3. **KV** — Storage & databases → KV → Create: `nero-limits` (한도 계산. 저장하는 건 날짜별 횟수와 IP 해시뿐)
+4. **Turnstile** — Application security → Turnstile → Add widget: 이름 `Nero`, 호스트 `hskim.me` · `localhost`, 모드 Managed. 사이트 키(공개)와 비밀 키를 받는다
+5. **Pages 프로젝트 `hskim-me` → Settings**
+   - Bindings: Workers AI `AI` · Vectorize `VECTORIZE` → `nero` · KV namespace `NERO_KV` → `nero-limits`
+   - Variables and Secrets: `TURNSTILE_SECRET` (Secret) · `NERO_ENABLED` = `off` (Text)
+6. 켜기 · 끄기 — `NERO_ENABLED` 를 `on` / `off` 로 바꾸고 다시 배포 (끄는 스위치, ai-nero.md §6.5)

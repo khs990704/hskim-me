@@ -148,6 +148,12 @@ fs.writeFileSync(path.join(PUBLIC, 'tree.json'), JSON.stringify(root.children))
 const treeSize = fs.statSync(path.join(PUBLIC, 'tree.json')).size
 console.log(`  tree.json   문서 ${docs.length}개 · ${(treeSize / 1024).toFixed(0)}KB`)
 
+// Nero 설정 (P8) — 파이프라인이 Vault Nero.md 로 만든 프롬프트를 서버(Pages Functions)가 묶어 갈 자리로 옮긴다
+const neroSrc = path.join(HERE, '..', '..', 'pipeline', 'out', 'nero.json')
+const neroDst = path.join(HERE, '..', 'functions', '_lib', 'prompt.json')
+fs.mkdirSync(path.dirname(neroDst), { recursive: true })
+fs.writeFileSync(neroDst, fs.existsSync(neroSrc) ? fs.readFileSync(neroSrc) : JSON.stringify({ prompt: '', hash: '' }))
+
 // 메인 그래프 별 카드의 설명 한두 줄 (주소 → 설명). graph.json 과 따로 둬서 그래프가 뜬 뒤에 받는다 (2026-10-02)
 const clip = (s, n = 110) => (s.length > n ? s.slice(0, n).replace(/\s+\S*$/, '') + '…' : s)
 const info = Object.fromEntries(docs.filter(d => d.description).map(d => [d.route, clip(d.description)]))
