@@ -58,8 +58,11 @@ export async function onRequestPost({ request, env }: { request: Request; env: E
   if (Number(site ?? 0) >= LIMITS.siteDay) return fail(429, '오늘은 Nero 가 쉬는 중이에요. 내일 다시 와 주세요.', 'sleep')
   if (Number(mine ?? 0) >= LIMITS.perDay) return fail(429, '오늘 물어볼 수 있는 만큼 다 물어보셨어요. 내일 또 와 주세요.', 'sleep')
   recent.push(now); minute.set(who, recent)
-  const ttl = { expirationTtl: 60 * 60 * 48 }
-  await Promise.all([env.NERO_KV.put(`u:${day}:${who}`, String(Number(mine ?? 0) + 1), ttl), env.NERO_KV.put(`s:${day}`, String(Number(site ?? 0) + 1), ttl)])
+  // 한 사람 기록(IP 해시)은 이틀 뒤 지운다. 사이트 전체 하루 질문 수는 숫자 하나뿐이라 40일 남겨 쓰임새를 돌아본다 (2026-10-07)
+  await Promise.all([
+    env.NERO_KV.put(`u:${day}:${who}`, String(Number(mine ?? 0) + 1), { expirationTtl: 60 * 60 * 48 }),
+    env.NERO_KV.put(`s:${day}`, String(Number(site ?? 0) + 1), { expirationTtl: 60 * 60 * 24 * 40 }),
+  ])
 
   // 설정을 캐는 질문은 모델을 부르지 않는다
   if (isExtraction(parsed.question)) return json(200, { answer: SECRET_ANSWER, sources: [], state: 'idle' })
