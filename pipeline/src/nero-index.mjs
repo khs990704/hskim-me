@@ -47,8 +47,9 @@ const call = async (url, init) => {
   }
 }
 
-// 지금까지 올린 것 — 실패해도 여기까지는 목록에 남긴다. 바뀐 조각의 옛 해시 · 못 지운 id 는 그대로 두어 다음 배포에서 다시 시도된다
-const done = { ...Object.fromEntries(Object.entries(old).filter(([id]) => id in now)) }
+// 지금까지 올린 것 — 실패해도 여기까지는 목록에 남긴다. 바뀐 조각의 옛 해시 · 못 지운 id 는 그대로 두어 다음 배포에서 다시 시도된다.
+// 지울 id 도 처음부터 빼지 않고, 실제로 지운 뒤에만 뺀다 — 전엔 미리 빼서, 지우다 실패하면 다시 시도하지 않아 옛 조각이 색인에 남았다 (2026-10-07)
+const done = { ...old }
 let sent = 0, deleted = 0
 try {
 for (let i = 0; i < todo.length; i += 50) {
