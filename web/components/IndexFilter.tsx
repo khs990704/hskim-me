@@ -109,7 +109,7 @@ export default function IndexFilter({ children }: { children: React.ReactNode })
           placeholder="제목 · 설명 · 태그로 찾기"
           aria-label="전체 목록에서 찾기"
           aria-describedby="idx-hits"
-          className="min-w-0 flex-1 rounded-md border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-1.5 text-[14px] text-[var(--fg)] placeholder:text-[var(--fg-faint)] focus:border-[var(--accent)] focus:outline-none sm:max-w-[420px]"
+          className="min-w-0 flex-1 rounded-md border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-1.5 text-[16px] text-[var(--fg)] sm:text-[14px] placeholder:text-[var(--fg-faint)] focus:border-[var(--accent)] focus:outline-none sm:max-w-[420px]"
         />
         {/* 오른쪽 칸은 폭을 고정한다 — 찾은 수 · 분야 단추가 바뀌어도 찾기 칸 너비가 움직이지 않게 */}
         <div className="flex w-[4.5rem] shrink-0 justify-end sm:justify-start">

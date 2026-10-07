@@ -926,6 +926,8 @@ button.hud-chip[aria-pressed="true"] { border-color: var(--accent); color: #0612
 .nero-form { display: flex; align-items: flex-end; gap: 8px; padding: 10px 10px 10px 12px; border-top: 1px solid var(--line-soft); }
 .nero-input { flex: 1; min-height: 40px; max-height: 120px; resize: none; field-sizing: content; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft); color: var(--fg); font-size: 14px; line-height: 1.5; outline: none; }
 .nero-input:focus { border-color: var(--accent); }
+/* 아이폰 Safari 는 16px 보다 작은 입력칸에 초점이 가면 화면을 확대한다. 확대 막기(maximum-scale)는 손가락 확대까지 막아 쓰지 않는다 — 좁은 화면만 16px */
+@media (max-width: 639.98px) { .nero-input { font-size: 16px; } }
 .nero-input::placeholder { color: var(--fg-faint); }
 .nero-send { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--accent); color: #06121c; transition: opacity .15s; }
 .nero-send:disabled { opacity: .35; }

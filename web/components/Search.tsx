@@ -203,7 +203,7 @@ export default function Search() {
             aria-controls="search-results"
             aria-activedescendant={hits[cursor] ? `search-opt-${cursor}` : undefined}
             placeholder="제목·본문 전체에서 찾기"
-            className="w-full bg-transparent py-3.5 text-[14px] text-[var(--fg)] outline-none placeholder:text-[var(--fg-faint)]"
+            className="w-full bg-transparent py-3.5 text-[16px] text-[var(--fg)] sm:text-[14px] outline-none placeholder:text-[var(--fg-faint)]"
           />
           <kbd className="hidden shrink-0 rounded border border-[var(--line)] px-1.5 py-0.5 text-[10.5px] text-[var(--fg-faint)] sm:block">
             Esc
