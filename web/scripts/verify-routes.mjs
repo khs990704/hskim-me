@@ -87,3 +87,24 @@ if (noMeta.length) {
 console.log('  모든 페이지에 description · canonical · og:image(파일 포함) · twitter:card 가 있습니다')
 console.log(has404 ? '  404.html 있음\n' : '  ⚠ 404.html 없음 — app/not-found.tsx 를 확인하세요\n')
 if (!has404) process.exit(1)
+
+// 사이트맵 주소 = 그 페이지의 정식 주소. 한 글자라도 다르면(예: + 와 %2B) 검색 엔진이 다른 주소로 보고
+// 사이트맵 쪽을 "정식 주소가 따로 있는 대체 페이지"로 분류한다 (2026-10-07 C++ 노트)
+const sitemap = fs.readFileSync(path.join(OUT, 'sitemap.xml'), 'utf8')
+const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1].replace(/&amp;/g, '&'))
+const off = []
+for (const loc of locs) {
+  const r = decodeURIComponent(new URL(loc).pathname).replace(/^\/|\/$/g, '')
+  const file = r ? pageOf(r) : path.join(OUT, 'index.html')
+  if (!file) { off.push([loc, '페이지 없음']); continue }
+  const canonical = fs.readFileSync(file, 'utf8').match(/<link rel="canonical" href="([^"]+)"/)?.[1]
+  if (canonical !== loc) off.push([loc, `정식 주소 ${canonical ?? '없음'}`])
+}
+console.log(`  사이트맵 검사 — 주소 ${locs.length}개`)
+if (off.length) {
+  console.error(`  ⚠ 정식 주소와 다른 사이트맵 주소 ${off.length}개\n`)
+  for (const [loc, why] of off.slice(0, 20)) console.error(`    ${loc} — ${why}`)
+  console.error('\n  app/sitemap.ts 의 주소 만들기를 페이지의 canonical 과 같게 맞추세요.\n')
+  process.exit(1)
+}
+console.log('  모든 사이트맵 주소가 페이지의 정식 주소와 같습니다\n')

@@ -8,7 +8,8 @@ export const dynamic = 'force-static'
 const BASE = 'https://hskim.me'
 const LIMIT = 50
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-const url = (route: string) => `${BASE}/${route.split('/').map(encodeURIComponent).join('/')}`
+// 정식 주소(canonical)와 같은 모양 — app/sitemap.ts 참고
+const url = (route: string) => new URL('/' + route, BASE).href
 // 날짜만 아는 글은 한국 시각 정오로 둔다 — 시간대 경계에서 하루가 밀리지 않게
 const rfc822 = (day: string) => new Date(`${day}T12:00:00+09:00`).toUTCString()
 
@@ -17,7 +18,7 @@ type Item = { title: string; link: string; date: string; description: string; ca
 export function GET() {
   const dates = docDates()
   const life: Item[] = getLife().posts.map(p => ({
-    title: p.heading, link: `${BASE}/life/${encodeURIComponent(p.slug)}`, date: p.date, description: p.description, category: p.category === '일상' ? '일상' : `일상 · ${p.category}`,
+    title: p.heading, link: url(`life/${p.slug}`), date: p.date, description: p.description, category: p.category === '일상' ? '일상' : `일상 · ${p.category}`,
   }))
   const docs: Item[] = allDocs()
     .filter(d => d.kind !== 'portfolio' && dates[d.source])
