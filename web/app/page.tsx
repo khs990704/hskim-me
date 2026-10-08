@@ -6,6 +6,7 @@ import GraphStage from '../components/GraphStage'
 import Search from '../components/Search'
 import RotateToggle from '../components/RotateToggle'
 import NeroFlight from '../components/nero/NeroFlight'
+import HeroTitle from '../components/HeroTitle'
 
 export const metadata: Metadata = {
   title: 'hskim.me',
@@ -37,14 +38,7 @@ export default function Home() {
       <NeroFlight />
 
       {/* 좌상단 — 이름과 한 줄 */}
-      <div className="pointer-events-none absolute left-5 top-5 z-10 max-w-[52vw] sm:left-8 sm:top-8 sm:max-w-xs">
-        <h1 className="text-[1.3rem] font-bold tracking-tight sm:text-[1.6rem]">
-          hskim<span className="text-[#78839c]">.me</span>
-        </h1>
-        <p className="mt-1 hidden text-[13px] leading-6 text-[#8b95a7] sm:block">
-          지식 노트와 프로젝트 기록을 연결해 둔 곳입니다.
-        </p>
-      </div>
+      <HeroTitle docs={docs.length} />
 
       {/* 우상단 — 검색과 진입 경로 */}
       <nav className="absolute right-4 top-5 z-10 flex items-center gap-1 text-[12px] sm:right-8 sm:top-8 sm:gap-1.5 sm:text-[13px]">
