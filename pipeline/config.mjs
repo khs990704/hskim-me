@@ -39,7 +39,7 @@ export const OPT_IN = [
  * OPT_IN 아래에서 공개를 승인한 경로 (D-16).
  *
  * 회사 노트는 Vault 에서 공개 기준('Project 케이스 지식화 규칙 > 회사 실무 케이스
- * 공개 기준')에 맞게 쓰여 있다. 기준을 놓친 표현은 guard-rules-company.txt 가
+ * 공개 기준')에 맞게 쓰여 있다. 기준을 놓친 표현은 Vault 의 04 Operations/guard-rules-company.txt 가
  * 배포 전에 잡는다. 여기 없는 경로는 그대로 비공개다.
  */
 export const OPT_IN_APPROVED = [

@@ -11,7 +11,6 @@
     "preview": "node src/preview.mjs",
     "test:media": "node test/media.mjs",
     "report": "node src/classify-broken.mjs",
-    "company": "node src/company-digest.mjs && node src/company-verdict.mjs",
     "all": "npm run build && npm run preview && npm run report && npm run company && npm run verify",
     "verify": "node src/verify-leak.mjs && node src/verify-meta.mjs"
   },

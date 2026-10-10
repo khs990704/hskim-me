@@ -3,9 +3,9 @@
 // error 가 하나라도 나오면 종료 코드 1 로 빌드를 실패시킨다.
 import fs from 'node:fs'
 import path from 'node:path'
-import { STAGE, ROOT } from '../config.mjs'
+import { STAGE, ROOT, VAULT } from '../config.mjs'
 
-const loadRules = (file, scope, flags = 'g') => fs.readFileSync(path.join(ROOT, file), 'utf8')
+const loadRules = (file, scope, flags = 'g') => fs.readFileSync(path.isAbsolute(file) ? file : path.join(ROOT, file), 'utf8')
   .split('\n')
   .map(l => l.trim())
   .filter(l => l && !l.startsWith('#'))
@@ -22,9 +22,14 @@ const loadRules = (file, scope, flags = 'g') => fs.readFileSync(path.join(ROOT, 
 const COMPANY_SCOPE = rel =>
   rel.startsWith('02 Project Cases/Project Index/03 Company/') || rel === '03 Portfolio/Portfolio.md'
 
+// 회사 규칙은 비공개 Vault 에 둔다 — 무엇을 막는지 적은 규칙 문장이 곧 회사 정보라서 공개 저장소에 둘 수 없다.
+// 파일이 없으면 검사 없이 지나가지 않도록 빌드를 멈춘다.
+const COMPANY_RULES = path.join(VAULT, '04 Operations', 'guard-rules-company.txt')
+if (!fs.existsSync(COMPANY_RULES)) throw new Error(`회사 규칙 파일이 없음: ${COMPANY_RULES} — Vault 에 올라가 있는지 확인`)
+
 const RULES = [
   ...loadRules('guard-rules.txt', () => true),
-  ...loadRules('guard-rules-company.txt', COMPANY_SCOPE, 'gi'),
+  ...loadRules(COMPANY_RULES, COMPANY_SCOPE, 'gi'),
 ]
 
 // 예외 목록 — '검토했고 안전하다고 판단했다'는 기록

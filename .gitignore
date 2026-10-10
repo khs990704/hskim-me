@@ -61,3 +61,7 @@ web/public/media/
 # 스탯창 픽셀 글꼴 — 쓰는 글자만 잘라 빌드 때 만든다 (web/scripts/gen-pixel-font.mjs)
 web/public/fonts/galmuri-*/
 web/lib/pixel-font.generated.json
+
+# 기획 · 작업 일지 · 질문지 · 요구사항 — 로컬에만 둔다. 회사 · 발주처 사정이 섞여 있어 공개 저장소에 올리지 않는다 (2026-10-10)
+/docs/
+/requirements-list.md

@@ -31,7 +31,7 @@ function place(d: Doc): { field: string; sub: string; rest: string } | null {
   }
   if (d.kind === 'project') {
     if (segs.length < 2) return null   // Project Cases MOC — 머리말 링크로
-    // 케이스 안의 경로(비공개 케이스 / rag 등)는 Cases 가 카드로 다시 묶는다
+    // 케이스 안의 경로(rag 등)는 Cases 가 카드로 다시 묶는다
     return { field: 'Project Cases', sub: segs[1], rest: segs.slice(2).join(' / ') }
   }
   if (segs.length < 2) return null     // 소개 · 포트폴리오 첫 화면 — 머리말 링크로
@@ -195,8 +195,8 @@ function CaseCard({ ds }: { ds: Doc[] }) {
 /**
  * 프로젝트 케이스 하위 분류(Company · Bootcamps …) 안.
  *   분류 바로 밑 문서 — 카드 하나씩
- *   케이스 폴더(비공개 케이스 · Hazard Data …) — 안에 폴더가 없으면 카드 한 장
- *   큰 케이스(secuai · 비공개 케이스 처럼 안에 폴더가 있는 것) — 대표 문서를 머리로 두고, 안쪽 폴더마다 카드 한 장
+ *   케이스 폴더(Hazard Data …) — 안에 폴더가 없으면 카드 한 장
+ *   큰 케이스(secuai 처럼 안에 폴더가 있는 것) — 대표 문서를 머리로 두고, 안쪽 폴더마다 카드 한 장
  */
 function Cases({ rests }: { rests: Rest[] }) {
   const root: Doc[] = []
